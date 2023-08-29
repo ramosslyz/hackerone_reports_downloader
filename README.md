@@ -11,9 +11,11 @@ python hackerone_reports_downloader.py
 ```
 
 ### Goal of this project
-The goal is to build a report search engine on top of the data. 
-With abilities to search & filter by bounty amount, severity, bug type, program name etc
+- The goal is to build a report search engine on top of the data. 
+- With abilities to search & filter by bounty amount, severity, bug type, program name etc
+```
 Let's see if i ever get around to doing that.
+```
 
 
 ### Tasks
