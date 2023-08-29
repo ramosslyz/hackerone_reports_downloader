@@ -1,0 +1,381 @@
+{
+    "id": 1685979,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjg1OTc5",
+    "url": "https://hackerone.com/reports/1685979",
+    "title": "DoS via Playbook ",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2022-08-31T00:41:40.539Z",
+    "submitted_at": "2022-08-31T00:41:40.606Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "vultza",
+        "url": "/vultza",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/nn900mz33sie5ce8rs5xesax9tma/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35268,
+        "url": "https://hackerone.com/mattermost",
+        "handle": "mattermost",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Mattermost",
+            "twitter_handle": "Mattermost",
+            "website": "https://mattermost.com",
+            "about": "Open-source collaboration, self-managed or SaaS"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2022-4019"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2022-11-23T14:55:52.329Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-11-23T14:55:52.216Z",
+    "team_member_agreed_on_going_public_at": "2022-11-23T05:36:22.190Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nA normal user can create a playbook, that has some attributes like the `run_summary_template`, `retrospective_template` and `description`,that don't have any size check or validation, which allows an attacker to set an unlimited number of characters as their values.\n\nIn a production environment is possible to set up to 50MB of data, due to the default nginx configuration, as the `run_summary_template` value. The creation of the playbook for itself is not sufficient to trigger an DoS attack in the application, but once this playbook is executed(run) the server  starts to consume a large amount of computing resources, which causes to the server to stop responding to users requests and ultimately leads to server crash.\n\nThis attack is even worst because after the application is restarted, its not possible to the user who created the playbook run to finish its execution via the Web Portal, because both the channel created by the playbook run, and the run dedicated management page, don't properly load, showing only a blank screen.\n\n## Steps To Reproduce:\n1.  Log in as a normal user in the platform.\n2. Grab the user `MMAUTHTOKEN` authentication token.\n3. Generate the playbook payload, that contains 50000000(50MB) characters as the `run_summary_template` attribute value. Use F1893243\n4. Send the following `POST` request to the `plugins/playbooks/api/v0/playbooks` API endpoint:\n```bash\ncurl -X POST \"http://<domain>/plugins/playbooks/api/v0/playbooks\" -H 'Content-Type: application/json' -d @payload --cookie \"MMAUTHTOKEN=<user-auth-token>\" -H \"X-CSRF-TOKEN: <csrf-token>\"\n```\n5. Go to the playbooks page, and click on the newly created playbook.\n6. Click in the \"Run\" button and then set an name for the run.\n7. After the run is initiated, the server will start to consume an abnormal quantity of computing resources, and crashes after some seconds.\n8. The application becomes unavailable for all its users.\n\n## Supporting Material/References:\n\n  * PoC Video\n{F1893242}\n\n## Impact\n\nA user can cause a full denial of service attack in the application server, making the application server unavailable to all its users.",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1893242,
+            "file_name": "dos_playbook_final.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/z25ecgyvkh8lczlknnww6gv2yiu4?response-content-disposition=attachment%3B%20filename%3D%22dos_playbook_final.mp4%22%3B%20filename%2A%3DUTF-8%27%27dos_playbook_final.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=04cb99905989ff3b68a262447b3f3852707740a7cf77a31590db4328b4c7daf0",
+            "file_size": 12310291,
+            "type": "video/mp4"
+        },
+        {
+            "id": 1893243,
+            "file_name": "generate-payload.py",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/lawafgj3ghtqfg37s0zep44nfe7f?response-content-disposition=attachment%3B%20filename%3D%22generate-payload.py%22%3B%20filename%2A%3DUTF-8%27%27generate-payload.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e651f03c36cb870e75909ecf813316c5f0eb6c99041e448edcf877c7140df758",
+            "file_size": 1637,
+            "type": "text/x-python"
+        }
+    ],
+    "allow_singular_disclosure_at": "2022-12-23T05:36:22.376Z",
+    "allow_singular_disclosure_after": -21518501.97786417,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "skoll101",
+        "oscuridad1010",
+        "randomrootx",
+        "ertugrul",
+        "zy9ard3",
+        "shubham_srt",
+        "ayoub0x1",
+        "kerolesmagdy",
+        "shivammusic",
+        "meispi",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 4.3,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 181350,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "Mattermost Plugins",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 18210576,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-09-01T06:34:27.020Z",
+            "updated_at": "2022-09-01T06:34:27.020Z",
+            "additional_data": {
+                "old_severity": "Medium (6.5)",
+                "new_severity": "Medium (4.3)",
+                "old_severity_id": 1642419,
+                "new_severity_id": 1645084
+            },
+            "actor": {
+                "username": "rohitesh_mattermost",
+                "cleared": false,
+                "verified": false,
+                "url": "/rohitesh_mattermost",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc27a3e030ca6672502239682f9f755537b99e6982ac4c32d98cafde52be6e1f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 18210586,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks for reporting this vulnerability. We have reviewed your report and after internally assessing the finding, we have determined that it is a valid issue. We would like to thank you for bringing this to our attention. Your report will be rewarded soon once we have discussed this further. Please stay tuned.\n\nBest regards and happy hunting!",
+            "automated_response": false,
+            "created_at": "2022-09-01T06:35:44.622Z",
+            "updated_at": "2022-09-01T06:35:44.622Z",
+            "actor": {
+                "username": "rohitesh_mattermost",
+                "cleared": false,
+                "verified": false,
+                "url": "/rohitesh_mattermost",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc27a3e030ca6672502239682f9f755537b99e6982ac4c32d98cafde52be6e1f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 18231100,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thank you for reporting this vulnerability. After internally reviewing your finding, we have determined that it is a valid issue. We appreciate you bringing this to our attention. Congratulations!! We look forward to more additional reports from you. \n\nBest regards and happy hunting!\n",
+            "automated_response": false,
+            "created_at": "2022-09-02T11:27:16.737Z",
+            "updated_at": "2022-09-02T11:27:16.737Z",
+            "actor": {
+                "url": "/mattermost",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Mattermost"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "mattermost",
+            "collaborator": {
+                "username": "vultza",
+                "url": "/vultza"
+            }
+        },
+        {
+            "id": 18806382,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks again for reporting this issue. The issue has been fixed and released. \n\n",
+            "automated_response": false,
+            "created_at": "2022-10-17T05:46:07.291Z",
+            "updated_at": "2022-10-17T05:46:07.291Z",
+            "actor": {
+                "username": "rohitesh_mattermost",
+                "cleared": false,
+                "verified": false,
+                "url": "/rohitesh_mattermost",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc27a3e030ca6672502239682f9f755537b99e6982ac4c32d98cafde52be6e1f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "vultza",
+                "url": "/vultza"
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 19314430,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-23T05:35:00.523Z",
+            "updated_at": "2022-11-23T05:35:00.523Z",
+            "cve_ids": [
+                "CVE-2022-4019"
+            ],
+            "actor": {
+                "username": "rohitesh_mattermost",
+                "cleared": false,
+                "verified": false,
+                "url": "/rohitesh_mattermost",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc27a3e030ca6672502239682f9f755537b99e6982ac4c32d98cafde52be6e1f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 19314437,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @vultza \n\nWe have assigned the CVE `CVE-2022-4019` for this vulnerability and it is now public. Requesting for full disclosure.\n\nThanks",
+            "automated_response": false,
+            "created_at": "2022-11-23T05:36:22.228Z",
+            "updated_at": "2022-11-23T05:36:22.228Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "rohitesh_mattermost",
+                "cleared": false,
+                "verified": false,
+                "url": "/rohitesh_mattermost",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065804Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc27a3e030ca6672502239682f9f755537b99e6982ac4c32d98cafde52be6e1f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 19321265,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-23T14:55:52.284Z",
+            "updated_at": "2022-11-23T14:55:52.284Z",
+            "actor": {
+                "username": "vultza",
+                "cleared": false,
+                "verified": false,
+                "url": "/vultza",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nn900mz33sie5ce8rs5xesax9tma/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 19321266,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-23T14:55:52.413Z",
+            "updated_at": "2022-11-23T14:55:52.413Z",
+            "actor": {
+                "username": "vultza",
+                "cleared": false,
+                "verified": false,
+                "url": "/vultza",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nn900mz33sie5ce8rs5xesax9tma/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        },
+        {
+            "id": 19961753,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::SwagAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-01-17T13:18:33.183Z",
+            "updated_at": "2023-01-17T13:18:33.183Z",
+            "actor": {
+                "url": "/mattermost",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Mattermost"
+                }
+            },
+            "reporter": {
+                "username": "vultza",
+                "url": "/vultza"
+            },
+            "genius_execution_id": null,
+            "team_handle": "mattermost"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

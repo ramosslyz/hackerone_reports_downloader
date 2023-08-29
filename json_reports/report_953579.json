@@ -1,0 +1,392 @@
+{
+    "id": 953579,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NTM1Nzk=",
+    "url": "https://hackerone.com/reports/953579",
+    "title": "[api.tumblr.com] Exploiting clickjacking vulnerability to trigger self DOM-based XSS",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2020-08-07T19:39:52.743Z",
+    "submitted_at": "2020-08-07T19:39:52.793Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "fuzzme",
+        "url": "/fuzzme",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/F9LSiEs1ckRkcUXxrvznmg2n/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 111,
+        "url": "https://hackerone.com/automattic",
+        "handle": "automattic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Automattic",
+            "twitter_handle": "",
+            "website": "https://automattic.com",
+            "about": "WordPress.com, VaultPress, Akismet, Gravatar, WooCommerce, Polldaddy, Tumblr and more!"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-10-09T11:36:07.087Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-09-09T11:36:05.566Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello i have found a clickjacking vulnerability in https://api.tumblr.com/console/*\n And a self DOM-based XSS In https://api.tumblr.com/console/calls/user/(follow/unfollow)\n\nA attacker can exploit the clickjacking  to trigged the self DOM-based XSS\n\n\nVulnerable URL to clickjacking :\nhttps://api.tumblr.com/console/*\n\nVulnerable URL to self DOM-based XSS :\n\nhttps://api.tumblr.com/console/calls/user/unfollow\nhttps://api.tumblr.com/console/calls/user/follow\n\nVulnerable code to self DOM-based XSS : \nhttps://assets.tumblr.com/assets/scripts/console/console.js\nline 1309\n\n```\n var e = jQuery(this);\n          if (0 === e.text().indexOf('\"http://') || 0 === e.text().indexOf('\"https://')) {\n            var t = e.text().slice(1, - 1),\n            n = jQuery('<a target=\"_blank\">').text(e.text()).attr('href', t);\n            n.html('\"<u>' + t + '</u>\"'),\n            /\\.(gif|jpg|jpeg|tiff|png)$/i.test(t) && n.addClass('image-modal'),\n            e.html(n)\n          }\n```\n\n ``` line 1309 : n.html('\"<u>' + t + '</u>\"')  ```\n\nthis trigger a self DOM-based XSS\n\nWith this payload :\n\n``` https://www.<img src=x onerror='alert()'>```\n\n\nSteps To Reproduce:\n\n1. Log in https://api.tumblr.com/console/calls/user/info\n2. Open the poc.html with chrome, and follow the instruction into the clickjacking page \n(Note: i have only test the poc.html with chrome)\n\n\n/!\\ Note this vulnerability needs a lot of user interaction, this why i have passed this report to low  /!\\\n\nI hope the poc.html work this your navigator.\n\nThanks bye.\n\n## Impact\n\nA attacker can manipulate a victim to click and follow instruction in the clickjacking page to triaged the self DOM-based XSS",
+    "weakness": {
+        "id": 74,
+        "name": "UI Redressing (Clickjacking)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 940222,
+            "file_name": "FinalPoc.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vvRHKLWFhTSvhMjLiKruXd6D?response-content-disposition=attachment%3B%20filename%3D%22FinalPoc.mp4%22%3B%20filename%2A%3DUTF-8%27%27FinalPoc.mp4&response-content-type=video%2Fogg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071805Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f2f0d7a811ce503ded6e4bb19aeb509976359a2cc5bad9c71b742840e40ed438",
+            "file_size": 4771903,
+            "type": "video/ogg"
+        },
+        {
+            "id": 940223,
+            "file_name": "self_DOM-based_XSS",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/H9UkZDW9M1ZkxC8YhvoPNSYF?response-content-disposition=attachment%3B%20filename%3D%22self_DOM-based_XSS%22%3B%20filename%2A%3DUTF-8%27%27self_DOM-based_XSS&response-content-type=video%2Fogg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071805Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=65594f8c57b27e3c17b7367962aabd55ef0f9d3fe85f6e0c786038946b9fab28",
+            "file_size": 7303023,
+            "type": "video/ogg"
+        },
+        {
+            "id": 940226,
+            "file_name": "No-X-Frame-Options.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tyj7A7mo57ZJq6wfr7LwmJXS?response-content-disposition=attachment%3B%20filename%3D%22No-X-Frame-Options.png%22%3B%20filename%2A%3DUTF-8%27%27No-X-Frame-Options.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071805Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9ec94a8712bf723ad2df21a9fc893145043cf8f0749b97309605fac303e0da63",
+            "file_size": 211194,
+            "type": "image/png"
+        },
+        {
+            "id": 940228,
+            "file_name": "poc.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/R9ohT1394xrhrRU3nNyp2wcw?response-content-disposition=attachment%3B%20filename%3D%22poc.html%22%3B%20filename%2A%3DUTF-8%27%27poc.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071805Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a101051be298f54e17f7a8692185c619319df502afb9f30bcb33f41850bfa0ca",
+            "file_size": 1632,
+            "type": "text/html"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-10-09T11:36:05.645Z",
+    "allow_singular_disclosure_after": -91050119.7083398,
+    "singular_disclosure_allowed": true,
+    "vote_count": 30,
+    "voters": [
+        "s1n6h",
+        "tess",
+        "ali",
+        "ahiezer",
+        "sudi",
+        "mattberg",
+        "h4x0r_dz",
+        "demonia",
+        "since2003",
+        "rootishere",
+        "and 20 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 42397,
+        "asset_type": "URL",
+        "asset_identifier": "api.tumblr.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8924136,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your submission. Your report will be reviewed and we'll get back to you shortly.",
+            "automated_response": false,
+            "created_at": "2020-08-13T09:56:41.991Z",
+            "updated_at": "2020-08-13T09:56:41.991Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 8926613,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @fuzzme, I forwarded this to the Tumblr team so they can investigate further. We'll let you know once we have something to share.",
+            "automated_response": false,
+            "created_at": "2020-08-13T13:17:33.409Z",
+            "updated_at": "2020-08-13T13:17:33.409Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 8928614,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,  ok, \nthank you.",
+            "automated_response": false,
+            "created_at": "2020-08-13T16:30:08.044Z",
+            "updated_at": "2020-08-13T16:30:08.044Z",
+            "actor": {
+                "username": "fuzzme",
+                "cleared": false,
+                "verified": false,
+                "url": "/fuzzme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/F9LSiEs1ckRkcUXxrvznmg2n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9096995,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @fuzzme, we are currently testing a patch to address this issue. We'll let you know once this is deployed to production.",
+            "automated_response": false,
+            "created_at": "2020-09-01T08:52:19.570Z",
+            "updated_at": "2020-09-01T08:52:19.570Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9114669,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@fuzzme The fix for the attack in question has been deployed to production. ",
+            "automated_response": false,
+            "created_at": "2020-09-02T22:41:57.489Z",
+            "updated_at": "2020-09-02T22:41:57.489Z",
+            "actor": {
+                "username": "michael_butler_a8c",
+                "cleared": false,
+                "verified": false,
+                "url": "/michael_butler_a8c",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9117440,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello, ok",
+            "automated_response": false,
+            "created_at": "2020-09-03T08:11:30.878Z",
+            "updated_at": "2020-09-03T08:11:30.878Z",
+            "actor": {
+                "username": "fuzzme",
+                "cleared": false,
+                "verified": false,
+                "url": "/fuzzme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/F9LSiEs1ckRkcUXxrvznmg2n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9167279,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-09T08:29:55.830Z",
+            "updated_at": "2020-09-09T08:29:55.830Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "fuzzme",
+                "url": "/fuzzme"
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9167324,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hi @fuzzme, we would like thank you again for your submission and helping make Tumblr a safer place. We look forward to more reports from you in the future.",
+            "automated_response": false,
+            "created_at": "2020-09-09T08:31:15.652Z",
+            "updated_at": "2020-09-09T08:31:15.652Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "automattic",
+            "collaborator": {
+                "username": "fuzzme",
+                "url": "/fuzzme"
+            }
+        },
+        {
+            "id": 9169255,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Ok, thank you c",
+            "automated_response": false,
+            "created_at": "2020-09-09T11:36:05.589Z",
+            "updated_at": "2020-09-09T11:36:05.589Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "fuzzme",
+                "cleared": false,
+                "verified": false,
+                "url": "/fuzzme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/F9LSiEs1ckRkcUXxrvznmg2n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9469582,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-10-09T11:36:07.168Z",
+            "updated_at": "2020-10-09T11:36:07.168Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

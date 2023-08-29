@@ -1,0 +1,274 @@
+{
+    "id": 304115,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDQxMTU=",
+    "url": "https://hackerone.com/reports/304115",
+    "title": "Integer Underflow @ ossl_cipher_pkcs5_keyivgen ",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2018-01-11T20:55:21.152Z",
+    "submitted_at": "2018-01-11T20:55:21.152Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "finb",
+        "url": "/finb",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/116/607/e94dc1d2039dc6ca53eb72d1ef6991346ac4de29_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-02-23T07:18:57.620Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-01-12T13:38:42.880Z",
+    "team_member_agreed_on_going_public_at": "2018-02-23T07:18:57.553Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Integer Underflow @ ossl_cipher_pkcs5_keyivgen \nfile : ext/openssl/ossl_cipher.c\naffected parameter: iterations\n\nINFO\nGenerates and sets the key/IV based on a password.\ncall-seq:\n```\ncipher.pkcs5_keyivgen(pass, salt = nil, iterations = 2048, digest = \"MD5\") -> nil\n```\n\n\nANALYSIS\niter(int) in ossl_cipher_pkcs5_keyivgen  which holds iterations value is not validated before use.\ntherefore passed on to openssl library function EVP_BytesToKey which loops over\niter(iterations) using count\n```\nfor (i = 1; i < (unsigned int)count; i++) {\n  if (!EVP_DigestInit_ex(c, md, NULL))\n  [code redacted]\n]\n```\nif count aka iterations is negative this loop runs forever and therefore causing \nruby to hang and eat up memory since allocation are performed during \nthis loop and \"i\" can never be greater than count\n\nPOC\n```\nrequire 'digest'\nrequire 'openssl'\nrequire 'base64'\n\ndata = 'abc'\nkey = '1234567887654321'\niv = key[0..7]\ncipher = OpenSSL::Cipher::Cipher.new('DES-EDE3-CBC') # or any other algorithm?\n\ncipher.encrypt\ncipher.pkcs5_keyivgen(key, iv, -1)\noutput = cipher.update(data)\noutput << cipher.final\n```\n\nCONFIGURATIONS\n./ruby -v\nruby 2.6.0dev (2018-01-11 trunk 61764) [x86_64-linux]\n\nopenssl version\nOpenSSL 1.0.1t  3 May 2016\n\n## Impact\n\nThis result in a DDOS Attack",
+    "weakness": {
+        "id": 16,
+        "name": "Integer Underflow"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2279432,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> if count aka iterations is negative this loop runs forever and therefore causing \nruby to hang and eat up memory since allocation are performed during \nthis loop and \"i\" can never be greater than count\n\nCorrection: technically the loop does not run forever since [the variable \"i\" is declared as an \"unsigned int\"](https://github.com/openssl/openssl/blob/a41a6120cdcb7e883481bc1bed55e7157c9255c4/crypto/evp/evp_key.c#L82). Also, the memory consumption is not proportional to the iteration count.\n\nWhile it is certainly a bug that OpenSSL::Cipher#pkcs5_keyivgen accepts a non-positive number as the iteration count, this is not considered a security issue. Applications passing user input as the iteration count are vulnerable to DoS attack without this bug, by accepting a large number.",
+            "automated_response": false,
+            "created_at": "2018-01-12T02:26:54.105Z",
+            "updated_at": "2018-01-12T02:26:54.105Z",
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2279869,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-01-12T10:35:04.007Z",
+            "updated_at": "2018-01-12T10:35:04.007Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "None",
+                "old_severity_id": 107297,
+                "new_severity_id": 107420
+            },
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2279870,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Patch: https://github.com/ruby/openssl/pull/184",
+            "automated_response": false,
+            "created_at": "2018-01-12T10:35:13.908Z",
+            "updated_at": "2018-01-12T10:35:13.908Z",
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2280112,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No problem \nThanks for the quick feedback.\n\nThanks",
+            "automated_response": false,
+            "created_at": "2018-01-12T13:37:40.982Z",
+            "updated_at": "2018-01-12T13:37:40.982Z",
+            "actor": {
+                "username": "finb",
+                "cleared": false,
+                "verified": false,
+                "url": "/finb",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/607/e94dc1d2039dc6ca53eb72d1ef6991346ac4de29_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2280116,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-01-12T13:38:42.914Z",
+            "updated_at": "2018-01-12T13:38:42.914Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "finb",
+                "cleared": false,
+                "verified": false,
+                "url": "/finb",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/607/e94dc1d2039dc6ca53eb72d1ef6991346ac4de29_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2424146,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T07:18:57.583Z",
+            "updated_at": "2018-02-23T07:18:57.583Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQTW5N2UI%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDD1i3LYDyd6aHvd3HlI33epLYZW0pok98JBc8Mfa86BQIgRXbBVs6snAIIu0Lc8lDE%2BRwd4I9stxP1dm7ma%2BT%2B960quwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLX3MdTcD%2FtbKioD9CqPBZ5W%2BqVMdHpdZANkqKRkD%2BI6Lg2bgGhdIgo%2BGTlnVOoa0ecknz3eENoVabJBhzA%2Bj5HbJtGtbVv6oi2GFTK4QVu8tWdn9LnhbXjxpcA7dQkuykepnFHEgf1k%2BawyuqlsV9aGpNIXtNIZaCKvf2nF62VIMZL%2BjAlK89d1KMSBcMCHx8AglxcJ6aW%2FdjkbdzEp4HHfNu8xrYxjvPs7%2Fvdl5qr0ogWYnILzE02f93FfD9UpTixTWg8WjjC%2FEOayl0rLsxaO979N8s4wKqs%2FaF44tzIHzQGAhZ1GWNDCGrg1dQ3wKYj86dgoFJ7uncMoHigroIosfGufiyQm0PK8pQY0OZ0sS8ZoTtfY95Xmoxd%2BHshoGUER7i2jtIpNXWGWgUFd41NRiRdSt2a%2F%2FvhL8Y%2FPKhn%2FyFl1yH5nPqPYK%2FTlGBpQ3mvPSW4C3cwomyxnaYTZ8d0cZYXbt9L9cDOGxy6Px%2Fm8md3Wu3v935Oos79ZowPtHsYZfeOtW8UPTHvhGyJma0wrBSl7sV4OSD9xxitU7TskcitF9zFJUcSDyqswOT%2BKYj%2Bpn9y8ZpBPJSkwSx4nVPRFqbG4BYiUFXtbChhq2xETk1v3lTW%2B88QjkYKlGESBp4YRl1NA%2FN5opa5hBjY5%2FrpR4eSqr1sL3AobzkuW5%2B2Jn6aKtIfswCXzzZou9uOErvBULe8T0170c9VWOB0XfbLv7Km0DbrOJvqBeTbbbs7KQasAeG52uCexNYylFkOHf%2FgwTzLM5IVEogrCpg63J5gxnUWFRD2SEfMW%2FzmrCc4WTxo4iH4dFy7uNNXDI%2FLDxcgMlgRdfUCJB4K2wMAdY4P5470pUHy1sGWgWOjqN0lioErWF4o5uHjd4CvSvdEw6Zu2pwY6sQFPk0Fetn%2FIa9xJW%2BZItRa3W2G%2BR0uXE7SjoenUfxVuJinEYLgCleCkkHDO4gYgTjW%2BJroPlP9CFVETtxi4MVh11fL%2F53nuUkf9hDTIQ65KGj6TgceWLrMZjFUCn%2B0MKXvJGURvJ6eBvxvpU3JWmYbsx6GzJfTlTCsjgp6mPnofSpTawIfaasDyuIBXylVKbYe77ydivwLW2mmxVW9kLKt2Tz7NDZft2HwvI9d0mE9ngi8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0a0ac71b761d50950cbe0261e5247834e3e22be939a1e3a8ab0bc6443f2510a8"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2424147,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T07:18:57.642Z",
+            "updated_at": "2018-02-23T07:18:57.642Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQTW5N2UI%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDD1i3LYDyd6aHvd3HlI33epLYZW0pok98JBc8Mfa86BQIgRXbBVs6snAIIu0Lc8lDE%2BRwd4I9stxP1dm7ma%2BT%2B960quwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLX3MdTcD%2FtbKioD9CqPBZ5W%2BqVMdHpdZANkqKRkD%2BI6Lg2bgGhdIgo%2BGTlnVOoa0ecknz3eENoVabJBhzA%2Bj5HbJtGtbVv6oi2GFTK4QVu8tWdn9LnhbXjxpcA7dQkuykepnFHEgf1k%2BawyuqlsV9aGpNIXtNIZaCKvf2nF62VIMZL%2BjAlK89d1KMSBcMCHx8AglxcJ6aW%2FdjkbdzEp4HHfNu8xrYxjvPs7%2Fvdl5qr0ogWYnILzE02f93FfD9UpTixTWg8WjjC%2FEOayl0rLsxaO979N8s4wKqs%2FaF44tzIHzQGAhZ1GWNDCGrg1dQ3wKYj86dgoFJ7uncMoHigroIosfGufiyQm0PK8pQY0OZ0sS8ZoTtfY95Xmoxd%2BHshoGUER7i2jtIpNXWGWgUFd41NRiRdSt2a%2F%2FvhL8Y%2FPKhn%2FyFl1yH5nPqPYK%2FTlGBpQ3mvPSW4C3cwomyxnaYTZ8d0cZYXbt9L9cDOGxy6Px%2Fm8md3Wu3v935Oos79ZowPtHsYZfeOtW8UPTHvhGyJma0wrBSl7sV4OSD9xxitU7TskcitF9zFJUcSDyqswOT%2BKYj%2Bpn9y8ZpBPJSkwSx4nVPRFqbG4BYiUFXtbChhq2xETk1v3lTW%2B88QjkYKlGESBp4YRl1NA%2FN5opa5hBjY5%2FrpR4eSqr1sL3AobzkuW5%2B2Jn6aKtIfswCXzzZou9uOErvBULe8T0170c9VWOB0XfbLv7Km0DbrOJvqBeTbbbs7KQasAeG52uCexNYylFkOHf%2FgwTzLM5IVEogrCpg63J5gxnUWFRD2SEfMW%2FzmrCc4WTxo4iH4dFy7uNNXDI%2FLDxcgMlgRdfUCJB4K2wMAdY4P5470pUHy1sGWgWOjqN0lioErWF4o5uHjd4CvSvdEw6Zu2pwY6sQFPk0Fetn%2FIa9xJW%2BZItRa3W2G%2BR0uXE7SjoenUfxVuJinEYLgCleCkkHDO4gYgTjW%2BJroPlP9CFVETtxi4MVh11fL%2F53nuUkf9hDTIQ65KGj6TgceWLrMZjFUCn%2B0MKXvJGURvJ6eBvxvpU3JWmYbsx6GzJfTlTCsjgp6mPnofSpTawIfaasDyuIBXylVKbYe77ydivwLW2mmxVW9kLKt2Tz7NDZft2HwvI9d0mE9ngi8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0a0ac71b761d50950cbe0261e5247834e3e22be939a1e3a8ab0bc6443f2510a8"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

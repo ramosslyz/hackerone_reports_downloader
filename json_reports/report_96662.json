@@ -1,0 +1,309 @@
+{
+    "id": 96662,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NjY2Mg==",
+    "url": "https://hackerone.com/reports/96662",
+    "title": "crossdomain.xml too permissive on eu1.badoo.com, us1.badoo.com, etc.",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2015-10-29T23:54:41.876Z",
+    "submitted_at": "2015-10-29T23:54:41.876Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "stefanofinding",
+        "url": "/stefanofinding",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/2udi3vbdhzbpwjlrvhxisg1q29dk/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 21554,
+        "url": "https://hackerone.com/bumble",
+        "handle": "bumble",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Bumble",
+            "twitter_handle": "bumble",
+            "website": "https://bumble.com/",
+            "about": "Bumble - Date, Meet, Network Better"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-08-31T10:20:34.330Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-08-01T10:20:24.040Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "__Description__\n\nThe file _crossdomain.xml_ that is hosted at https://[eu1,us1,etc].badoo.com/crossdomain.xml is too permissive in the scope of allowed domains to access the content in the domain using Flash.\nWhen you contact Badoo via https://us1.badoo.com/feedback/, you can upload a file. This file can be a Flash file. This file is hosted at https://static-*.badoo.com which is an allowed domain because of the line `<allow-access-from domain=\"*.badoo.com\"/>` in the _crossdomain.xml_ file.\nThe problem is that an attacker can upload a malicious Flash file and load it from an external website. This allows to read and update information of the current logged in user.\n\n__Proof of concept__\n\n1. Download the file _bug.jpg_ that I attached (the source code is attached too).\n2. Go to https://us1.badoo.com/feedback/.\n3. Click on _General question_.\n4. Fill the required fields.\n5. Click _Attach screenshot_.\n6. Select the file you downloaded in step 1 and click _Open_.\n7. When the upload is finished, click _Send message_.\n8. Go to the inbox of the email address that you entered for _Email address_.\n9. Open the email with the subject \"We've received your query\", sent by Badoo Support Team.\n10. Click on the link that appears (like: https://us1.badoo.com/support.phtml?rid=11761766:noX7xh7DgCDiU80B).\n11. Click on the name of the file that you uploaded (_bug.jpg_). Appears below the message you wrote.\n12. Right click on the black box that is shown, and find the `<img alt=\"\" class=\"pv-big\" id=\"big_photo\">` element.\n13. Save the `src` value of the element (it looks like https://static-us2.badoo.com/file/36140042.0?signature=41918aa731579d62a601d6391ac793f1&amp;dt=9tKskfyuTrlkjvLg).\n14. Download the file _bug.html_ that I attached.\n15. Open the file _bug.html_ in a text editor. Change the value of the attribute `src` of the element `<embed>` to the value that you saved in step 13.\n16. Serve the file _bug.html_ from a server (can be local, like `php -S 0.0.0.0:8000`).\n17. Verify that you are logged in Badoo.\n18. Open the file _bug.html_ from the server using the web browser (like http://localhost:8000/bug.html).\n19. The content of the endpoint https://us1.badoo.com/settings is showed in the `<textarea>`.\n\nThis is a simple proof of concept, but it's possible to make POST requests too.\n\nLet me know if something is not well explained.",
+    "bounty_amount": "310.0",
+    "formatted_bounty": "$310",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 59462,
+            "file_name": "bug.as",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/059/462/9ebea60de1d1cad87599bb14df2729238066675c/bug.as?response-content-disposition=attachment%3B%20filename%3D%22bug.as%22%3B%20filename%2A%3DUTF-8%27%27bug.as&response-content-type=text%2Fx-java&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075951Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9ad8ffb41f7029b0c547524f6a9d47840efff8d5ebc8d79f2ba9f02dd5c4d7d0",
+            "file_size": 1153,
+            "type": "text/x-java"
+        },
+        {
+            "id": 59463,
+            "file_name": "bug.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/059/463/f506c240ed03a3df50dd07ea90eca9efab0a8894/bug.jpg?response-content-disposition=attachment%3B%20filename%3D%22bug.jpg%22%3B%20filename%2A%3DUTF-8%27%27bug.jpg&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075951Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6bbc79b48981410a31a3bf8d352d568222bd38d3ba9f4e76ce4a99e5517c62b0",
+            "file_size": 1597,
+            "type": "application/x-shockwave-flash"
+        },
+        {
+            "id": 59464,
+            "file_name": "bug.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/059/464/b8e3fad124eb9243b0f799c8fdddc6da8e95d7c6/bug.html?response-content-disposition=attachment%3B%20filename%3D%22bug.html%22%3B%20filename%2A%3DUTF-8%27%27bug.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075951Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=30e3655b9f962ef0589948da57ca845afecb077d9a23ddeb08386b4af1385232",
+            "file_size": 508,
+            "type": "text/html"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-08-31T10:20:24.130Z",
+    "allow_singular_disclosure_after": -189121167.2133993,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "flamezzz",
+        "thaivu",
+        "mashoud1122",
+        "bogdantcaciuc",
+        "michan",
+        "malcolmx",
+        "eveeez",
+        "sumit7",
+        "hacklad",
+        "klau5",
+        "and 5 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 642299,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-11-03T08:21:18.756Z",
+            "updated_at": "2015-11-03T08:21:18.756Z",
+            "actor": {
+                "username": "iyakovlev",
+                "cleared": false,
+                "verified": false,
+                "url": "/iyakovlev",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/745/0021196ae41e34df146de08f7438520dcebfded9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        },
+        {
+            "id": 642312,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hello @esevece!\nThank you very much for such clear and detailed report! We've decided to assign a 2nd category to this vulnerability, and reward you with a £200, which is a bit less than $310.\nWe hope that you will continue testing of our projects to help us make them more secure! ",
+            "automated_response": false,
+            "created_at": "2015-11-03T08:27:37.498Z",
+            "updated_at": "2015-11-03T08:28:01.228Z",
+            "actor": {
+                "url": "/bumble",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Bumble"
+                }
+            },
+            "bounty_amount": "310.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "bumble",
+            "collaborator": {
+                "username": "stefanofinding",
+                "url": "/stefanofinding"
+            }
+        },
+        {
+            "id": 642314,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @iyakovlev!\nThank you for the reward! I'm glad the report was clear and you were able to reproduce the proof of concept.\nI will keep testing. :)",
+            "automated_response": false,
+            "created_at": "2015-11-03T08:35:59.818Z",
+            "updated_at": "2015-11-03T08:35:59.818Z",
+            "actor": {
+                "username": "stefanofinding",
+                "cleared": false,
+                "verified": false,
+                "url": "/stefanofinding",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2udi3vbdhzbpwjlrvhxisg1q29dk/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        },
+        {
+            "id": 834862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Report is completely resolved, thanks.\n",
+            "automated_response": false,
+            "created_at": "2016-03-11T10:46:35.190Z",
+            "updated_at": "2016-03-11T10:46:35.190Z",
+            "actor": {
+                "username": "uyga",
+                "cleared": false,
+                "verified": false,
+                "url": "/uyga",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/780/942fbff2730b14a4cb3450a1c78b108cf3abbe91_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "stefanofinding",
+                "url": "/stefanofinding"
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        },
+        {
+            "id": 835261,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Perfect!",
+            "automated_response": false,
+            "created_at": "2016-03-11T15:49:20.937Z",
+            "updated_at": "2016-03-11T15:49:20.937Z",
+            "actor": {
+                "username": "stefanofinding",
+                "cleared": false,
+                "verified": false,
+                "url": "/stefanofinding",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2udi3vbdhzbpwjlrvhxisg1q29dk/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        },
+        {
+            "id": 1881884,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I would like to disclose this report if you agree.",
+            "automated_response": false,
+            "created_at": "2017-08-01T10:20:24.087Z",
+            "updated_at": "2017-08-01T10:20:24.087Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "stefanofinding",
+                "cleared": false,
+                "verified": false,
+                "url": "/stefanofinding",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2udi3vbdhzbpwjlrvhxisg1q29dk/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        },
+        {
+            "id": 1968360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-31T10:20:34.364Z",
+            "updated_at": "2017-08-31T10:20:34.364Z",
+            "actor": {
+                "url": "/bumble",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Bumble"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "bumble"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

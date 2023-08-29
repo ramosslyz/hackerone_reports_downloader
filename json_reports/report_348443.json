@@ -1,0 +1,433 @@
+{
+    "id": 348443,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNDg0NDM=",
+    "url": "https://hackerone.com/reports/348443",
+    "title": "Snippet JS template allows attacker to read a user's private snippets",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2018-05-08T03:09:57.685Z",
+    "submitted_at": "2018-05-08T03:09:57.685Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jobert",
+        "url": "/jobert",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 264,
+        "url": "https://hackerone.com/gitlab",
+        "handle": "gitlab",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "GitLab",
+            "twitter_handle": "gitlab",
+            "website": "https://about.gitlab.com",
+            "about": "A single application for the entire software development lifecycle."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-03-03T03:03:14.355Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-02-01T03:03:12.980Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "These days snippets can be embedded in a site other than the GitLab instance. An embed link is only generated for public snippets, as can be seen in the `app/views/shared/snippets/_header.html.haml`:\n\n```haml\n  - if public_snippet?\n    .embed-snippet\n      .input-group\n        .input-group-btn\n          %button.btn.embed-toggle{ 'data-toggle': 'dropdown', type: 'button' }\n            %span.js-embed-action= _(\"Embed\")\n            = sprite_icon('angle-down', size: 12)\n          %ul.dropdown-menu.dropdown-menu-selectable.embed-toggle-list\n```\n\nWhen visiting a public snippet, the embed link is shown at the top of the page, as such:\n\n{F294865}\n\nAs you can see, there's no entropy other than the snippet ID, which is an auto incrementing ID. It turns out that the controller itself doesn't limit the user to generate a JS template for a private snippet though. When appending `.js` to a private snippet, it'll return the JavaScript template, which contains the contents of a private snippet. This can be used to access a private snippet the attacker doesn't have access to from a 3rd party website.\n\nTo reproduce, sign in on gitlab.com and create a private snippet. For the sake of the PoC, let's create global snippet (not one that is tied to a project). It also works with a project, but in that case the attacker has to know the namespace and project path. Here's a PoC that'll call the `alert` function with the first line of a private snippet:\n\n```html\n<html>\n<head>\n<style>\n.gitlab-embed-snippets {\n  display: none;\n}\n</style>\n<script src=\"https://gitlab.com/snippets/1714319.js\"></script>\n</head>\n<body>\n  <script>\n    alert(document.getElementById('LC1').innerHTML);\n  </script>\n</body>\n</html>\n```\n\nSimply replace the snippet ID in the `script` tag with whichever snippet ID the private snippet has. Save the HTML and load it from any other location, e.g. localhost or some domain. You'll notice that it'll alert the first line of the contents:\n\n{F294866}\n\n## Impact\n\nAn attacker could enumerate IDs and inject multiple `script` tags to try to determine the contents of private snippets. Not knowing which snippet IDs belong to a user increases the attack complexity, which lowers the overall severity of the vulnerability. Private snippets may contain sensitive information that is not supposed to be viewable to anyone outside of the creator itself.",
+    "bounty_amount": "300.0",
+    "formatted_bounty": "$300",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 294865,
+            "file_name": "Screen_Shot_2018-05-07_at_8.01.10_PM.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/294/865/def9787308ff6216542c698a74c4ac7ed1c97f0a/Screen_Shot_2018-05-07_at_8.01.10_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-05-07_at_8.01.10_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-05-07_at_8.01.10_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073430Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6c35b2354598cbe704f16135e4e71acdbb031a5b4c7a996fdda790c891eb8c53",
+            "file_size": 89829,
+            "type": "image/png"
+        },
+        {
+            "id": 294866,
+            "file_name": "Screen_Shot_2018-05-07_at_8.05.10_PM.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/294/866/6c9b2b114e2b4c501e553d632815d1a9edb03329/Screen_Shot_2018-05-07_at_8.05.10_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-05-07_at_8.05.10_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-05-07_at_8.05.10_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073430Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4d46bbad3322a41b8eb437695792c3a91e01890a7641e416e15670eb94951fc0",
+            "file_size": 220949,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-03-03T03:03:13.076Z",
+    "allow_singular_disclosure_after": -141712277.40643102,
+    "singular_disclosure_allowed": true,
+    "vote_count": 164,
+    "voters": [
+        "8ayac",
+        "mashoud1122",
+        "sameerphad72",
+        "bl4de",
+        "mahatmacrond",
+        "dhakal_ananda",
+        "ali",
+        "mik317",
+        "verichains",
+        "aryan2808",
+        "and 154 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2726440,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jobert  ,\n\nThank you for submitting this report. We are currently investigating the issue. Due to our current workload, we will get back with you within the next week with an update.\n\nBest regards,\nJames",
+            "automated_response": false,
+            "created_at": "2018-05-10T20:32:58.247Z",
+            "updated_at": "2018-05-10T20:32:58.247Z",
+            "actor": {
+                "username": "jritchey",
+                "cleared": false,
+                "verified": false,
+                "url": "/jritchey",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2798491,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @jobert,\n\nWere you able to do this in a browser window that was not logged in as the owner of the snippet?  I was unable to reproduce the results by using a new private browser window.  Directly requesting the \"/snippet/xxxxx.js\" using wget failed with an authentication error as well.\n\nRegards,\nAntony",
+            "automated_response": false,
+            "created_at": "2018-05-25T22:51:35.442Z",
+            "updated_at": "2018-05-25T22:51:35.442Z",
+            "actor": {
+                "username": "asaba",
+                "cleared": false,
+                "verified": false,
+                "url": "/asaba",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/261/798/9526c5243e43f554dd0a5b900547c1f5ea6751ea_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2885704,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @asaba - no, it only works if an attacker were to have a victim click on a link. It could then execute the payload and download the victim's private snippets. This isn't an IDOR vulnerability. Sorry for the delay by the way, I was out traveling. Let me know if you need any additional information.",
+            "automated_response": false,
+            "created_at": "2018-06-14T20:26:33.502Z",
+            "updated_at": "2018-06-14T20:26:33.502Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2917385,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-21T19:27:07.946Z",
+            "updated_at": "2018-06-21T19:27:07.946Z",
+            "additional_data": {
+                "old_severity": "Medium (5.3)",
+                "new_severity": "Low",
+                "old_severity_id": 150417,
+                "new_severity_id": 171470
+            },
+            "actor": {
+                "username": "asaba",
+                "cleared": false,
+                "verified": false,
+                "url": "/asaba",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/261/798/9526c5243e43f554dd0a5b900547c1f5ea6751ea_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2917526,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jobert ,\n\nWe have classified this as low since it primarily relies on permissions the owning user already has, but violates best practices around using autoincrementing IDs.\n\nWe are tracking progress internally here: https://gitlab.com/gitlab-org/gitlab-ce/issues/48259.  We will disclose this report 30 days after the patch is released.\n\nRegards,\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2018-06-21T19:55:39.927Z",
+            "updated_at": "2018-06-21T19:55:39.927Z",
+            "actor": {
+                "username": "asaba",
+                "cleared": false,
+                "verified": false,
+                "url": "/asaba",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/261/798/9526c5243e43f554dd0a5b900547c1f5ea6751ea_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2917528,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-21T19:56:24.167Z",
+            "updated_at": "2018-06-21T19:56:24.167Z",
+            "actor": {
+                "url": "/gitlab",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "GitLab"
+                }
+            },
+            "bounty_amount": "300.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "gitlab",
+            "collaborator": {
+                "username": "jobert",
+                "url": "/jobert"
+            }
+        },
+        {
+            "id": 2919735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "👍",
+            "automated_response": false,
+            "created_at": "2018-06-22T06:01:00.128Z",
+            "updated_at": "2018-06-22T06:01:00.128Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 2923426,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-22T19:24:42.810Z",
+            "updated_at": "2018-06-22T19:24:42.810Z",
+            "actor": {
+                "username": "asaba",
+                "cleared": false,
+                "verified": false,
+                "url": "/asaba",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/261/798/9526c5243e43f554dd0a5b900547c1f5ea6751ea_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 3633890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-11-13T12:30:56.225Z",
+            "updated_at": "2018-11-13T12:30:56.225Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 438878
+            },
+            "actor": {
+                "username": "chaosbolt",
+                "cleared": false,
+                "verified": false,
+                "url": "/chaosbolt",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/d81xKAqqBxYLV8QQn83n3V5d/f91f824ee62f9e17cbde0ea8a0899aac93d25148b96b44b4ca8321e0bc9b12f1"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 4074228,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi,\n\nThank you again for the report! Your finding has been patched in GitLab version 11.6.1.\n\nWe look forward to your next report!\n\nBest regards,\nSecurity Team | GitLab Inc.\n",
+            "automated_response": false,
+            "created_at": "2019-01-31T23:32:32.644Z",
+            "updated_at": "2019-01-31T23:32:32.644Z",
+            "actor": {
+                "username": "asaba",
+                "cleared": false,
+                "verified": false,
+                "url": "/asaba",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/261/798/9526c5243e43f554dd0a5b900547c1f5ea6751ea_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "jobert",
+                "url": "/jobert"
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 4075683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thanks @asaba!",
+            "automated_response": false,
+            "created_at": "2019-02-01T03:03:13.007Z",
+            "updated_at": "2019-02-01T03:03:13.007Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 4245410,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-03-03T03:03:14.384Z",
+            "updated_at": "2019-03-03T03:03:14.384Z",
+            "actor": {
+                "url": "/gitlab",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "GitLab"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

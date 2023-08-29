@@ -1,0 +1,287 @@
+{
+    "id": 440963,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NDA5NjM=",
+    "url": "https://hackerone.com/reports/440963",
+    "title": "Privilege Escalation by abusing non-existent path. (Windows)",
+    "state": "Closed",
+    "substate": "duplicate",
+    "severity_rating": "medium",
+    "readable_substate": "Duplicate",
+    "created_at": "2018-11-14T22:16:09.559Z",
+    "submitted_at": "2018-11-14T22:16:09.559Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "0x09al",
+        "url": "/0x09al",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15252,
+        "url": "https://hackerone.com/portswigger",
+        "handle": "portswigger",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/252/60e8778f4f1fee57ea2b164a7d2ec1e2d2dd7bc8_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/252/60e8778f4f1fee57ea2b164a7d2ec1e2d2dd7bc8_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "PortSwigger Web Security",
+            "twitter_handle": "Burp_Suite",
+            "website": "https://portswigger.net",
+            "about": "Burp Suite is the leading software for web security testing"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-03-13T08:50:22.266Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-03-12T13:34:46.408Z",
+    "team_member_agreed_on_going_public_at": "2019-03-13T08:50:22.190Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Vulnerability Overview\nWhen Burpsuite runs, it tries to load some DLLs in the path ```C:\\Program%20Files```. Because the folder doesn't exists, it can be created **by a low-privileged user** which can inject arbitrary DLL into the process when another ** privileged user** runs Burpsuite. I have verified the vulnerability in the Pro Version but I'm pretty sure the community version is also affected.\n\n# Vulnerability Description\nMonitoring the BurpSuite application in Process Monitor, we can see that it tries to load 2 DLLs from a directory that does not exist.\n{F375743}\n\nThe interesting thing here is, that on Windows (verified for 7,10,Server 2008 R2 and Server 2012) every authenticated user is allowed to add new folders on the ```C:\\``` drive. This in turn allows an attacker to create the folder structure and inject arbitrary DLLs to Burpsuite.\n\n# Vulnerability Reproduction Steps\n1. Login as a low-privileged user on a system which has Burpsuite installed.\n{F375748}\n2. Create the directory tree as shown in the image below.\n{F375753}\n3. Copy the attached ```sunec.dll``` file to the last directory (amd64).\n4. Simulate the login of a privileged user , run Burpsuite and a message should pop up.\n{F375756}\n\n## Impact\n\nA low privileged user can execute code as a high privileged user.",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": 257004,
+    "original_report_url": "https://hackerone.com/reports/257004",
+    "attachments": [
+        {
+            "id": 375743,
+            "file_name": "Trying_to_Load_from_DLLs.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/375/743/95cc03a992776f7b2c8eca0cf861d1c6802072c4/Trying_to_Load_from_DLLs.png?response-content-disposition=attachment%3B%20filename%3D%22Trying_to_Load_from_DLLs.png%22%3B%20filename%2A%3DUTF-8%27%27Trying_to_Load_from_DLLs.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073428Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=06f9caf3d4d32dff06bf64289ae4596e5f668da14b505001ee83184897b59379",
+            "file_size": 17003,
+            "type": "image/png"
+        },
+        {
+            "id": 375748,
+            "file_name": "low_priv_user.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/375/748/0135d010931bc85832d150bca2964587eb3c39ba/low_priv_user.png?response-content-disposition=attachment%3B%20filename%3D%22low_priv_user.png%22%3B%20filename%2A%3DUTF-8%27%27low_priv_user.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073428Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4d5602a2046fc817230f79396e5354a6705c717ab36711e719a0e9fe804ba442",
+            "file_size": 26908,
+            "type": "image/png"
+        },
+        {
+            "id": 375753,
+            "file_name": "directory_tree.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/375/753/9773d30ffa7ed200026ee8d4b26e7e686578110d/directory_tree.png?response-content-disposition=attachment%3B%20filename%3D%22directory_tree.png%22%3B%20filename%2A%3DUTF-8%27%27directory_tree.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073428Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6393c647ccb75a3415b2eab3e80a5c08509f8f7bf19a79eb4e0a9671d7a8db45",
+            "file_size": 5196,
+            "type": "image/png"
+        },
+        {
+            "id": 375754,
+            "file_name": "sunec.dll",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/375/754/e0e3e158e41fa72a479d68e6eb8af75cebad2040/sunec.dll?response-content-disposition=attachment%3B%20filename%3D%22sunec.dll%22%3B%20filename%2A%3DUTF-8%27%27sunec.dll&response-content-type=application%2Fx-dosexec&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073428Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2ec3ae6408291240f7aac4fcb96f34a5c127cc6aeb30432509e5e0dd52066099",
+            "file_size": 10752,
+            "type": "application/x-dosexec"
+        },
+        {
+            "id": 375756,
+            "file_name": "dll_Hijack_Successful.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/375/756/2fff16d04a77fedfa9bafa956063276b41009b4a/dll_Hijack_Successful.png?response-content-disposition=attachment%3B%20filename%3D%22dll_Hijack_Successful.png%22%3B%20filename%2A%3DUTF-8%27%27dll_Hijack_Successful.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073428Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1b4f7f895b104af36c89f7e9a0cb9a1fb4046aa091e2254228883d3fb0bbe201",
+            "file_size": 127681,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 57,
+    "voters": [
+        "mirchr",
+        "foobar7",
+        "kapytein",
+        "sameerphad72",
+        "healdb",
+        "ali",
+        "tulswani",
+        "bugdiscloseguys",
+        "savitar0x01",
+        "xiaoyinl",
+        "and 47 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.3,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 169,
+        "asset_type": "DOWNLOADABLE_EXECUTABLES",
+        "asset_identifier": "Burp Suite Pro/Community",
+        "max_severity": "high"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3647196,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugDuplicate",
+            "message": "Thanks for your report. Unfortunately this is a duplicate of an existing report that we decided was out of scope as Burp trusts the system it's running on by design - as stated in our bounty brief, we are only interested in DLL hijacking targeting the installer.\n\nThat said, we'll have a fresh internal discussion on whether this should be patched.",
+            "automated_response": false,
+            "created_at": "2018-11-15T09:27:48.740Z",
+            "updated_at": "2018-11-15T09:27:48.740Z",
+            "original_report_id": 257004,
+            "actor": {
+                "username": "albinowax",
+                "cleared": true,
+                "verified": true,
+                "url": "/albinowax",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "portswigger"
+        },
+        {
+            "id": 3647351,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @albinowax ,\nOk cool no problem. Regarding the issue, I'm pretty sure this needs to be patched because it break the boundaries of user privilege separation.",
+            "automated_response": false,
+            "created_at": "2018-11-15T10:17:51.796Z",
+            "updated_at": "2018-11-15T10:17:51.796Z",
+            "actor": {
+                "username": "0x09al",
+                "cleared": false,
+                "verified": false,
+                "url": "/0x09al",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "portswigger"
+        },
+        {
+            "id": 4307776,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @albinowax ,\nSince this was resolved, can we publicly disclose this one ?\nThanks",
+            "automated_response": false,
+            "created_at": "2019-03-12T13:34:46.439Z",
+            "updated_at": "2019-03-12T13:34:46.439Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "0x09al",
+                "cleared": false,
+                "verified": false,
+                "url": "/0x09al",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "portswigger"
+        },
+        {
+            "id": 4314238,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Sure. For context, this issue came from the Java version, and was patched in 2.0.18 release by bundling OpenJDK 11. As per our policy this was treated as a normal bug rather than a security issue as Burp Suite Pro cannot be run securely on a system that is already compromised (ie already has a local malicious user).",
+            "automated_response": false,
+            "created_at": "2019-03-13T08:50:22.222Z",
+            "updated_at": "2019-03-13T08:50:22.222Z",
+            "actor": {
+                "username": "albinowax",
+                "cleared": true,
+                "verified": true,
+                "url": "/albinowax",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "portswigger"
+        },
+        {
+            "id": 4314239,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-03-13T08:50:22.286Z",
+            "updated_at": "2019-03-13T08:50:22.286Z",
+            "actor": {
+                "username": "albinowax",
+                "cleared": true,
+                "verified": true,
+                "url": "/albinowax",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "portswigger"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

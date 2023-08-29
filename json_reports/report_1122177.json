@@ -1,0 +1,457 @@
+{
+    "id": 1122177,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTIyMTc3",
+    "url": "https://hackerone.com/reports/1122177",
+    "title": "Third party app could steal access token as well as protected files using inAppBrowser",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2021-03-10T11:15:25.000Z",
+    "submitted_at": "2021-03-10T11:15:25.020Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "rahulkankrale",
+        "url": "/rahulkankrale",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/005/502/d37e781fc65b9d9b3af63e6a0094450fe5c68509_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35710,
+        "url": "https://hackerone.com/reddit",
+        "handle": "reddit",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Reddit",
+            "twitter_handle": "reddit",
+            "website": "https://www.reddit.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-10-27T14:10:40.811Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-05-20T10:12:35.335Z",
+    "team_member_agreed_on_going_public_at": "2021-10-27T14:10:40.625Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nReddit android app version : 2021.8.0 \nOS: Android 11\n\nThis app uses com.reddit.frontpage.RedditDeepLinkActivity class to route app links including deeplink and reddit.com links while this class does not check for scheme, host and it opens given url in InAppBrowser and IAB have access to apps private/protected files.\n\nSo any third party app could steal session token from \"data/data/com.reddit.frontpage/shared_prefs/com.reddit.auth_active.UserName.xml\" files as well as rest of sensitive files like DB, Cookies etc. \n\n## Impact:\nThird party app could steal access token as well as protected files using inAppBrowser\n\n## Steps To Reproduce:\nTo reproduce this issue I have created basic poc:\n  1. Create third-party app using snippet (Replace UserName to victims username i.e. file:///data/data/com.reddit.frontpage/shared_prefs/com.reddit.auth_active.**Strong-Sun628**.xml) :\n\n```java \n        Intent intent = new Intent();\n        intent.setClassName(\"com.reddit.frontpage\", \"com.reddit.frontpage.RedditDeepLinkActivity\");\n        intent.setData(Uri.parse(\"file:///data/data/com.reddit.frontpage/shared_prefs/com.reddit.auth_active.UserName.xml\"));\n        startActivity(intent);\n``` \n  1. Once open third-party app, Reddit app opens InAppBrowser with auth_active file and its data contained token.\n  2. We could also reproduce this quickly using adb:\n\n```shell\nadb shell am start -n \"com.reddit.frontpage/com.reddit.frontpage.RedditDeepLinkActivity\" -d \"file:///data/data/com.reddit.frontpage/shared_prefs/com.reddit.frontpage_preferences.xml\"\n```\n\n## Supporting Material/References:\nVideo : Proof of concept\n  * F1225199\n\nif required I can submit complete POC to show how third-party app could save this files and send to attackers server.\n\nThanks\nRahul\n\n## Impact\n\nThird party app could steal access token as well as protected files using inAppBrowser",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1225199,
+            "file_name": "reddit.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/26b1fe87y3ry9rpi15105ofh3rq7?response-content-disposition=attachment%3B%20filename%3D%22reddit.mp4%22%3B%20filename%2A%3DUTF-8%27%27reddit.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5f7047e25bbd1e493feebe9b24f75e8aab673d4a141f4770b30b417537c753df",
+            "file_size": 1082690,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 24,
+    "voters": [
+        "awakening",
+        "drsniper",
+        "bombon",
+        "fanimalikhack",
+        "run_win",
+        "nmochea",
+        "kmxx",
+        "h4x0r_dz",
+        "akashhamal0x01",
+        "0xwise",
+        "and 14 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 22298,
+        "asset_type": "GOOGLE_PLAY_APP_ID",
+        "asset_identifier": "com.reddit.frontpage",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10960557,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hello @rahulkankrale, \nIn order to confirm the impact of this finding, could you please provide a PoC that leaks sensitive information that would lead to other attacks such as session tokens, cookies, etc...? \n\nThanks,\n@0xcain",
+            "automated_response": false,
+            "created_at": "2021-03-11T17:46:06.926Z",
+            "updated_at": "2021-03-11T17:46:06.926Z",
+            "actor": {
+                "username": "0xcain",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcain",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ucqykd0scuywp0i3iiioil8xt6c7/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22circle-cropped.png%22%3B%20filename%2A%3DUTF-8%27%27circle-cropped.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=924e03c5d856e0553c91d19f796fdef37ba94286a24db92d81572a19b1971837"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 10960658,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @0xcain\n\nIn video poc F1225199: I have already demonstrated \"token\" leakage which was stored in data/data/com.reddit.frontpage/shared_prefs/com.reddit.auth_active.Strong-Sun628.xml\n\nThanks \nRahul",
+            "automated_response": false,
+            "created_at": "2021-03-11T17:57:08.525Z",
+            "updated_at": "2021-03-11T17:58:41.099Z",
+            "actor": {
+                "username": "rahulkankrale",
+                "cleared": true,
+                "verified": true,
+                "url": "/rahulkankrale",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/502/d37e781fc65b9d9b3af63e6a0094450fe5c68509_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 10995426,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-15T11:56:32.995Z",
+            "updated_at": "2021-03-15T11:56:32.995Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1124898
+            },
+            "actor": {
+                "username": "dirtycoder",
+                "cleared": true,
+                "verified": true,
+                "url": "/dirtycoder",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/061/759/88cb62a7598caf1eb0e2b380103422bcc6f2d384_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11028665,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hello @rahulkankrale, \nThanks for your report. \nI'm having issues arriving at the result you've provided in your video as this is the only result that I get on my end: \n\n{F1233586}\n\nThe Reddit app is installed and I'm logged into my account, so please let me know if there are any additional steps I need to be taking in order to receive the sensitive data that you've demonstrated. \n\nThanks,\n@0xcain\n",
+            "automated_response": false,
+            "created_at": "2021-03-17T15:05:46.935Z",
+            "updated_at": "2021-03-17T15:05:46.935Z",
+            "actor": {
+                "username": "0xcain",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcain",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ucqykd0scuywp0i3iiioil8xt6c7/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22circle-cropped.png%22%3B%20filename%2A%3DUTF-8%27%27circle-cropped.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=924e03c5d856e0553c91d19f796fdef37ba94286a24db92d81572a19b1971837"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1233586,
+                    "filename": "Screen_Shot_2021-03-17_at_10.58.49_AM.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/r7m3inabf04a1xvuyswnktj0uswq?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2021-03-17_at_10.58.49_AM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2021-03-17_at_10.58.49_AM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a315a7d8c225b8ca5a665c024dbb80e8f6b0fea8c6be1a7257fd9d059ef7dd19"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11029022,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @0xcain\nYou have used file:///data/data/com.reddit.frontpage/shared_prefs/com.reddit.frontpage_preferences.xml which i mentioned in step to for basic proof but see step 1 and my recent reply where i have used auth_active xml file which contains sensitive data:\n\nfile:///data/data/com.reddit.frontpage/shared_prefs/com.reddit.auth_active.Strong-Sun628.xml\n\nIn above file name replace username(Strong-Sun628) with your logged in username.\n\nSorry if any misunderstanding.\n\nRegards ",
+            "automated_response": false,
+            "created_at": "2021-03-17T15:17:40.628Z",
+            "updated_at": "2021-03-17T15:17:40.628Z",
+            "actor": {
+                "username": "rahulkankrale",
+                "cleared": true,
+                "verified": true,
+                "url": "/rahulkankrale",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/502/d37e781fc65b9d9b3af63e6a0094450fe5c68509_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11088414,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @rahulkankrale - I'm discussing this submission internally with the Reddit team. You will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2021-03-23T09:40:18.487Z",
+            "updated_at": "2021-03-23T09:40:18.487Z",
+            "actor": {
+                "username": "0xcain",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcain",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ucqykd0scuywp0i3iiioil8xt6c7/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22circle-cropped.png%22%3B%20filename%2A%3DUTF-8%27%27circle-cropped.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=924e03c5d856e0553c91d19f796fdef37ba94286a24db92d81572a19b1971837"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11167953,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2021-03-29T15:12:57.464Z",
+            "updated_at": "2021-03-29T15:12:57.464Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Medium",
+                "old_severity_id": null,
+                "new_severity_id": 1026324
+            },
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11167961,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Looks like we have a couple of loaders within that Activity, so we're taking a peek at where this invalidation is falling through. We use AirBnB's DeepLinkDispatch for these, and while some functions / endpoints are validated based on the initial path, there's no validation based on schema or hostname. \n```\n            new DeepLinkUtilLoader(),\n            new WikiDeepLinkModuleLoader(),\n            new MediaScreensDeepLinkModuleLoader(),\n            new VaultDeepLinkModuleLoader(),\n            new CrowdsourceTaggingDeepLinkModuleLoader()\n```\n\nRating this as a Medium because there is the ability to steal session information, but requires prior knowledge or additional chaining to get user's session file so prevents mass exploitation . Will get a dev to take a look at this",
+            "automated_response": false,
+            "created_at": "2021-03-29T15:14:01.852Z",
+            "updated_at": "2021-03-29T15:14:01.852Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11404786,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-15T16:01:25.630Z",
+            "updated_at": "2021-04-15T16:01:25.630Z",
+            "actor": {
+                "url": "/reddit",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Reddit"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "reddit",
+            "collaborator": {
+                "username": "rahulkankrale",
+                "url": "/rahulkankrale"
+            }
+        },
+        {
+            "id": 11404802,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Fix for this merged couple days ago (code below). This should be available in build out for next week. \n\n```\nval shouldFilter = FrontpageApplication.instance.userComponent.features.isDeepLinkFallbackFilterEnabled\n    if (!shouldFilter) {\n      NavigationUtil.launchUriWebView(activity = this, uri = uri)\n    } else {\n      if (uri.scheme == \"http\" || uri.scheme == \"https\") {\n        NavigationUtil.launchUriWebView(activity = this, uri = uri)\n      } else {\n\n        // Only way we can be in this state is, either we misconfigure a deeplink, or someone explicitly opens the an\n        // intent with the deeplink. We should not be opening these urls in a WebView.\n        RedditLogger.logNonFatalDontThrow { \"Invalid Deeplink: $uri\" }\n        startActivity(Intent(this, StartActivity::class.java))\n      }\n    }\n```\n\nThanks @rahulkankrale for the report",
+            "automated_response": false,
+            "created_at": "2021-04-15T16:03:20.815Z",
+            "updated_at": "2021-04-15T16:03:20.815Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "rahulkankrale",
+                "url": "/rahulkankrale"
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11818578,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Reddit is now public program so can I request for disclosure?\n\nThanks",
+            "automated_response": false,
+            "created_at": "2021-05-20T10:12:35.385Z",
+            "updated_at": "2021-05-20T10:12:35.385Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "rahulkankrale",
+                "cleared": true,
+                "verified": true,
+                "url": "/rahulkankrale",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/502/d37e781fc65b9d9b3af63e6a0094450fe5c68509_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 14079017,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-27T14:10:40.667Z",
+            "updated_at": "2021-10-27T14:10:40.667Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 14079018,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-27T14:10:40.861Z",
+            "updated_at": "2021-10-27T14:10:40.861Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,390 @@
+{
+    "id": 194866,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTQ4NjY=",
+    "url": "https://hackerone.com/reports/194866",
+    "title": "Deleting Key-value pair from Frozen HASH or Clearing a Frozen HASH",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "none",
+    "readable_substate": "Resolved",
+    "created_at": "2016-12-30T19:24:05.402Z",
+    "submitted_at": "2016-12-30T19:24:05.402Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "an0n-j",
+        "url": "/an0n-j",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/099/222/8fb256358976ee24d8bc993c42822d8476f5d816_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15668,
+        "url": "https://hackerone.com/shopify-scripts",
+        "handle": "shopify-scripts",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "paused",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "shopify-scripts",
+            "twitter_handle": "",
+            "website": "",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2017-01-05T16:49:46.236Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-01-05T16:49:46.200Z",
+    "team_member_agreed_on_going_public_at": "2017-01-05T16:19:50.472Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hey!\n\nwhile reviewing mruby for vulnerabilities, I stumble onto a snippet that allow an attacker to delete \"key-value Pair\" from a \"Frozen\" Hash or to clear the \"Frozen\" HASH.\n\nReproduction Step\n=============\n1.) Create a __Hash__ like  h = { \"a\" => 100, \"b\" => 200 }\n2.) __Freeze__ this hash\n3.) Now call ___delete___ method with __\"KEY\"__ (the case if you don't know the KEY then you can call ___.keys___ method to obtaine all available KEYS in the HASH) ( or call ___.clear___ method to clear the HASH )\n\nPOC\n===\n\nh = { \"a\" => 100, \"b\" => 200 }\nh.freeze\nh.delete(\"a\")\n@output = h\n\nLook at ___h___ you will get remaining values after deletion even if the HASH has been frozen. ( in case of ___h.clear___ you will get empty HASH ).\n\nExplanation\n========\n\nBug is happened because there is no method calling to check weather the HASH is frozen or not in both methods  *mrb_hash_delete*   [hash.c#552](https://github.com/mruby/mruby/blob/master/src/hash.c#L552)  and  *mrb_hash_clear*  [hash.c#619](https://github.com/mruby/mruby/blob/master/src/hash.c#L619)  in https://github.com/mruby/mruby/blob/master/src/hash.c\n\n\nThis bug may come handy to delete details to cause data corruption.\n\nFix\n==\nJust apply   mrb_hash_modify(mrb, self);  &  mrb_hash_modify(mrb, hash);   on line  [555](https://github.com/mruby/mruby/blob/master/src/hash.c#L555)  and  on line  [622](https://github.com/mruby/mruby/blob/master/src/hash.c#L622) respectively.",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 148306,
+            "file_name": "Hash.c_BUG.rb",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/148/306/2dab58948f2049138c4a681acf977b81822793e2/Hash.c_BUG.rb?response-content-disposition=attachment%3B%20filename%3D%22Hash.c_BUG.rb%22%3B%20filename%2A%3DUTF-8%27%27Hash.c_BUG.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080831Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=220e94c857acf6a3b778127dcf3e60d7633beeb8400427ed257ad66021969e84",
+            "file_size": 65,
+            "type": "text/plain"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-02-04T16:19:50.506Z",
+    "allow_singular_disclosure_after": -207071320.80130097,
+    "singular_disclosure_allowed": true,
+    "vote_count": 12,
+    "voters": [
+        "supernatural",
+        "eveeez",
+        "mpz",
+        "an0n-j",
+        "exception",
+        "japz",
+        "sumit7",
+        "spetr0x",
+        "muhaddix",
+        "0619",
+        "and 2 more..."
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1392489,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for reporting this bug! This is an automated response to let you know that we've received your issue, and we'll process it as soon as possible.\n\nDue to the holiday period and the large volume of reports we have received, it may take us up to three weeks to respond. Thank you for your patience!",
+            "automated_response": true,
+            "created_at": "2016-12-30T19:24:05.568Z",
+            "updated_at": "2016-12-30T19:24:05.568Z",
+            "actor": {
+                "url": "/shopify-scripts",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "shopify-scripts"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1398877,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "any update ?",
+            "automated_response": false,
+            "created_at": "2017-01-04T16:21:08.641Z",
+            "updated_at": "2017-01-04T16:21:08.641Z",
+            "actor": {
+                "username": "an0n-j",
+                "cleared": false,
+                "verified": false,
+                "url": "/an0n-j",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/099/222/8fb256358976ee24d8bc993c42822d8476f5d816_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1398940,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> Due to the holiday period and the large volume of reports we have received, it may take us up to three weeks to respond. Thank you for your patience!",
+            "automated_response": false,
+            "created_at": "2017-01-04T16:40:09.668Z",
+            "updated_at": "2017-01-04T16:40:09.668Z",
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1399772,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report. We have opened an issue upstream: https://github.com/mruby/mruby/issues/3370\n\nThis issue does not appear to have any security implications in our environment (where users have full control over the scripts that are executed), and so this issue will most likely not be eligible for a bounty.",
+            "automated_response": false,
+            "created_at": "2017-01-04T20:50:58.854Z",
+            "updated_at": "2017-01-04T20:50:58.854Z",
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1399774,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-04T20:51:05.393Z",
+            "updated_at": "2017-01-04T20:51:05.393Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "None",
+                "old_severity_id": 16754,
+                "new_severity_id": 17465
+            },
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401390,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks again for your report. This issue has been fixed upstream.",
+            "automated_response": false,
+            "created_at": "2017-01-05T12:55:43.194Z",
+            "updated_at": "2017-01-05T12:55:43.194Z",
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "an0n-j",
+                "url": "/an0n-j"
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401391,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-05T12:55:49.530Z",
+            "updated_at": "2017-01-05T12:55:49.530Z",
+            "actor": {
+                "url": "/shopify-scripts",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "shopify-scripts"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401460,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "can we disclose ?",
+            "automated_response": false,
+            "created_at": "2017-01-05T13:35:53.902Z",
+            "updated_at": "2017-01-05T13:35:53.902Z",
+            "actor": {
+                "username": "an0n-j",
+                "cleared": false,
+                "verified": false,
+                "url": "/an0n-j",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/099/222/8fb256358976ee24d8bc993c42822d8476f5d816_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401833,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-05T16:19:50.491Z",
+            "updated_at": "2017-01-05T16:19:50.491Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "clayton",
+                "cleared": false,
+                "verified": false,
+                "url": "/clayton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/YKjJrQvn996bd2n67ELXwtHt/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401896,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-05T16:49:46.215Z",
+            "updated_at": "2017-01-05T16:49:46.215Z",
+            "actor": {
+                "username": "an0n-j",
+                "cleared": false,
+                "verified": false,
+                "url": "/an0n-j",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/099/222/8fb256358976ee24d8bc993c42822d8476f5d816_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        },
+        {
+            "id": 1401897,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-05T16:49:46.251Z",
+            "updated_at": "2017-01-05T16:49:46.251Z",
+            "actor": {
+                "username": "an0n-j",
+                "cleared": false,
+                "verified": false,
+                "url": "/an0n-j",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/099/222/8fb256358976ee24d8bc993c42822d8476f5d816_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify-scripts"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

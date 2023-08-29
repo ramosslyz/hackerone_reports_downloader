@@ -1,0 +1,362 @@
+{
+    "id": 1184379,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTg0Mzc5",
+    "url": "https://hackerone.com/reports/1184379",
+    "title": "XSS on Brave Today through custom RSS feed",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2021-05-04T23:26:23.415Z",
+    "submitted_at": "2021-05-04T23:26:23.616Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nishimunea",
+        "url": "/nishimunea",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15688,
+        "url": "https://hackerone.com/brave",
+        "handle": "brave",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Brave Software",
+            "twitter_handle": "brave",
+            "website": "https://brave.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-06-22T05:51:53.264Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-06-22T05:51:53.165Z",
+    "team_member_agreed_on_going_public_at": "2023-06-22T05:42:39.724Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n\nTwo months ago, the [custom RSS feed feature](https://github.com/brave/brave-ios/pull/3317) was introduced to Brave Today on Brave iOS.\n\nThis feature allows to add any RSS feed to Brave Today, and the registered feed entries are shown in a tab with a hyperlink to the original article URL.\nThen, Brave iOS doesn't restrict the URL scheme of the original article link, which can cause XSS weakness through `javascript:` URL.\n\nHere is a demonstration RSS feed of this attack.\nhttps://csrf.jp/brave/rss.php\n\nThis RSS feed contains `javascript:alert(document.domain)` in an entry tag like this.\n```\n<entry>\n  <title>XSS</title>\n  <link rel=\"alternate\" type=\"text/html\" href=\"javascript:alert(document.domain)\" />\n  <content type=\"html\"><![CDATA[<img src=\"https://csrf.jp/test.png\">]]></content>\n</entry>\n```\nWhen user taps the entry on Brave Today, an alert dialog is shown on `http://localhost:65XX`.\n\n## Products affected: \n\n * Brave iOS current Nightly build\n\n## Steps To Reproduce:\n\n * Open \"Settings\"\n * Tap \"Brave Today\" in Settings menu\n * Tap \"Add Source\"\n * Type \"https://csrf.jp/brave/rss.php\" and tap \"Search\"\n * RSS feed, that name is PoC, is found, then tap \"Add\"\n * Enable PoC feed\n * Close the Settings menu and open a new tab\n * Enable Brave Today, then you can find an article entry that name is \"XSS\"\n * Tap the article, then an alert dialog is shown\n\n## Supporting Material/References:\n\n  * See attached movie file for the demonstration\n\n## Impact\n\nAs written in summary, XSS is possible on `http://localhost:65XX`.\nNote that `http://localhost:65XX` should be considered as a privileged domain that hosts Brave's internal features such as reader-view, error-pages and so on.",
+    "bounty_amount": "500.0",
+    "formatted_bounty": "$500",
+    "weakness": {
+        "id": 63,
+        "name": "Cross-site Scripting (XSS) - DOM"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1289014,
+            "file_name": "xss_on_localhost_through_brave_today_rss.mov",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/f7tuzdsazeayrvehw7s3l2dhbi0u?response-content-disposition=attachment%3B%20filename%3D%22xss_on_localhost_through_brave_today_rss.mov%22%3B%20filename%2A%3DUTF-8%27%27xss_on_localhost_through_brave_today_rss.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074605Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=db6f66bf22ab23eaa68adf761be44baeede484b1ad73ad0153b7d7f84002cbd9",
+            "file_size": 13821057,
+            "type": "video/quicktime"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 22,
+    "voters": [
+        "tolga",
+        "zy9ard3",
+        "neil-tsakatsa",
+        "imranhudaa",
+        "ali",
+        "shubham_srt",
+        "ayoub0x1",
+        "ritsuy",
+        "moemam",
+        "alexanderpetree",
+        "and 12 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.4,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "low",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 16463,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/brave/brave-ios",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11619896,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, we are investigating.",
+            "automated_response": false,
+            "created_at": "2021-05-04T23:59:32.542Z",
+            "updated_at": "2021-05-04T23:59:32.542Z",
+            "actor": {
+                "username": "fmarier",
+                "cleared": false,
+                "verified": false,
+                "url": "/fmarier",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/164/5ccc7f221450d705333b28dc1d4c0eb673b24684_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 11619949,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-05-05T00:15:08.635Z",
+            "updated_at": "2021-05-05T00:15:08.635Z",
+            "actor": {
+                "username": "fmarier",
+                "cleared": false,
+                "verified": false,
+                "url": "/fmarier",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/164/5ccc7f221450d705333b28dc1d4c0eb673b24684_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 11632343,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "The fix will ship in the upcoming 1.26 release of the iOS browser.",
+            "automated_response": false,
+            "created_at": "2021-05-05T23:08:01.786Z",
+            "updated_at": "2021-05-05T23:08:01.786Z",
+            "actor": {
+                "url": "/brave",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Brave Software"
+                }
+            },
+            "bounty_amount": "500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "brave",
+            "collaborator": {
+                "username": "nishimunea",
+                "url": "/nishimunea"
+            }
+        },
+        {
+            "id": 11632987,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@fmarier Thank you for your swift response!",
+            "automated_response": false,
+            "created_at": "2021-05-06T00:35:39.007Z",
+            "updated_at": "2021-05-06T00:35:39.007Z",
+            "actor": {
+                "username": "nishimunea",
+                "cleared": false,
+                "verified": false,
+                "url": "/nishimunea",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 11727646,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-05-12T23:21:20.514Z",
+            "updated_at": "2021-05-12T23:21:20.514Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "nishimunea",
+                "url": "/nishimunea"
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 22457499,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello! Could you make this bug ticket accessible to the public?\nAs time has passed since the fix and this product is now already secure, I'd like to make this hacktivity details available for anyone to reference.",
+            "automated_response": false,
+            "created_at": "2023-06-22T05:38:31.897Z",
+            "updated_at": "2023-06-22T05:38:31.897Z",
+            "actor": {
+                "username": "nishimunea",
+                "cleared": false,
+                "verified": false,
+                "url": "/nishimunea",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 22457556,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-22T05:42:39.792Z",
+            "updated_at": "2023-06-22T05:42:39.792Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 22457686,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-22T05:51:53.222Z",
+            "updated_at": "2023-06-22T05:51:53.222Z",
+            "actor": {
+                "username": "nishimunea",
+                "cleared": false,
+                "verified": false,
+                "url": "/nishimunea",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 22457687,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-22T05:51:53.318Z",
+            "updated_at": "2023-06-22T05:51:53.318Z",
+            "actor": {
+                "username": "nishimunea",
+                "cleared": false,
+                "verified": false,
+                "url": "/nishimunea",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,209 @@
+{
+    "id": 1609004,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjA5MDA0",
+    "url": "https://hackerone.com/reports/1609004",
+    "title": "Rate limit is implemented in Reddit , but its not working . ",
+    "state": "Closed",
+    "substate": "duplicate",
+    "severity_rating": "low",
+    "readable_substate": "Duplicate",
+    "created_at": "2022-06-22T13:19:32.749Z",
+    "submitted_at": "2022-06-22T13:19:32.934Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "hackeronesurya",
+        "url": "/hackeronesurya",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35710,
+        "url": "https://hackerone.com/reddit",
+        "handle": "reddit",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Reddit",
+            "twitter_handle": "reddit",
+            "website": "https://www.reddit.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-05-18T14:43:25.013Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-06-28T15:33:31.875Z",
+    "team_member_agreed_on_going_public_at": "2023-05-18T14:43:24.896Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nIt is a vulnerability which can prove to be critical when misused by attackers ,rate limit is a flaw that doesn't limit the no. of attempts one makes on a website server. this vulnerability makes the website more susceptible to brute force the username while keeping the password constant that is ,, <same password>:<diff. username>,\n secondly it also make susceptible to brute force the <diff. username>:<diff. password>. Please refer to my Conclusion below:\n\n## Impact:\nNo rate limit means their is no mechanism to protect against the requests you made in a short frame of time . Hence the hacker can brute force the Login page of Reddit , he may also gain easy access to user accounts , it has a lot of chances to flood the server with lot of requests\n\n## Steps To Reproduce:\n\n  1. NOTE : as we know we are not allowed to brute force , therefore i generated 20 random accounts and did manual login as well as few automated logins. \n \nI CAME TO CONCLUSION :\n\nMECHANISM OF RATE LIMIT ON REDDIT##\n\n1.SAME USERNAME DIFF PASS: RATE LIMIT IS WORKING\n\n2.DIFF USERNAME , SAME PASS : RATE LIMIT IS  NOT WORKING\n3.REDDIT IS NOT RESTRICTING THE IP ADDRESS , NEITHER THERE IS TIME DELAY IN MAKING REQUEST\n4.DIFFERENT USERNAME , DIFF PASS AREN'T RESTTRICTED , CAN DEFINATELY LEAD TO DDOS OR BRUTEFORCE ATTACK\n\n## Impact\n\nthis vulnerability making the website more susceptible to brute force which may also lead to gaining unauthorized access to users account.",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "shubham_srt",
+        "tr13r",
+        "naili22x",
+        "p4n7h3r1229"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18825,
+        "asset_type": "URL",
+        "asset_identifier": "www.reddit.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 17262851,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugDuplicate",
+            "message": "Hi @helloitscyberguard,\nPlease see the explanation from the team from a previously submitted report demonstrating this same finding.\n\n>Ok, so digging into the code, this looks like it might be because of our concept of \"familiar\" vs \"unfamiliar\" IPs. For an account that has a familiar IP, there's no IP address validation on a request. So when testing with my own account, I can reproduce the above behavior that you're noticing. When flipping to a random VPN IP, I notice the appropriate behavior. Would ask that you attempt this similarly with an \"unfamiliar IP\" and see if you're still able to reproduce this.\nFor context, this is our code around ratelimiting:\n\n```\n        is_previously_seen_ip = is_recent_account_ip(cassandra, account_id, ip)\n\n        max_requests_user = int(self.reset_seconds * self.max_login_requests_per_sec)\n        max_requests_ip = int(\n            self.reset_seconds * self.max_login_requests_per_sec_new_ip\n        )\n\n        r2_account_id = account_id_to_r2_thing_id(account_id)\n\n        if is_previously_seen_ip:\n            ratelimits = {LoginRatelimit(\"familiar\", r2_account_id): max_requests_user}\n            return ratelimits\n\n        ratelimits = {LoginRatelimit(\"unfamiliar\", r2_account_id): max_requests_user}\n        if not (ip in self.ip_whitelist or []):\n            ratelimits[LoginRatelimit(\"ip\", ip)] = max_requests_ip\n\n        return ratelimits\n```\n\nSo you can see at Line 10 that's the escape hatch if it's a familiar IP.\n\n@sodacan n",
+            "automated_response": false,
+            "created_at": "2022-06-23T19:56:23.933Z",
+            "updated_at": "2022-06-23T19:56:23.933Z",
+            "actor": {
+                "username": "h1_analyst_ava",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_ava",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/l6jvtw54r3s4hzqzp58kpmfycpjm/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 17328158,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-28T15:33:31.901Z",
+            "updated_at": "2022-06-28T15:33:31.901Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hackeronesurya",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackeronesurya",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 21907592,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-05-18T14:43:24.940Z",
+            "updated_at": "2023-05-18T14:43:24.940Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 21907593,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-05-18T14:43:25.074Z",
+            "updated_at": "2023-05-18T14:43:25.074Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

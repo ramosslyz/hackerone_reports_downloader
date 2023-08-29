@@ -1,0 +1,651 @@
+{
+    "id": 1019457,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDE5NDU3",
+    "url": "https://hackerone.com/reports/1019457",
+    "title": "Data race conditions reported by helgrind when performing parallel DNS queries in libcurl",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2020-10-27T00:52:50.602Z",
+    "submitted_at": "2020-10-27T00:52:50.673Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "brumbrum",
+        "url": "/brumbrum",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-11-04T21:44:37.603Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-11-04T15:48:54.735Z",
+    "team_member_agreed_on_going_public_at": "2020-11-04T21:44:37.504Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "While running binary built from curl git repo file \"docs/examples/10-at-a-time.c\" under valgrind specifically with the helgrind tool, reports race condition in getaddrinfo() calls.   Using the latest curl/libcurl from github repo.\n\nFrom the valgrind documentation \"Helgrind is a Valgrind tool for detecting synchronisation errors in C, C++ and Fortran programs that use the POSIX pthreads threading primitives.\"\n\n\nCommand used for testing:\n\nvalgrind --tool=helgrind --log-file=helgrind_%p.log ./10-at-a-time\n\n\nSee helgrind log files attached to this report.\n\n\nHere is one example of the helgrind reports:\nNote: libcurl was rebuilt in debug to provide complete stack traces. Problem occurs in both debug and non-debug builds.\n\n==43481== Possible data race during read of size 1 at 0x8325DE8 by thread #7\n==43481== Locks held: none\n==43481==    at 0x8325DE8: ns_name_pton (ns_name.c:160)\n==43481==    by 0x831D8DF: __res_hnok (res_comp.c:202)\n==43481==    by 0x833906B: check_name (dns-host.c:284)\n==43481==    by 0x833906B: _nss_dns_gethostbyname4_r (dns-host.c:335)\n==43481==    by 0x4A5B58E: gaih_inet.constprop.0 (getaddrinfo.c:765)\n==43481==    by 0x4A5D0D8: getaddrinfo (getaddrinfo.c:2256)\n==43481==    by 0x486D6AB: curl_dbg_getaddrinfo (curl_addrinfo.c:554)\n==43481==    by 0x486CD6D: Curl_getaddrinfo_ex (curl_addrinfo.c:124)\n==43481==    by 0x4861FE0: getaddrinfo_thread (asyn-thread.c:307)\n==43481==    by 0x4872148: curl_thread_create_thunk (curl_threads.c:57)\n==43481==    by 0x4842B1A: ??? (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_helgrind-amd64-linux.so)\n==43481==    by 0x4ED6608: start_thread (pthread_create.c:477)\n==43481==    by 0x4A76292: clone (clone.S:95)\n==43481==  Address 0x8325de8 is in the Text segment of /usr/lib/x86_64-linux-gnu/libresolv-2.31.so\n==43481==    at 0x8325DE8: ns_name_pton (ns_name.c:160)\n\n\n\nWill also see some of the calls falling, sometimes.  Not every time though.  Issues might vary based on number of cores/threads present or allocated to the test system. For this testing using a VirtualBox VM with 3 vCPUs running up to date Ubuntu 20.04.\n\n\nI received the following errors over various runs with the helgrind tool.  Usually the initial few logged output lines will report some failure, rarely do the later output logged lines show failures.  Some examples of errors received over various runs:\n\nR: 16 - Error in the HTTP2 framing layer <https://www.microsoft.com>\nR: 16 - Error in the HTTP2 framing layer <https://www.google.com>\nR: 35 - SSL connect error <https://www.mysql.com>\n\nR: 52 - Server returned nothing (no headers, no data) <https://www.bbc.co.uk>\n\nR: 55 - Failed sending data to the peer <https://www.google.com>\n\n\n$ valgrind --version\nvalgrind-3.15.0\n\n\nWhen not running under helgrind the 10-at-a-time binary usually runs without issues, but sometimes one will randomly fail, which might be normal sometimes, but appears to validate that this is a real problem and not only revealed with libcurl used under helgrind.\n\nR: 35 - SSL connect error <https://www.hp.com>\n\n\nHave not tried c-ares library.  Would you find it useful if I did?\n\n\nNot clear if the problem is with libcurl or with the libc library implementing getaddrinfo().\n\n## Impact\n\n- Failure to connect to target system.\n- Connecting to wrong IP if DNS data corrupted, potentially disclosing sensitive data to wrong site.\n\n\nMitigation:\n- Limit parallel DNS usage.\n- Potentially c-ares library may not have this issue, but this is not verified.",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1053044,
+            "file_name": "helgrind_43280.log",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/66yg7yQTuMjjTAmtdsFNWvnh?response-content-disposition=attachment%3B%20filename%3D%22helgrind_43280.log%22%3B%20filename%2A%3DUTF-8%27%27helgrind_43280.log&response-content-type=text%2Fx-log&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ff7329a1f593ce8b29bce6d4b94d09ed985b49973161673c22c498941a7ead6a",
+            "file_size": 445466,
+            "type": "text/x-log"
+        },
+        {
+            "id": 1053045,
+            "file_name": "helgrind_43481.log",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7XHrdVhNc3KvApAJbHeAPtnU?response-content-disposition=attachment%3B%20filename%3D%22helgrind_43481.log%22%3B%20filename%2A%3DUTF-8%27%27helgrind_43481.log&response-content-type=text%2Fx-log&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4de089031fdf2c3d76467214ab22e7048161fa808bc10110f7888d734b586c11",
+            "file_size": 668880,
+            "type": "text/x-log"
+        },
+        {
+            "id": 1053046,
+            "file_name": "helgrind_43338.log",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/kHxAGAtV1mJ2RcN9u7pyWZX8?response-content-disposition=attachment%3B%20filename%3D%22helgrind_43338.log%22%3B%20filename%2A%3DUTF-8%27%27helgrind_43338.log&response-content-type=text%2Fx-log&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=62c6e300f15c7277352118cff0ae6b0d0ecf6eb71ee97e0be7e6e16aff46ac84",
+            "file_size": 601353,
+            "type": "text/x-log"
+        },
+        {
+            "id": 1053047,
+            "file_name": "helgrind_43432.log",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/82arL3RRz9SzRusX2BM6dyPk?response-content-disposition=attachment%3B%20filename%3D%22helgrind_43432.log%22%3B%20filename%2A%3DUTF-8%27%27helgrind_43432.log&response-content-type=text%2Fx-log&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d178192384b48e50d60056a48e62ae5534e198f0d101e768c28a83e3d535505c",
+            "file_size": 447193,
+            "type": "text/x-log"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "medium",
+        "score": 5.2,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "physical",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "low",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9642766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, I confirm that the report addresses: Reproducible, Impact and In Scope.",
+            "automated_response": false,
+            "created_at": "2020-10-27T00:56:48.115Z",
+            "updated_at": "2020-10-27T00:56:48.115Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9653411,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I've built curl with --disable-threaded-resolver and the helgrind data race reports have gone away, but interestingly two of the sites (google and mysql) are still consistently failing now and another one (hp) fails from time to time.   As if helgrind is changing the dynamic of the execution so much that it results in these two failures.  Helgrind is famous for slowing down execution of code, so that is not a surprise, but could it be so slow as to cause the server to fail the client connection.\n\nAttaching log to show the failures when the libcurl code was built with --disable-threaded-resolver flag.  The co-responding helgrind log files are essentially empty with no reports of any kind.\n\nSo seems the failures are not a result of the data races, just helgrind impacts!  Will continue looking at it a little more to see if can better understand.",
+            "automated_response": false,
+            "created_at": "2020-10-27T21:15:15.975Z",
+            "updated_at": "2020-10-27T21:15:15.975Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1054447,
+                    "filename": "log_2020-10-27_failures_disable_threaded_resolver.txt",
+                    "type": "text/plain",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/BodB31vo4thChBd9PvQBEzcr?response-content-disposition=attachment%3B%20filename%3D%22log_2020-10-27_failures_disable_threaded_resolver.txt%22%3B%20filename%2A%3DUTF-8%27%27log_2020-10-27_failures_disable_threaded_resolver.txt&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=760efb7b41561030d3ce75aa847b66ad489214a55cb43a9152770b661a3f8408"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9653704,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I did a few more experiments\n\n1- I moved 'google' and 'mysql' further down in the list of urls, and they stopped failing afterwards.\n2- After moving those two down, then https://www.heise.de started failing consistently, I changed the scheme from https to http and it stopped failing afterwards.  No failures seen, except 'hp' from time to time, which is way down the list.\n3- I changed 'hp' to http scheme and it stopped failing too.  No more failures now.\n\nSo the failing sites are usually the first ones reported (and hp further down the list).   I suspect that openssl has some issue that gets affected by the performance impacts from helgrind.\n\nWould be interesting to use a different SSL library to see if the problems go away.  Will try that.\n",
+            "automated_response": false,
+            "created_at": "2020-10-27T21:56:24.641Z",
+            "updated_at": "2020-10-27T21:56:24.641Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9654473,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok, with the url list changes mentioned in my previous comment, I re-enabled the threaded resolver and the failures are still gone.\n\nAttaching the url list that works well for me, for your reference.\n\nStrangely https://www.un.org started failing for me, but I tested that url exclusively with curl CLI directly without helgrind and I could see problems reported there too, so could just be that the site (or its CDN) is having some issues.\n\nOf course now the data race reports are back when using the threaded resolver, but no failures reported, so now what to do.  Is this a non-problem at least with the DNS resolver portion.  Are those data races reported by helgrind on their own a concern.\n\n",
+            "automated_response": false,
+            "created_at": "2020-10-28T01:06:28.179Z",
+            "updated_at": "2020-10-28T01:06:28.179Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1054556,
+                    "filename": "urls_working_list.txt",
+                    "type": "text/plain",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/idVFA2jNLNJmKjBxYTAwckXt?response-content-disposition=attachment%3B%20filename%3D%22urls_working_list.txt%22%3B%20filename%2A%3DUTF-8%27%27urls_working_list.txt&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d083c6cee63266ad4fbfbcf2ca8ec8e44beed8ecb022c081191cf5349637bbbf"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9656073,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, will investigate! ",
+            "automated_response": false,
+            "created_at": "2020-10-28T07:04:10.952Z",
+            "updated_at": "2020-10-28T07:04:10.952Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9656991,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have some early questions:\n\n1. How is this a security problem? How does this potential flaw lead to a *security problem* and if so who can take advantage of it or how does it lead to badness for the user?\n\n2. The valgrind output says **possible** data race. It doesn't say \"verified\" or \"confirmed\" data race. Can you clarify exactly how this is a race and what the worst case problems are as a result?\n\n3. The report claims issues inside `getaddrinfo()`, but me knowingly we run each resolver thread completely separate and independent (from which the call to getaddrinfo is made). I cannot see how this causes race conditions. Also, I cannot see how you'd remove or minimize them by changing the order of the list of names.\n\nSo for now I have not confirmed any security problem here - but I have not ruled them out.",
+            "automated_response": false,
+            "created_at": "2020-10-28T08:46:25.103Z",
+            "updated_at": "2020-10-28T08:46:25.103Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9673511,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Responding to your questions as best I can:\n\n1- If this is a real problem, then the security impact would be if the dns information returned was subtly altered due to the data race and still happens to represent a valid host, could lead to connecting to a wrong system and could lead to passing some sensitive information (for example, session cookies or credentials) that shouldn't be sent to this wrong system.\n\n2- Valgrind leaves the possibility for a false positive in it's wording due to the fact that it might not properly detect the lock used to protect the shared resource if some non-standard locking mechanism is used by the application or library.  As long as proper locking primitives are used then the helgrind report should be reliable.\n\nThere is a long discussion in this document: https://www.valgrind.org/docs/manual/hg-manual.html\n\nHere is a small subset of the discussion in section 7.5 of the document above:\n\n\"Make sure your application, and all the libraries it uses, use the POSIX threading primitives. Helgrind needs to be able to see all events pertaining to thread creation, exit, locking and other synchronisation events. To do so it intercepts many POSIX pthreads functions.\n\nDo not roll your own threading primitives (mutexes, etc) from combinations of the Linux futex syscall, atomic counters, etc. These throw Helgrind's internal what's-going-on models way off course and will give bogus results.”\n\n\n\n3- Looking over the valgrind reported events, it seems to me that the problem might very well be deep inside the getaddrinfo() call in the libc library.  So there may be nothing that can be done from the libcurl side.  Right now, I would have to dig further into the dns resolver code to have a better understanding of the issue and what exactly could be impacted by the data race.  Sorry I jumped the gun and should have dug more before reporting.\n\nRegarding the comment about reorganizing the url list causing problems to disappear, that now seems to be not related to this dns issue, but some other issue uncovered regarding openssl when running really slowly due to helgrind.  I would need to investigate that and could end up as some issue with the openssl library, most likely has nothing to do with libcurl.\n",
+            "automated_response": false,
+            "created_at": "2020-10-29T16:46:39.356Z",
+            "updated_at": "2020-10-29T16:46:39.356Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9674743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "As a test, I'll try to use c-ares instead of the glibc dns resolver.  I'll have something to compare to.",
+            "automated_response": false,
+            "created_at": "2020-10-29T19:40:36.442Z",
+            "updated_at": "2020-10-29T19:40:36.442Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9676619,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "1 - such kind of problem could only happen to an insecure data transfer since both TLS and SSH would otherwise already have refused the connection. An insecure data transfer is already insecure by nature as it could also easily be MITMed or DNS-spoofed without the client being able to tell.\n\nBut okay, it would be a bad bug if that happens and would probably still be considered a security flaw, especially if it would be possible to somehow trigger or control by a third party.\n\n2 - I have not spent a lot of time analyzing these valgrind reports because A) you could change them by changing the order of the URLs and that seems very suspect. B) we've had the threaded resolver for over 15 years and we've shipped curl with the threaded resolver enabled by default for over three years and not once (during the last decade at least) have we gotten reports about curl connecting to the wrong IP address or having crashed in the name resolver thread. C) the caveats about using the proper function calls. I don't know what that means to valgrind. Perhaps we're not doing things kosher according to it?\n\nI'm sorry, I realize it is a little lame and anecdotally but if you cannot actually show curl crash or do something wrong here, then I will lean towards **not** trusting those valgrind warnings.",
+            "automated_response": false,
+            "created_at": "2020-10-29T23:10:01.687Z",
+            "updated_at": "2020-10-29T23:10:01.687Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9677093,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "1- Completely agree with you.\n\n2A- I'm hoping I haven't cause some confusion here, to be clear the reordering of the url list doesn't impact the race condition reports from helgrind in any way.  \n\nThe reordering of the url list impacts these errors messages only:\n\nR: 16 - Error in the HTTP2 framing layer <https://www.microsoft.com>\nR: 16 - Error in the HTTP2 framing layer <https://www.google.com>\nR: 35 - SSL connect error <https://www.mysql.com>\nR: 52 - Server returned nothing (no headers, no data) <https://www.bbc.co.uk>\nR: 55 - Failed sending data to the peer <https://www.google.com>\n\nIf I shuffle the url order and change some from https to http, then these errors above stop being reported, and yes I find that suspicious too and have seems such behavior before.  When I encountered it it was due to two threads not being synchronized and sometimes things happening in different order leading to random behaviors.   As the problem is only easily seen while using helgrind leads me to think that it is a performance based issue.\n\nThese errors are most likely NOT due to dns threaded resolver; and are SSL/TLS related instead. \n\nSo we have two issues mixed together.  Hopefully I did not confuse matters here.\n\nDo you feel this SSL/TLS problem deserves more attention and might be the more important issue to resolve?  I'm thinking it is. Might be a rare problem with parallel downloads.  Any one else report random problems in parallel mode, while using SSL/TLS? \n\n\n2B- I found these old posting that I think you got it right back 10 years ago.\n\nhttps://curl.haxx.se/mail/lib-2010-12/0117.html\nhttps://curl.haxx.se/mail/lib-2010-12/0140.html\n\nFrom what I can gather reading various other posts, glibc developers use a lot of special optimizations and I think that helgrind can not be fully trusted to deal with them reliably.  Also helgrind has a suppression file that attempts to deal with the false positives, and there are a number of glibc suppression entries in there.  Seems likely that they should add at least one more entry for the getaddrinfo() call.  \n\nSuppression file on my system is at: /usr/lib/x86_64-linux-gnu/valgrind/default.supp\n\nAttaching my copy of default.supp to this comment.  In it you can see various suppression for libc and glibc.\n\nUsing a very simple multi-thread test tool that calls getaddrinfo() once per thread, I was able to generate similar helgrind reports, where it is very obvious that if there is a problem it must be in glibc or helgrind is reporting a false positive.\n\nI agree with you that I have not seen any actual bad behavior that can clearly be related to getaddrinfo() so yes, this is looking more like a false alarm.\n\nPlease accept my apologies for this.\n\n\n2C- As far as I can tell curl is not doing anything wrong with the function calls.  In fact using getaddrinfo() is the correct thing to do when used the resolver in a multi-threaded application.  Problem is most likely helgrind not being able to deal in a reliable way with glibc getaddrinfo().  False positive seems like the right call until better proof can be found.\n",
+            "automated_response": false,
+            "created_at": "2020-10-30T01:07:09.915Z",
+            "updated_at": "2020-10-30T01:07:09.915Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9677099,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Forgot the my suppression file.  Attaching it.",
+            "automated_response": false,
+            "created_at": "2020-10-30T01:08:15.968Z",
+            "updated_at": "2020-10-30T01:08:15.968Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1057659,
+                    "filename": "default.supp",
+                    "type": "application/octet-stream",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/GEooBoqA5SMuFMiNqM3UpHR9?response-content-disposition=attachment%3B%20filename%3D%22default.supp%22%3B%20filename%2A%3DUTF-8%27%27default.supp&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3d881d4996d7d75757379682d01513d1e0d0d8618699c9db28fea1dba5117866"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9684377,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If you think you can find any real and substantial problem in there, then we can keep this issue open for more days for you, otherwise I think you can close it for now. We can always create a new one if we actually run into something serious at a later point.",
+            "automated_response": false,
+            "created_at": "2020-10-30T14:41:44.247Z",
+            "updated_at": "2020-10-30T14:41:44.247Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9685105,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sounds good.  I'll do my best to report back on Monday, if I made any progress.  Have a great weekend.",
+            "automated_response": false,
+            "created_at": "2020-10-30T15:59:39.480Z",
+            "updated_at": "2020-10-30T15:59:39.480Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9698273,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I did a small investigation into the various docs/examples/10-at-a-time.c failures when running under valgrind/helgrind, resulting in some sites failing with various error codes as below:\n\nR: 7 - Couldn't connect to server <https://www.mysql.com>\nR: 18 - Transferred a partial file <https://www.ebay.com>\nR: 35 - SSL connect error <https://www.google.com>\nR: 52 - Server returned nothing (no headers, no data) <https://www.informationweek.com>\nR: 55 - Failed sending data to the peer <https://www.ietf.org>\nR: 56 - Failure when receiving data from the peer <https://www.google.com>\n\n\nTo exclude that this was not some helgrind artifact causing misbehavior in the 10-at-a-time process, I was able to reproduce the issue (without using helgrind) using the 'stress' tool to artificially overload the CPU and starve the libcurl client (and the whole system in fact).  In some other tests I also used the 'cpulimit' tool to only limit the 10-at-a-time process CPU availability, with similar success in reproducing the issue. As I am using a VM I also did some of the testing with a single vCPU allocated to the VM.\n\nAlso if I changed the multi_setopt option CURLMOPT_MAXCONNECTS to a larger number, then the problem got worse as the number was further increased, as the share of the CPU needed to manage each of the additional connections was reduced, leading to more failures being triggered.\n\nI looked at the traffic with wireshark,, after some specific times (5, 10, 15, 20 seconds) the server end is returning packets with FIN/ACK.  Many times the RST/ACK (connection reset) is also seen coming from the server.  Suggesting that the remote end is timing out and shutting down the communication.  Some of the sites are not showing failures, suggesting that they have much longer timeouts.\n\nI looked at www.bbc.co.uk specifically as it is the site that was failing more reliably and the results suggest a 5 second timeout for that site.\n\nAttaching some screen captures of wireshark output, showing the FIN/ACK and RST/ACK coming from remote end. The client side IP address is 10.0.2.4.\n",
+            "automated_response": false,
+            "created_at": "2020-11-02T02:30:18.426Z",
+            "updated_at": "2020-11-02T02:30:18.426Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1061044,
+                    "filename": "Screenshot_from_2020-11-01_16-22-41.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rzYgiNz9BUXRaDhdZcgkfeYt?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_16-22-41.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_16-22-41.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bebe79c1f7620ea2962daed5127efca0c749c3e498683b9d8d6749962ed6550d"
+                },
+                {
+                    "id": 1061043,
+                    "filename": "Screenshot_from_2020-11-01_16-17-27.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/UQZSUPpX5u4L1FDYQNxa459i?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_16-17-27.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_16-17-27.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7881a7aea236203ce911d865ab0a465837d05fe90403579d960f6ef932b56b35"
+                },
+                {
+                    "id": 1061042,
+                    "filename": "Screenshot_from_2020-11-01_16-13-34.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/MDfeqqfxeTxTvmMcJyUXD5ho?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_16-13-34.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_16-13-34.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=90a23de019daf34ed252333535f0e0a588c972c6a0a9903b871360aa1667793b"
+                },
+                {
+                    "id": 1061041,
+                    "filename": "Screenshot_from_2020-11-01_16-11-53.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qZZtcYXpsDHsD5eUj6i3oCpJ?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_16-11-53.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_16-11-53.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5a5d5e66a0d3c0061cfbd5ffec3ae6054802489eafd0975c94b59cb21fc2a4cc"
+                },
+                {
+                    "id": 1061040,
+                    "filename": "Screenshot_from_2020-11-01_16-11-43.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/fqgdPdfi2yERPosskBq7UihB?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_16-11-43.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_16-11-43.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f1876b28e624089d84699be15320509d9470d067fd0a78a66e0cffb319bd1791"
+                },
+                {
+                    "id": 1061039,
+                    "filename": "Screenshot_from_2020-11-01_15-54-54.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Xiv4WgEKbyvERKceFmTpSkKz?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-11-01_15-54-54.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-11-01_15-54-54.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a71acf1ebf1dbbf4f9b20e9d3a6858aaf43b959364d0c559673aa344aa9aac6a"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9698278,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Really sorry for the false report. Should be safe to close it down.",
+            "automated_response": false,
+            "created_at": "2020-11-02T02:35:35.214Z",
+            "updated_at": "2020-11-02T02:35:35.214Z",
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9699406,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks for all the details",
+            "automated_response": false,
+            "created_at": "2020-11-02T08:11:39.833Z",
+            "updated_at": "2020-11-02T08:11:39.833Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9725172,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Might be useful to disclose this one in case similar questions are raised at a later time.  Would give a clue where to start investigating.  Also I may followup with valgrind or gnu glibc, to get their inputs.  I will back here to this report and put some links if I do.\nThank you.",
+            "automated_response": false,
+            "created_at": "2020-11-04T15:48:54.819Z",
+            "updated_at": "2020-11-04T15:48:54.819Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "brumbrum",
+                "cleared": false,
+                "verified": false,
+                "url": "/brumbrum",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9727920,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "+1",
+            "automated_response": false,
+            "created_at": "2020-11-04T21:44:37.529Z",
+            "updated_at": "2020-11-04T21:44:37.529Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 9727921,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-04T21:44:37.638Z",
+            "updated_at": "2020-11-04T21:44:37.638Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071652Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=beb5079c44d829226b47c67ad5df0963449093f6228d66f44476d80a3d78e94f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

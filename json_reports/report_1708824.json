@@ -1,0 +1,705 @@
+{
+    "id": 1708824,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzA4ODI0",
+    "url": "https://hackerone.com/reports/1708824",
+    "title": "No rate limit on subscribe form ",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2022-09-22T13:10:36.967Z",
+    "submitted_at": "2022-09-22T13:10:37.052Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "happykira0x1",
+        "url": "/happykira0x1",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-10-05T20:55:39.542Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-10-05T20:55:39.458Z",
+    "team_member_agreed_on_going_public_at": "2022-10-05T18:58:53.466Z",
+    "comments_closed?": true,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nHi team, I found that you missing a rate limit protection for subscribe form \n\n## Platform(s) Affected:\nhttps://business.yelp.com/?source=consumer_site_header&utm_content=header&utm_medium=www&utm_source=cons_home\n\n## Steps To Reproduce:\n\n\n  1. go to https://business.yelp.com/?source=consumer_site_header&utm_content=header&utm_medium=www&utm_source=cons_home\n  1. find a form with just email input (emailsub.png)\n  1. fill it with email click on submit then intercept the request \n  1.  send to burp intruder  go to  -> positions\n  1. clear `§`\n  1. add `§` in email like `youremail§1§@gmail.com`\n  1. go to -> payloads,  add numbers type paylaod like ( from : 2 , to : 100, step: 1)\n  1. start attack you will see all response with 200 ok and contain msg `Thanks for subscribing!` so no rate limit implemented\n\n##Fix:\nadd a recaptcha or 429 error (many requests)\n## Supporting Material/References:\nsee screenshots\n\n## Impact\n\nNo rate limit in form.",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1946521,
+            "file_name": "emailsub.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cfze1ei4weykqm89qau9v3f6pv9v?response-content-disposition=attachment%3B%20filename%3D%22emailsub.png%22%3B%20filename%2A%3DUTF-8%27%27emailsub.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065927Z&X-Amz-Expires=783&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=213293a7f9109f635ca02d85018bb0001b8ce3879ce6c67cfe75be19df327ccc",
+            "file_size": 125634,
+            "type": "image/png"
+        },
+        {
+            "id": 1946522,
+            "file_name": "Capture_d__cran_(31).png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1kxidnixxihcl5xdt1u7655m25ha?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_%252831%2529.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_%252831%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065927Z&X-Amz-Expires=783&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a6da2a729fca0ca93fb252a4721ffe60fa608c53017cfe010c9ef8c4b3598b5a",
+            "file_size": 122885,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 10,
+    "voters": [
+        "khizer47",
+        "shivammusic",
+        "mchklt",
+        "happykira0x1",
+        "saidkira",
+        "ratthor00",
+        "alien935",
+        "mohithreddy",
+        "gison8",
+        "dipannama91"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.1,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 43913,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.yelp.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 18487993,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\n\nThanks for submitting your report to us! Please expect a response within a week.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2022-09-22T14:27:12.237Z",
+            "updated_at": "2022-09-22T14:27:12.237Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18493798,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\nThanks for submitting your report to us!\nWe are investigating the reported issue and will update this thread once we have further details.\nBest,\nThe Yelp Security Team",
+            "automated_response": false,
+            "created_at": "2022-09-22T21:57:32.609Z",
+            "updated_at": "2022-09-22T21:57:32.609Z",
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18494268,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your response, I hope fix it soon",
+            "automated_response": false,
+            "created_at": "2022-09-22T23:52:59.844Z",
+            "updated_at": "2022-09-22T23:52:59.844Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18502356,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ttibbel any update please?? ",
+            "automated_response": false,
+            "created_at": "2022-09-23T13:23:19.998Z",
+            "updated_at": "2022-09-23T13:23:19.998Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18517133,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi team,\nAny update please?? ",
+            "automated_response": false,
+            "created_at": "2022-09-24T18:43:12.689Z",
+            "updated_at": "2022-09-24T18:43:12.689Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18529383,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ttibbel any information please? ",
+            "automated_response": false,
+            "created_at": "2022-09-26T09:21:51.679Z",
+            "updated_at": "2022-09-26T09:21:51.679Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18560796,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi team, any update please?? ",
+            "automated_response": false,
+            "created_at": "2022-09-28T09:27:19.001Z",
+            "updated_at": "2022-09-28T09:27:19.001Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18579034,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ttibbel any update please?? ",
+            "automated_response": false,
+            "created_at": "2022-09-29T12:15:59.297Z",
+            "updated_at": "2022-09-29T12:15:59.297Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18595575,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey team,\nAny update?? ",
+            "automated_response": false,
+            "created_at": "2022-09-30T13:30:25.597Z",
+            "updated_at": "2022-09-30T13:30:25.597Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18608231,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ttibbel is 9 days I sent my report and no update from you please provide me any information?? ",
+            "automated_response": false,
+            "created_at": "2022-10-01T16:23:51.094Z",
+            "updated_at": "2022-10-01T16:23:51.094Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18621497,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there,\nAny update please?? ",
+            "automated_response": false,
+            "created_at": "2022-10-03T08:44:13.671Z",
+            "updated_at": "2022-10-03T08:44:13.671Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18641188,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ttibbel please any update about my report is 2 weeks I sent it?? ",
+            "automated_response": false,
+            "created_at": "2022-10-04T12:55:28.786Z",
+            "updated_at": "2022-10-04T12:55:28.786Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18657454,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi there , \nany update please??",
+            "automated_response": false,
+            "created_at": "2022-10-05T17:45:38.405Z",
+            "updated_at": "2022-10-05T17:45:38.405Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18657875,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2022-10-05T18:42:45.333Z",
+            "updated_at": "2022-10-05T18:42:45.333Z",
+            "additional_data": {
+                "old_severity": "High",
+                "new_severity": "Medium (6.1)",
+                "old_severity_id": 1670692,
+                "new_severity_id": 1687777
+            },
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18657963,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @happykira0x1,\nThank you for your report and for your patience. During our investigation we determined that there is rate-limiting already in place for that specific email subscription form and all of business.yelp.com; rate-limiting is currently configured to stop DDoS and other high traffic volume attacks. However we appreciate you bringing this email subscription form to our attention so we'll close this report as Informative.\nBest,\nYelp Security",
+            "automated_response": false,
+            "created_at": "2022-10-05T18:56:04.170Z",
+            "updated_at": "2022-10-05T18:56:04.170Z",
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18657980,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-10-05T18:58:53.513Z",
+            "updated_at": "2022-10-05T18:58:53.513Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18658006,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you so much for your response but although it , my report can deserve a bounty because I found it first this is not a duplicate ??",
+            "automated_response": false,
+            "created_at": "2022-10-05T19:05:26.829Z",
+            "updated_at": "2022-10-05T19:05:55.853Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18658028,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "so I will be appreciate if you accept it as a valid report not just informative. ",
+            "automated_response": false,
+            "created_at": "2022-10-05T19:08:15.285Z",
+            "updated_at": "2022-10-05T19:08:15.285Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18658095,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @happykira0x1,\nAs there is already rate-limiting on business.yelp.com this report does not describe an active vulnerability and therefore it does not qualify for a bounty.\nBest,\nYelp Security",
+            "automated_response": false,
+            "created_at": "2022-10-05T19:17:07.847Z",
+            "updated_at": "2022-10-05T19:17:07.847Z",
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18658205,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes I know that  you put already rate-limiting for business.yelp.com but in subscriptions form you didn't add it so I found it before you put the rate limit so my finding is a valid also I found before the same in restaurants.yelp.com and the staff accept it.  https://hackerone.com/reports/1580558",
+            "automated_response": false,
+            "created_at": "2022-10-05T19:33:50.169Z",
+            "updated_at": "2022-10-05T19:33:50.169Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18658260,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @happykira0x1,\nTo be clear rate-limiting was already in place for all of business.yelp.com (including the email subscription form) when you originally submitted your report. It is configured for high volume traffic which likely explains why you did not encounter it during your testing. Again we appreciate your report however this does not qualify for a bounty.\nBest,\nYelp Security",
+            "automated_response": false,
+            "created_at": "2022-10-05T19:41:48.655Z",
+            "updated_at": "2022-10-05T19:41:48.655Z",
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18660764,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Disclose it thank you😊",
+            "automated_response": false,
+            "created_at": "2022-10-05T20:55:39.493Z",
+            "updated_at": "2022-10-05T20:55:39.493Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18660766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-10-05T20:55:39.620Z",
+            "updated_at": "2022-10-05T20:55:39.620Z",
+            "actor": {
+                "username": "happykira0x1",
+                "cleared": false,
+                "verified": false,
+                "url": "/happykira0x1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vw0n3bdyw0jk95qh3an6u7231bbw/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 20222561,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CommentsClosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-02-02T18:23:11.990Z",
+            "updated_at": "2023-02-02T18:23:11.990Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

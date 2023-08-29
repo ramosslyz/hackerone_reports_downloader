@@ -1,0 +1,289 @@
+{
+    "id": 219601,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTk2MDE=",
+    "url": "https://hackerone.com/reports/219601",
+    "title": "Transferring incorrect data to the http://gip.rocks/v1 endpoint with correct Content-Type leads to local paths disclosure through the error message",
+    "state": "Closed",
+    "substate": "duplicate",
+    "severity_rating": "low",
+    "readable_substate": "Duplicate",
+    "created_at": "2017-04-08T18:48:38.907Z",
+    "submitted_at": "2017-04-08T18:48:38.907Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sp1d3rs",
+        "url": "/sp1d3rs",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1868,
+        "url": "https://hackerone.com/gratipay",
+        "handle": "gratipay",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Gratipay",
+            "twitter_handle": "Gratipay",
+            "website": "https://gratipay.com/",
+            "about": "Gratitude? Gratipay! The easiest way for your company to pay for open source."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-04-08T19:30:14.931Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-04-08T19:30:14.903Z",
+    "team_member_agreed_on_going_public_at": "2017-04-08T19:26:51.352Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Description\nHi. I found the way to raise 500 Internal Server Error with some sensitive information disclosure (some local paths of the python installation). The issue is not critical, however, you can prevent this information leak.\n\nRequest:\n```\nPOST /v1 HTTP/1.1\nHost: gip.rocks\nCache-Control: max-age=0\nContent-Type: image/jpeg\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\nAccept-Encoding: gzip, deflate, sdch\nAccept-Language: ru,en-US;q=0.8,en;q=0.6,uk;q=0.4\nContent-Length: 3\n\n111\n```\nResponse:\n```\n<html>\n    <head>\n        <title>500 Internal Server Error</title>\n        <style>\n            \n            BODY {\n                margin: 0;\n                padding: 200px 0 0;\n                text-align: center;\n                font: normal 18pt/18pt Georgia, serif;\n            }\n            PRE {\n                text-align: left;\n                font: normal 10pt/12pt monospace;\n                margin: 50px 200px 0;\n            }\n        </style>\n    </head>\n    <body>\n        Internal server error, program!\n        <pre>Traceback (most recent call last):\n  File &quot;/app/.heroku/python/lib/python2.7/site-packages/algorithm.py&quot;, line 288, in run\n    new_state = function(**deps.as_kwargs)\n  File &quot;/app/.heroku/python/lib/python2.7/site-packages/aspen/algorithms/website.py&quot;, line 115, in get_response_for_resource\n    return {'response': resource.respond(state)}\n  File &quot;/app/.heroku/python/lib/python2.7/site-packages/aspen/http/resource.py&quot;, line 59, in respond\n    content_type, body = super(Dynamic, self).respond(accept, state)\n  File &quot;/app/.heroku/python/lib/python2.7/site-packages/aspen/simplates/__init__.py&quot;, line 169, in respond\n    exec(self.pages[1], context)\n  File &quot;/app/www/v1.spt&quot;, line 22, in &lt;module&gt;\n    image = Image.open(fp)\n  File &quot;/app/.heroku/python/lib/python2.7/site-packages/PIL/Image.py&quot;, line 2349, in open\n    % (filename if filename else fp))\nIOError: cannot identify image file &lt;cStringIO.StringI object at 0x7f6b803082d8&gt;\n</pre>\n    </body>\n</html>\n```\n\n# Steps To Reproduce\n\n1. Conduct the POST request attached above to the `http://gip.rocks/v1` using Burp, Charles, or \nhttps://www.hurl.it/ with correct Content-Type header:\n{F174337}\n{F174336}\n2. Check the response.\n\n# Patch\nI think you need just some exception handling block when perform image load at `https://github.com/gratipay/gip.rocks/blob/master/www/v1.spt` on line 19\n```\n# Load the image.\nfp = StringIO(request.raw_body)\nfp.seek(0)\nimage = Image.open(fp)\n```\n\n",
+    "weakness": {
+        "id": 82,
+        "name": "Information Exposure Through an Error Message"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 174336,
+            "file_name": "z1.JPG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/174/336/465c0d2b6b3de12b779796a6b7f36443a4d29271/z1.JPG?response-content-disposition=attachment%3B%20filename%3D%22z1.JPG%22%3B%20filename%2A%3DUTF-8%27%27z1.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080537Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1f53007950cf7985136190617103230da1563d37f659eb3d306f9c100fb035b8",
+            "file_size": 87778,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 174337,
+            "file_name": "z.JPG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/174/337/5917bdded3034506cd1f5f4fc2dd5a543019f276/z.JPG?response-content-disposition=attachment%3B%20filename%3D%22z.JPG%22%3B%20filename%2A%3DUTF-8%27%27z.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080537Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6ca23325a48460c93ea862c5a8ece162eabf184c6638f19ee1b2cb29792c8985",
+            "file_size": 49753,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "delimitry",
+        "haxta4ok00",
+        "eveeez",
+        "linkks",
+        "spetr0x",
+        "thejaguar"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1595321,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThank you for your report, the receipt of which we herewith confirm. We are currently verifying the issue you reported.\n\nPlease expect additional feedback from us within the next couple of days. The \"INFORMATION SECURITY\" section of the following page has additional, useful information regarding our platform's security: http://inside.gratipay.com/howto/manage-risk\n\nWe appreciate your interest in securing our platform and look forward to working with you.\n\nYours sincerely,\nThe Gratipay Security Team",
+            "automated_response": true,
+            "created_at": "2017-04-08T18:48:39.103Z",
+            "updated_at": "2017-04-08T18:48:39.103Z",
+            "actor": {
+                "url": "/gratipay",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Gratipay"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595336,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugDuplicate",
+            "message": "Hi @sp1d3rs,\n\nThank you very much for the very well written and well structured report. Unfortunately, this has already been reported to us and the team decided that since we are open-source and that this information is already out there that they will not fix this issue.\n\nQuote @whit537:\n\n> This is an interesting bug, but not a security vulnerability in our case. Our code is open-source and we're open about hosting on Heroku, so leaking this path is a non-issue.\n\nIf you believe this can create a bigger issue or simply disagree with our decision, please reply with additional information describing your reasoning.\n\nWe look forward to more reports from you in the future.\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:26:40.378Z",
+            "updated_at": "2017-04-08T19:26:40.378Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595337,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:26:51.374Z",
+            "updated_at": "2017-04-08T19:26:51.374Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595338,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, it is a good point. Disclosing it to prevent other Duplicates.",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:30:09.233Z",
+            "updated_at": "2017-04-08T19:30:09.233Z",
+            "actor": {
+                "username": "sp1d3rs",
+                "cleared": false,
+                "verified": false,
+                "url": "/sp1d3rs",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595339,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:30:14.917Z",
+            "updated_at": "2017-04-08T19:30:14.917Z",
+            "actor": {
+                "username": "sp1d3rs",
+                "cleared": false,
+                "verified": false,
+                "url": "/sp1d3rs",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595340,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:30:14.944Z",
+            "updated_at": "2017-04-08T19:30:14.944Z",
+            "actor": {
+                "username": "sp1d3rs",
+                "cleared": false,
+                "verified": false,
+                "url": "/sp1d3rs",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1595342,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks @sp1d3rs! Keep up the good work and well-written reports. 😊",
+            "automated_response": false,
+            "created_at": "2017-04-08T19:34:14.346Z",
+            "updated_at": "2017-04-08T19:34:14.346Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

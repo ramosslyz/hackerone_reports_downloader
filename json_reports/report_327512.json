@@ -1,0 +1,522 @@
+{
+    "id": 327512,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMjc1MTI=",
+    "url": "https://hackerone.com/reports/327512",
+    "title": "Potential command injection in `Shell#[]` and `Shell#test`",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "none",
+    "readable_substate": "Resolved",
+    "created_at": "2018-03-19T20:33:10.989Z",
+    "submitted_at": "2018-03-19T20:33:10.989Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ooooooo_q",
+        "url": "/ooooooo_q",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-10-16T23:15:28.407Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-10-16T23:15:28.314Z",
+    "team_member_agreed_on_going_public_at": "2019-10-16T23:10:46.538Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "As `Shell#test` and `Shell#[]` use `send` when transferring to FileTest, private methods etc. can also be called. Therefore, command injection is possible when a crafted value is passed.\n\n```ruby\n$ irb\nirb(main):001:0> `ls xy`\nls: xy: No such file or directory\n=> \"\"\n\nirb(main):002:0> require 'shell'\n=> true\nirb(main):003:0> sh = Shell.new\n=> #<Shell:0x00007fc0c20f2a78>\nirb(main):004:0> sh['system', '$(touch xy)']\nsh: /private/tmp/: is a directory\n=> false\n\nirb(main):005:0> `ls xy`\n=> \"xy\\n\"\n```\n\nSince send is executed after the file path is converted to absolute path, it is difficult with `instance_eval` and `open` etc, but you can execute it using a subshell.\n\n## Impact\n\nIt seems almost unlikely that user input is given for the purpose, so it probably will not be affected in most cases.\nIt may be feasible under complex conditions such as combining object injection and other problems.",
+    "bounty_amount": "200.0",
+    "formatted_bounty": "$200",
+    "weakness": {
+        "id": 58,
+        "name": "Command Injection - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2019-11-15T23:10:46.642Z",
+    "allow_singular_disclosure_after": -119434753.33330205,
+    "singular_disclosure_allowed": true,
+    "vote_count": 1,
+    "voters": [
+        "bl4de"
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2676030,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It is a pattern using `instance_eval`.\n(However, it seems that this will succeed only when the path is shallow.)\n\n```ruby\n$ irb\nirb(main):001:0> `pwd`\n=> \"/Users\\n\"\nirb(main):002:0> require 'shell'\n=> true\nirb(main):003:0> sh = Shell.new\n=> #<Shell:0x00007fba500c3d90>\nirb(main):004:0> sh['instance_eval', '.match (puts \"z\")']\nz\n=> nil\n```",
+            "automated_response": false,
+            "created_at": "2018-04-28T11:38:35.839Z",
+            "updated_at": "2018-04-28T11:38:35.839Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2768745,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ruby \nhi, Is this report eligible for processing?",
+            "automated_response": false,
+            "created_at": "2018-05-20T15:30:07.331Z",
+            "updated_at": "2018-05-20T15:30:07.331Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2803976,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sck, Sorry our late response.\n\nWe didn't investigate this yet. ",
+            "automated_response": false,
+            "created_at": "2018-05-28T00:17:25.101Z",
+            "updated_at": "2018-05-28T00:17:25.101Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2804022,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-05-28T01:34:48.704Z",
+            "updated_at": "2018-05-28T01:34:48.704Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 3582181,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@hsbt\n\nWill this continue to be investigated?\n\nIt seems that there are no circumstances that actually pose a vulnerability problem and seems to be OK even if you close it.",
+            "automated_response": false,
+            "created_at": "2018-11-04T01:26:11.274Z",
+            "updated_at": "2018-11-04T01:26:11.274Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 3695985,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ooooooo_q It's vulnerability. We are fixing it in next release.",
+            "automated_response": false,
+            "created_at": "2018-11-22T08:28:24.999Z",
+            "updated_at": "2018-11-22T08:28:24.999Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 3696375,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ooooooo_q Can you confirm attached patch for fixing this vulnerability?",
+            "automated_response": false,
+            "created_at": "2018-11-22T08:47:36.293Z",
+            "updated_at": "2018-11-22T08:47:36.293Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 379280,
+                    "filename": "shell-fix.patch",
+                    "type": "text/x-diff",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/379/280/dd16fcff53ad4d8cdb233a337324ca3f7cc24b11/shell-fix.patch?response-content-disposition=attachment%3B%20filename%3D%22shell-fix.patch%22%3B%20filename%2A%3DUTF-8%27%27shell-fix.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7b3e9d4ad41086f2b706d69e2b13263a0fbb29558499b122c8694f8beffb05ee"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 3697405,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@hsbt\nI confirmed the patch.\nIn most cases it will be fixed, but since `public_method` can execute `instance_eval`, the problem remains in the code.\nhttp://the.igreque.info/posts/2016/01-object-send-considered-harmful-en.html#can-public_send-avoid\n",
+            "automated_response": false,
+            "created_at": "2018-11-22T13:37:57.785Z",
+            "updated_at": "2018-11-22T13:37:57.785Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 4106862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ooooooo_q I did escalate this to the original author of Shell library. \n",
+            "automated_response": false,
+            "created_at": "2019-02-07T04:41:36.590Z",
+            "updated_at": "2019-02-07T04:41:36.590Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 5780026,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "How about this?\n```diff\ndiff --git a/lib/shell/command-processor.rb b/lib/shell/command-processor.rb\nindex 5fe6056560..9a7a2332a3 100644\n--- a/lib/shell/command-processor.rb\n+++ b/lib/shell/command-processor.rb\n@@ -180,6 +180,9 @@ def test(command, file1, file2=nil)\n             top_level_test(command, file1)\n           end\n         else\n+          unless FileTest.methods(false).include?(command.to_s)\n+            raise \"unsupported command: #{ command }\"\n+          end\n           if file2\n             FileTest.send(command, file1, file2)\n           else\n```",
+            "automated_response": false,
+            "created_at": "2019-09-11T13:42:12.517Z",
+            "updated_at": "2019-09-11T13:42:12.517Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 5780763,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@mame It seems there is no problem.",
+            "automated_response": false,
+            "created_at": "2019-09-11T15:48:40.659Z",
+            "updated_at": "2019-09-11T15:48:40.659Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 5780910,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Agh, `command.to_s` -> `command.to_sym`.  Thank you for the confirmation, anyway.\n\n```\ndiff --git a/lib/shell/command-processor.rb b/lib/shell/command-processor.rb\nindex 5fe6056560..9a7a2332a3 100644\n--- a/lib/shell/command-processor.rb\n+++ b/lib/shell/command-processor.rb\n@@ -180,6 +180,9 @@ def test(command, file1, file2=nil)\n             top_level_test(command, file1)\n           end\n         else\n+          unless FileTest.methods(false).include?(command.to_sym)\n+            raise \"unsupported command: #{ command }\"\n+          end\n           if file2\n             FileTest.send(command, file1, file2)\n           else\n```",
+            "automated_response": false,
+            "created_at": "2019-09-11T16:20:08.750Z",
+            "updated_at": "2019-09-11T16:20:08.750Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059709,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "This issue was fixed at Ruby 2.6.5/2.5.7/2.4.8.  Thank you for the report.  I'll leave the bounty handling to IBB.",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:08:03.536Z",
+            "updated_at": "2019-10-16T23:08:03.536Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "ooooooo_q",
+                "url": "/ooooooo_q"
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059724,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:10:37.465Z",
+            "updated_at": "2019-10-16T23:10:37.465Z",
+            "actor": {
+                "url": "/ruby",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Ruby"
+                }
+            },
+            "bounty_amount": "200.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "ruby",
+            "collaborator": {
+                "username": "ooooooo_q",
+                "url": "/ooooooo_q"
+            }
+        },
+        {
+            "id": 6059725,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:10:46.579Z",
+            "updated_at": "2019-10-16T23:10:46.579Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073000Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f75700e6d9174d40481977615c1fdc2139deaaecae906a625379efb6e31ff4c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059755,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:15:28.330Z",
+            "updated_at": "2019-10-16T23:15:28.330Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059756,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:15:28.422Z",
+            "updated_at": "2019-10-16T23:15:28.422Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

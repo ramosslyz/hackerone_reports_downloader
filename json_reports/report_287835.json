@@ -1,0 +1,433 @@
+{
+    "id": 287835,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yODc4MzU=",
+    "url": "https://hackerone.com/reports/287835",
+    "title": "Resolv::getaddresses bug that can be abused to bypass security measures. ",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2017-11-06T19:44:58.500Z",
+    "submitted_at": "2017-11-06T19:44:58.500Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "edoverflow",
+        "url": "/edoverflow",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-02-23T07:19:19.776Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-11-10T09:34:10.401Z",
+    "team_member_agreed_on_going_public_at": "2018-02-23T07:19:19.683Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Description\n\n`Resolv::getaddresses` is OS-dependent, therefore by playing around with different IP formats one can return blank values. This bug can be abused to bypass exclusion lists often used to protect against SSRF.\n\n| 💻 Machine 1 | \t💻 Machine 2 | \n|--------------|---------------| \n| ruby 2.3.3p222 (2016-11-21) [x86_64-linux-gnu] | ruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu] |\n\n💻 Machine 1\n\n```\nirb(main):002:0> Resolv.getaddresses(\"127.0.0.1\")\n=> [\"127.0.0.1\"]\nirb(main):003:0> Resolv.getaddresses(\"localhost\")\n=> [\"127.0.0.1\"]\nirb(main):004:0> Resolv.getaddresses(\"127.000.000.1\")\n=> [\"127.0.0.1\"]\n```\n💻 Machine 2\n\n```\nirb(main):008:0> Resolv.getaddresses(\"127.0.0.1\")\n=> [\"127.0.0.1\"]\nirb(main):009:0> Resolv.getaddresses(\"localhost\")\n=> [\"127.0.0.1\"]\nirb(main):010:0> Resolv.getaddresses(\"127.000.000.1\")\n=> []\n```\n\n# Proof of concept\n\n```\nirb(main):001:0> require 'resolv'\n=> true\nirb(main):002:0> uri = \"0x7f.1\"\n=> \"0x7f.1\"\nirb(main):003:0> server_ips = Resolv.getaddresses(uri)\n=> [] # The bug!\nirb(main):004:0> blocked_ips = [\"127.0.0.1\", \"::1\", \"0.0.0.0\"]\n=> [\"127.0.0.1\", \"::1\", \"0.0.0.0\"]\nirb(main):005:0> (blocked_ips & server_ips).any?\n=> false # Bypass\n```\n\n# Mitigation\n\nCurrently I have been suggesting that the affected vendors stay away from `Resolv::getaddresses` altogether and use the `Socket` class.\n\n```\nirb(main):002:0> Resolv.getaddresses(\"127.1\")\n=> []\nirb(main):003:0> Socket.getaddrinfo(\"127.1\", nil).sample[3]\n=> \"127.0.0.1\"\n```\n\n# Affected vendors and gems\n\nBy abusing this bug I was able to bypass GitLab, HackerOne and [private_address_check](https://github.com/jtdowney/private_address_check/)'s [SSRF](https://www.owasp.org/index.php/Server_Side_Request_Forgery) filters.\n\nThe `private_address_check` gem, for instance, relied on `Resolv::getaddresses` in `lib/private_address_check.rb`:\n\n```ruby\ndef resolves_to_private_address?(hostname)\n    ips = Resolv.getaddresses(hostname)\n    ips.any? do |ip| \n      private_address?(ip)\n    end\nend\n```\n\n```\nirb(main):001:0> require 'private_address_check'\n=> true\nirb(main):002:0> PrivateAddressCheck.resolves_to_private_address?(\"127.1\")\n=> false # Bypass\n```\n\nThe author of this gem has provided a [patch](https://github.com/jtdowney/private_address_check/commit/58a0d7fe31de339c0117160567a5b33ad82b46af) for this issue and I can confirm that I am unable to bypass the fix.\n\nGitLab and HackerOne have also been notified and plan on releasing a fix this week.\n\n",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "jokebookservice1",
+        "003random",
+        "khizer47",
+        "666reda"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2138101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-11-06T20:15:00.680Z",
+            "updated_at": "2017-11-06T20:15:00.680Z",
+            "cve_ids": [
+                "CVE-2017-0904"
+            ],
+            "actor": {
+                "username": "reed",
+                "cleared": false,
+                "verified": false,
+                "url": "/reed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/132/66d7eadcea16b878bb67bfd697b9542250a801a7_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2139111,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello, thank you for the report.  Our team members are looking at it.",
+            "automated_response": false,
+            "created_at": "2017-11-07T04:18:13.168Z",
+            "updated_at": "2017-11-07T04:18:13.168Z",
+            "actor": {
+                "username": "shyouhei",
+                "cleared": false,
+                "verified": false,
+                "url": "/shyouhei",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2139227,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-11-07T06:28:16.274Z",
+            "updated_at": "2017-11-07T06:28:16.274Z",
+            "actor": {
+                "username": "tanaka_akr",
+                "cleared": false,
+                "verified": false,
+                "url": "/tanaka_akr",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2139298,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "resolv.rb can behave differently with OS's resolver.\nThis is documented behavior.\nhttps://docs.ruby-lang.org/en/2.4.0/Resolv.html describes that\nresolv.rb doesn't support NIS (of Solaris).\nI.e. some name not resolved with resolv.rb may be resolved in OS's resolver.\n\nUncommon IP address format can be considered as an example of above.\n\nAlthough it is possible to support such uncommon IP addresses in resolv.rb\nbut it is too difficult to support NIS.\nWe can not match the behaviors of resolv.rb and OS's resolver.\n\nThe right way to check an address is using OS's resolver instead of resolv.rb\nif the address is resolved by OS's resolver.\nFor example, Addrinfo.getaddrinfo of socket library can be used:\n\n```\n% ruby -rsocket -e '\nas = Addrinfo.getaddrinfo(\"192.168.0.1\", nil)\np as\np as.map {|a| a.ipv4_private? }\n'\n[#<Addrinfo: 192.168.0.1 TCP>, #<Addrinfo: 192.168.0.1 UDP>, #<Addrinfo: 192.168.0.1 SOCK_RAW>]\n[true, true, true]\n```\n\nIf you need CIDR or netmask, ipaddr library helps.\n",
+            "automated_response": false,
+            "created_at": "2017-11-07T07:32:23.648Z",
+            "updated_at": "2017-11-07T07:32:23.648Z",
+            "actor": {
+                "username": "tanaka_akr",
+                "cleared": false,
+                "verified": false,
+                "url": "/tanaka_akr",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2139723,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @tanaka_akr,\n\nThank you for the prompt response. I would like to reiterate the importance of this issue by reminding you that I have discovered numerous cases where this class was being used leading to a security vulnerability. In my opinion, those two little bullet points do not suffice and I would recommend reviewing your documentation again and coming up with a better solution to emphasize the fact that `Resolv` can have unpredictable behaviour and should not be used for security measures such as SSRF filters.\n\nThe Python documentation does this very well by having a large red panel that clearly instructs the developer on what not to use that specific library for. An example warning can be seen here: https://docs.python.org/3/library/random.html.",
+            "automated_response": false,
+            "created_at": "2017-11-07T09:57:59.475Z",
+            "updated_at": "2017-11-07T09:57:59.475Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2141896,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "True. We need doc improvements.",
+            "automated_response": false,
+            "created_at": "2017-11-08T01:54:56.589Z",
+            "updated_at": "2017-11-08T01:54:56.589Z",
+            "actor": {
+                "username": "shyouhei",
+                "cleared": false,
+                "verified": false,
+                "url": "/shyouhei",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2144783,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The document is not so updated since Ruby 1.8 era.\nI agree that it should be updated including emphasizing difference to OS's resolver.",
+            "automated_response": false,
+            "created_at": "2017-11-09T01:33:39.055Z",
+            "updated_at": "2017-11-09T01:33:39.055Z",
+            "actor": {
+                "username": "tanaka_akr",
+                "cleared": false,
+                "verified": false,
+                "url": "/tanaka_akr",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2147025,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have published a write-up on this issue in order to inform developers on the consequences of using `Resolv::getaddresses` for security measures such as SSRF filters: https://edoverflow.com/2017/ruby-resolv-bug/. If there is anyway that I can possibly help with improving Ruby's documentation, please let me know.",
+            "automated_response": false,
+            "created_at": "2017-11-09T18:41:26.562Z",
+            "updated_at": "2017-11-09T18:41:26.562Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2148413,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks to your report. We decide to not handle this for security issue.",
+            "automated_response": false,
+            "created_at": "2017-11-10T08:39:25.907Z",
+            "updated_at": "2017-11-10T08:39:25.907Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6010f16a2f829d6dd8c1e3de964fd483157735bc49f0f0f51377bae54f5f4d34"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2148510,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thank you very much for the extremely informative response, @hsbt. Now I know how to deal with such issues in future.",
+            "automated_response": false,
+            "created_at": "2017-11-10T09:34:10.456Z",
+            "updated_at": "2017-11-10T09:34:10.456Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2150182,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I would like to apologise for my brash comment earlier. Putting so much time and effort into this issue and not even getting a response explaining your final decision is very frustrating. In future, I will be more careful as to how I deal with this frustration. I would also suggest you communicate clearly how you came to your final decision to security researchers. Making your thought process clear helps us learn and improve. Nevertheless, my comment was uncalled for and I hope it did not offend anyone.\n\nI hope you have a wonderful weekend.",
+            "automated_response": false,
+            "created_at": "2017-11-10T20:34:02.287Z",
+            "updated_at": "2017-11-10T20:34:02.287Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2150779,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-11-11T03:04:56.165Z",
+            "updated_at": "2017-11-11T03:04:56.165Z",
+            "cve_ids": [],
+            "actor": {
+                "username": "reed",
+                "cleared": false,
+                "verified": false,
+                "url": "/reed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/132/66d7eadcea16b878bb67bfd697b9542250a801a7_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2424149,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T07:19:19.728Z",
+            "updated_at": "2018-02-23T07:19:19.728Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6010f16a2f829d6dd8c1e3de964fd483157735bc49f0f0f51377bae54f5f4d34"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 2424150,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T07:19:19.801Z",
+            "updated_at": "2018-02-23T07:19:19.801Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6010f16a2f829d6dd8c1e3de964fd483157735bc49f0f0f51377bae54f5f4d34"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

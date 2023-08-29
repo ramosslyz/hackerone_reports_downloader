@@ -1,0 +1,329 @@
+{
+    "id": 1463013,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDYzMDEz",
+    "url": "https://hackerone.com/reports/1463013",
+    "title": "Occasional use-after-free in multi_done() libcurl-7.81.0",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2022-01-28T18:22:32.999Z",
+    "submitted_at": "2022-01-28T18:22:33.099Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "luminixaaron",
+        "url": "/luminixaaron",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-03-09T21:46:52.194Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-01-30T11:53:09.885Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "We are seeing the use of a `struct connectdata *` on a thread after it was returned to the connection cache (and thus available for use on other threads including potential deallocation) in `multi_done()` in libcurl-7.81.0.  This could occasionally result in an actual use-after-free, witnessed on Windows 10 platform.\n\n## Steps To Reproduce:\n- [`multi_done()` line 717](https://github.com/curl/curl/blob/curl-7_81_0/lib/multi.c#L717) a call is made to `Curl_conncache_return_conn()`\n- `Curl_conncache_return_conn()` returns `TRUE` (conn was returned to the cache and available for use in other threads) and execution continues on [line 719](https://github.com/curl/curl/blob/curl-7_81_0/lib/multi.c#L719) where the code derefs the now unowned `conn` to get the `connection_id`\n- We have a fork with a [commit](https://github.com/luminixinc/curl/commit/e8560cb3a2aa0c104d1afcc77490b70bad1ce9cd) that both tests (inline, not formally) and offers a potential fix for this issue.\n- See attached screenshot showing assert firing in debug build\n\n## Impact\n\nUnsure.\n\nI'm not a hacker, and would have been happy to submit this as a GitHub issue instead, but _discretion being the better part of valor_, decided to post this issue here instead :)\n\nTangentially, I do not care to get credit or receive a bounty for this issue.  Would be great to get this fixed as I suggested or in some other manner, thanks!",
+    "weakness": {
+        "id": 50,
+        "name": "Use After Free"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1596575,
+            "file_name": "assert.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/frmaa5xpbt51e6knf6hqxm4yjw5q?response-content-disposition=attachment%3B%20filename%3D%22assert.png%22%3B%20filename%2A%3DUTF-8%27%27assert.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b02e76b65a05709c41a7f271ca14fbd25bb715b0cf1bc7e3ee20cdf7f2762ab9",
+            "file_size": 356498,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 1,
+    "voters": [
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 15234108,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report, we will look into it and get back to you.",
+            "automated_response": false,
+            "created_at": "2022-01-28T18:38:40.975Z",
+            "updated_at": "2022-01-28T18:38:40.975Z",
+            "actor": {
+                "username": "dgustafsson",
+                "cleared": false,
+                "verified": false,
+                "url": "/dgustafsson",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15236200,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'm not sure I follow this description. This is what I see;\n\n- on multi.c:717  in `multi_done()`, `Curl_conncache_return_conn` is called\n- if that function returns `TRUE` the `conn` pointer is dereferenced on line 719, even if the function call on line 717 has passed on ownership of the data the pointer points to. This is the error\n\nHere are additional details I see and please tell me if I've gone wrong somewhere:\n- `Curl_conncache_return_conn()` returns the connection to the pool **or disconnects and frees it**\n- If the connection it disconnects and frees is the same connection that was passed in as argument (coming from `multi_done`) the function returns `FALSE`.  Meaning that it **will not** dereference the conn pointer on line 719 for this case.\n- To make `Curl_conncache_return_conn()` return TRUE, the connection is returned to the pool *alive* and not freed. The access on line 719 then seems to access data that it indeed has handed over responsibility for, but it has not *freed* it.\n\nThe connection pool sharing is not working across threads (this is a documented known flaw/restriction) so there's nothing that has a chance to kill and free the connection before the line 719 dereference. Or am I missing something?",
+            "automated_response": false,
+            "created_at": "2022-01-28T21:59:06.520Z",
+            "updated_at": "2022-01-28T21:59:06.520Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0482306241f2e7e0a9240e6e4e35d49bd8158b6a0fed007445e08942d6441d6f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15246163,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for responding Daniel!\n\nYes, we are in agreement with all your bullet points except the final one, which is where the potential use-after-free can creep in.\n\nWhile I agree with your final point 99% of the time, imagine this potential scenario, which I think we caught twice in the wild:\n- Thread1 `Curl_conncache_return_conn()` returns TRUE because `conn` was, (and we are in full agreement here), returned to the pool _alive and not freed_\n- Thread1 is blocked by the system before line 719 executes (and sometime _after_ line 405 in `Curl_conncache_return_conn()` --see below)\n- Thread2 grabs the same `conn` from the pool, does a bunch of work, and ends up in `multi_done()`, but this time `Curl_conncache_return_conn()` returns FALSE, indicating that now `conn`was deallocated...\n- Thread1 is now unblocked by the system which proceeds to execute the dereference of the now deallocated `conn` on line 719\n\nNOTES:\n- As you can see in our [commit](https://github.com/luminixinc/curl/commit/e8560cb3a2aa0c104d1afcc77490b70bad1ce9cd), the `#if 1 /* TESTING ... */` code is meant to simulate the system blocking Thread1 in step 2 above, and thus widen the potential for the race that could result in a potential segfault.\n- It appears to me that the race window actually begins right after line 405 in `Curl_conncache_return_conn()`, where `conn->lastused = Curl_now()`, which appears to be how it is returned to the pool.  If my understanding is correct, this represents a wider window, than just when `Curl_conncache_return_conn()` returns TRUE.\n- In terms of connection sharing (e.g.: `CURL*`s) _in our code_, I'm fairly certain that is not happening here or we would see a different type of blow up.\n\nI hope I was able to clarify my reasoning (and of course I may be missing something here too) on the potential for use-after-free.\n\nKind regards,\n\nAaron",
+            "automated_response": false,
+            "created_at": "2022-01-29T23:43:20.935Z",
+            "updated_at": "2022-01-29T23:43:20.935Z",
+            "actor": {
+                "username": "luminixaaron",
+                "cleared": false,
+                "verified": false,
+                "url": "/luminixaaron",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15246191,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, if a second **thread** gets that connection it can certainly lead to a use-after-free. However, another thread can only get that connection if the connection cache is shared between threads, which requires the use of the share interface which [documents](https://curl.se/libcurl/c/CURLSHOPT_SHARE.html), and I quote:\n\n> Note that due to a known bug, it is not safe to share connections this way between multiple concurrent threads. \n\nMeaning that this (and other) problems are already known when the connections are shared between threads. It's a known issue. And honestly one that is pretty complicated to fix without a substantial amount of work.\n\nSince this is already a documented flaw, I don't consider this a (new) security problem.\n\nStill a bug we should fix, yes.",
+            "automated_response": false,
+            "created_at": "2022-01-29T23:58:26.464Z",
+            "updated_at": "2022-01-29T23:58:26.464Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0482306241f2e7e0a9240e6e4e35d49bd8158b6a0fed007445e08942d6441d6f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15246431,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "OK thank you for the clarification and your time.  It seems we are Doing It Wrong, and we will need to refactor to correctly use the multi interface.\n\nKind regards,\n\nAaron",
+            "automated_response": false,
+            "created_at": "2022-01-30T02:10:28.611Z",
+            "updated_at": "2022-01-30T02:10:28.611Z",
+            "actor": {
+                "username": "luminixaaron",
+                "cleared": false,
+                "verified": false,
+                "url": "/luminixaaron",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15249887,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks for confirming. If you want to fix this issue, file a PR for it. Otherwise I can do it.",
+            "automated_response": false,
+            "created_at": "2022-01-30T11:36:03.017Z",
+            "updated_at": "2022-01-30T11:36:03.017Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0482306241f2e7e0a9240e6e4e35d49bd8158b6a0fed007445e08942d6441d6f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15250092,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I think we should make it available publicly.",
+            "automated_response": false,
+            "created_at": "2022-01-30T11:53:09.932Z",
+            "updated_at": "2022-01-30T11:53:09.932Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0482306241f2e7e0a9240e6e4e35d49bd8158b6a0fed007445e08942d6441d6f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15252509,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "OK I will issue a PR on GitHub, thank you.",
+            "automated_response": false,
+            "created_at": "2022-01-30T17:35:24.001Z",
+            "updated_at": "2022-01-30T17:35:24.001Z",
+            "actor": {
+                "username": "luminixaaron",
+                "cleared": false,
+                "verified": false,
+                "url": "/luminixaaron",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15814940,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-09T21:46:52.081Z",
+            "updated_at": "2022-03-09T21:46:52.081Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=850&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0482306241f2e7e0a9240e6e4e35d49bd8158b6a0fed007445e08942d6441d6f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

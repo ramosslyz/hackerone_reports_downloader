@@ -1,0 +1,477 @@
+{
+    "id": 1490470,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDkwNDcw",
+    "url": "https://hackerone.com/reports/1490470",
+    "title": "Admin Authentication Bypass Lead to Admin Account Takeover ",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2022-02-24T04:34:20.935Z",
+    "submitted_at": "2022-02-24T04:34:21.010Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "quickjohn",
+        "url": "/quickjohn",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 46613,
+        "url": "https://hackerone.com/ups",
+        "handle": "ups",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/pkPEL4aaki35bqW2ft2bvbkf/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/pkPEL4aaki35bqW2ft2bvbkf/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "UPS VDP",
+            "twitter_handle": "",
+            "website": "https://www.ups.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2022-06-20T00:18:15.085Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-05-21T00:18:08.969Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello Team\n\nI found that i can bypass the login page of the Admin account by intercepting the respone of the login request of ```connectnb.ups.com``` subdomain and change ```status``` from ```false``` to ```true```\n\n## Steps To Reproduce:\n\n  1. Open ```https://connectnb.ups.com/Layout/login```\n  2. Enter ```Admin``` as a Username  and ```1111``` as a password \n\n{F1631133}\n\n  3. Press log in and Intercept the request in Burp\n```\nPOST /api/Account/Login/ HTTP/2\nHost: connectnb.ups.com\nCookie: __RequestVerificationToken=QebkjA4fUWqs_x5SlBpsNQLJfA_U-PO9D27S5PJ8o4WoQ7I7inEZxzHFoQ4huXpUb9jeC8L-JusQF0PU18M73AyQ-xH2jF4hJVYtxbOe5lQ1\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/json;charset=utf-8\nContent-Length: 38\nOrigin: https://connectnb.ups.com\nSec-Fetch-Dest: empty\nSec-Fetch-Mode: cors\nSec-Fetch-Site: same-origin\nTe: trailers\n\n{\"UserName\":\"admin\",\"Password\":\"1111\"}\n```\n\n  4. Intercept the response for this request in Burp by >> ```Do Intercept >>Response to this request``` and then Forward this request\n  5. Change ```status``` value from ```false``` to ```true``` and Forward the request\n\n```\nHTTP/2 200 OK\nCache-Control: no-cache,no-cache,no-store\nPragma: no-cache,no-cache\nContent-Type: application/json; charset=utf-8\nExpires: -1\nServer: \nX-Content-Type-Options: nosniff\nX-Xss-Protection: 1; mode=block\nReferrer-Policy: no-referrer\nStrict-Transport-Security: max-age=31536000; includeSubDomains;preload\nX-Frame-Options: DENY\nX-Ua-Compatible: IE=Edge\nContent-Security-Policy: script-src 'self'; object-src 'self'; frame-ancestors 'none'\nExpect-Ct: enforce, max-age=7776000, report-uri='https://connectnb.ups.com/'\nAccess-Control-Allow-Origin: https://connectnb.ups.com/\nAccess-Control-Allow-Headers: Accept, Content-Type, Origin\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\nDate: Thu, 24 Feb 2022 03:59:01 GMT\nContent-Length: 71\n\n{\"status\":true,\"errorMessage\":\"Username and Password does not match.\"}\n```\n\n\n  6. Now open ```Report``` , ```Change Password``` and  ```Process Return``` and then Turn off the intercept of the Burp\n\n{F1631144}\n{F1631140}\n{F1631141}\n\n## Supporting Material/References:\n\nPOC Video\n\n{F1631161}\n\n## Impact\n\nThe attacker can \n- login as an admin by bypassing the authentication  \n- change the admin password to takeove the admin account\n- View the company's reports and delete them [1066 Report]\n- View processReturn",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1631133,
+            "file_name": "step2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cb4xehb4bomuemsgsyuxpq1kmefr?response-content-disposition=attachment%3B%20filename%3D%22step2.png%22%3B%20filename%2A%3DUTF-8%27%27step2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=27728157bf6fd7127ad12ab2f05e172465a7134dbf2bd8f11dc7fb138249dd1e",
+            "file_size": 192718,
+            "type": "image/png"
+        },
+        {
+            "id": 1631140,
+            "file_name": "ChangePassword.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rii189unpex0p45vbthuveywe65n?response-content-disposition=attachment%3B%20filename%3D%22ChangePassword.png%22%3B%20filename%2A%3DUTF-8%27%27ChangePassword.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f0eb3e39f1db5122da5be9563bfb14cc32092a946d6aceb5b35286ca3998cd1c",
+            "file_size": 192813,
+            "type": "image/png"
+        },
+        {
+            "id": 1631141,
+            "file_name": "ProcessReturn.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/t4ub08hmexb33k3fo9jvect37my9?response-content-disposition=attachment%3B%20filename%3D%22ProcessReturn.png%22%3B%20filename%2A%3DUTF-8%27%27ProcessReturn.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=db3210ca9b80ed2b31714e4b8091effc35758d5cf9f085b74399900163487011",
+            "file_size": 229796,
+            "type": "image/png"
+        },
+        {
+            "id": 1631144,
+            "file_name": "ReportsDisclusere.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6af00aml57187lgpoeq7cau89a9s?response-content-disposition=attachment%3B%20filename%3D%22ReportsDisclusere.png%22%3B%20filename%2A%3DUTF-8%27%27ReportsDisclusere.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=32cc8de52ad663b0130a0115b449c73e001ff0916957fb972e5830e068d7fa52",
+            "file_size": 245394,
+            "type": "image/png"
+        },
+        {
+            "id": 1631161,
+            "file_name": "POCVideo.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4ih8enaa56yk1qqbrzyjlg76u2xi?response-content-disposition=attachment%3B%20filename%3D%22POCVideo.mp4%22%3B%20filename%2A%3DUTF-8%27%27POCVideo.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fb3f74207b9e73d71080a916f15b516dfef254f8c69d1591874e5c630aa5e635",
+            "file_size": 4922193,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": "2022-06-20T00:18:09.067Z",
+    "allow_singular_disclosure_after": -37608229.947534055,
+    "singular_disclosure_allowed": true,
+    "vote_count": 75,
+    "voters": [
+        "lubak",
+        "gudarzi",
+        "tolga",
+        "redhotchilihacker_",
+        "yassinek3ch",
+        "zy9ard3",
+        "gemini",
+        "basant0x01",
+        "polem4rch",
+        "mmdz",
+        "and 65 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.5,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "low",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 69852,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.ups.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 15619751,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> View the company's reports and delete them [1066 Report]\n\nAs I mention in impact the attacker can viem Shipment Details such as :-\n- PICKUP LOCATION\n- RETURN LOCATION:\n- SERVICE NAME\n- PROCESS DATE\n- TRACKING NUMBE\n\n{F1631897}\n\n**POC Video**\n\n{F1631901}\n",
+            "automated_response": false,
+            "created_at": "2022-02-24T15:51:37.346Z",
+            "updated_at": "2022-02-24T15:52:07.288Z",
+            "actor": {
+                "username": "quickjohn",
+                "cleared": false,
+                "verified": true,
+                "url": "/quickjohn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1631901,
+                    "filename": "ShipmentDetails.mp4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/nfnar1axkbba3xcjr6f4vb2pieog?response-content-disposition=attachment%3B%20filename%3D%22ShipmentDetails.mp4%22%3B%20filename%2A%3DUTF-8%27%27ShipmentDetails.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ce49b4d62f7c84d49e8e80f33de34f4cad9cd6a9778ffeef4d971c3c207cf048"
+                },
+                {
+                    "id": 1631897,
+                    "filename": "ShipmentDetails.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/lcgsohqh58tn9259v1wkpukux0i6?response-content-disposition=attachment%3B%20filename%3D%22ShipmentDetails.png%22%3B%20filename%2A%3DUTF-8%27%27ShipmentDetails.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7a37e0f0a7a753589c5bd8809a0a3f6f7808129f8e67d5a58ede20104d14079c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15630192,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @7odamo,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@saffron",
+            "automated_response": false,
+            "created_at": "2022-02-25T11:24:00.873Z",
+            "updated_at": "2022-02-25T11:24:00.873Z",
+            "actor": {
+                "username": "h1_analyst_dhaval",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_dhaval",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cY5cPzjJeGeBPzeaefv49om9/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15630469,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-25T11:38:59.852Z",
+            "updated_at": "2022-02-25T11:38:59.852Z",
+            "additional_data": {
+                "old_severity": "Critical",
+                "new_severity": "Critical (9.1)",
+                "old_severity_id": 1408204,
+                "new_severity_id": 1409673
+            },
+            "actor": {
+                "username": "h1_analyst_dhaval",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_dhaval",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cY5cPzjJeGeBPzeaefv49om9/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15630642,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportVulnerabilityTypesUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-25T11:49:47.813Z",
+            "updated_at": "2022-02-25T11:49:47.813Z",
+            "additional_data": {
+                "added_weaknesses": [
+                    {
+                        "id": 27,
+                        "name": "Improper Authentication - Generic"
+                    }
+                ],
+                "removed_weaknesses": [
+                    {
+                        "id": 26,
+                        "name": "Improper Access Control - Generic"
+                    }
+                ]
+            },
+            "actor": {
+                "username": "h1_analyst_dhaval",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_dhaval",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cY5cPzjJeGeBPzeaefv49om9/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15630656,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @7odamo,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nThanks,\n@saffron",
+            "automated_response": false,
+            "created_at": "2022-02-25T11:49:59.982Z",
+            "updated_at": "2022-02-25T11:49:59.982Z",
+            "actor": {
+                "username": "h1_analyst_dhaval",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_dhaval",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cY5cPzjJeGeBPzeaefv49om9/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15710948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-02T18:02:48.365Z",
+            "updated_at": "2022-03-02T18:02:48.365Z",
+            "additional_data": {
+                "old_severity": "Critical (9.1)",
+                "new_severity": "Medium (6.5)",
+                "old_severity_id": 1409673,
+                "new_severity_id": 1416981
+            },
+            "actor": {
+                "username": "5h4d0w123",
+                "cleared": false,
+                "verified": false,
+                "url": "/5h4d0w123",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 15922783,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks again for the find, @7odamo! \nThis issue has been resolved. ",
+            "automated_response": false,
+            "created_at": "2022-03-17T14:26:15.617Z",
+            "updated_at": "2022-03-17T14:26:15.617Z",
+            "actor": {
+                "username": "5h4d0w123",
+                "cleared": false,
+                "verified": false,
+                "url": "/5h4d0w123",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "quickjohn",
+                "url": "/quickjohn"
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 16245684,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @5h4d0w123\n\nGreat job, The bug has been fixed!\nBut I'd recommend fixing the error message which shows if the username exists or not\nAs if the username doesn't exist, an error show --> ```Username does not exist```\nAnd if it exists, an error show --> ```Username and password does not match```\n{F1689087}\n\n\n\nAnd I would like to know why the severity is reduced to medium although there is a PII leak  adding to the broken authentication in the admin panel\n\n**The last thing I would like to ask if there is any kind of swag, I will be happy if I get a swag from UPS :) **\n\nRegards,\n7odamo",
+            "automated_response": false,
+            "created_at": "2022-04-11T21:48:48.304Z",
+            "updated_at": "2022-04-11T21:53:18.796Z",
+            "actor": {
+                "username": "quickjohn",
+                "cleared": false,
+                "verified": true,
+                "url": "/quickjohn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1689087,
+                    "filename": "rec1.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xwype2r0njfxt0otroffpq3vlgrw?response-content-disposition=attachment%3B%20filename%3D%22rec1.png%22%3B%20filename%2A%3DUTF-8%27%27rec1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c0703675cdc10dd7900e7eb69564afb7f306677a6f7b28c2dcef1d36a4eedaa8"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 16800341,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Shall we disclose the report for the community? ",
+            "automated_response": false,
+            "created_at": "2022-05-21T00:18:08.998Z",
+            "updated_at": "2022-05-21T00:18:08.998Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "quickjohn",
+                "cleared": false,
+                "verified": true,
+                "url": "/quickjohn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        },
+        {
+            "id": 17201327,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-20T00:18:15.175Z",
+            "updated_at": "2022-06-20T00:18:15.175Z",
+            "actor": {
+                "url": "/ups",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pkPEL4aaki35bqW2ft2bvbkf/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "UPS VDP"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "ups"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 163714,
+            "category": "researcher",
+            "content": "𓂀",
+            "user": {
+                "id": 2122854,
+                "username": "quickjohn",
+                "name": "7odamo",
+                "bio": "",
+                "cleared": false,
+                "verified": true,
+                "website": null,
+                "location": "",
+                "created_at": "2021-12-12T19:50:37.005Z",
+                "url": "https://hackerone.com/quickjohn",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/jd3x7figlunelr6kqwi53sg64iyn/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

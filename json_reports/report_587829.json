@@ -1,0 +1,546 @@
+{
+    "id": 587829,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81ODc4Mjk=",
+    "url": "https://hackerone.com/reports/587829",
+    "title": "CSTI at Plugin page leading to active stored XSS (Publisher name)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-05-22T12:45:01.797Z",
+    "submitted_at": "2019-05-22T12:45:01.797Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "skavans",
+        "url": "/skavans",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17011,
+        "url": "https://hackerone.com/newrelic",
+        "handle": "newrelic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "New Relic",
+            "twitter_handle": "newrelic",
+            "website": "https://newrelic.com",
+            "about": "New Relic's Coordinated Disclosure Program"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-08-13T10:57:40.541Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:30:34.720Z",
+    "team_member_agreed_on_going_public_at": "2020-08-13T10:57:40.457Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hey team,\n\nI have discovered the CSTI vulnerability at NR single Plugin page leading to stored XSS.\n\nTo plant the payload you need to publish new plugin using account having the payload inside its name. Below I show you the easiest way to reproduce this using a python script which creates the new plugin using the Plugins API.\n\n###Steps to reproduce:\n1) Sign into the NR app with \"Admin\" account\n2) Change the account name to `xsstest{{'a'.constructor.prototype.charAt=[].join;$eval('x=alert(1)');}}`\n3) Open attached python-script and change the `YOUR_LICENSE_KEY` to your own license key\n4) Install the necessary python dependency with `sudo pip install requests`\n5) Run the changed script with `python nr_new_plugin.py`\n6) Navigate to NR Plugins and then to your new created plugin\n7) Make sure the XSS payload is fired\n{F494473}\n\n###Remediation\nThe vulnerability exists because of using the Angular framework. Here is the HTML-code of plugin page:\n```html\n...\n<section class='span-4 last' ng-app='Plugins'>\n<div class='branding-block clearfix'>\n<p>Published and supported by</p>\n<div class='logo'>\n<img alt=\"Branding-default\" height=\"44\" src=\"/images/v4/platform/branding-default.png?e9181bf\" width=\"44\" />\n</div>\n<div class='information'>\n<h1>PUBLISHER_NAME_HERE</h1>\n<ul>\n<li>\n<a href='' target='_blank'>About us</a>\n&nbsp;|&nbsp;\n...\n```\nAs you can see, the `PUBLISHER_NAME_HERE` is inside the element which is the Angular-app container (`<section class='span-4 last' ng-app='Plugins'>`, look at the `ng-app` attribute). It means that its content will be considered as Angular template so attacker can use the Angular template sandbox escape vulnerability to trigger an XSS here.\n\nThe right way to fix this is not to return the user controlled data inside the Angular app container. All user controlled data should be retrieved using Angular built-in AJAX. As the immediate fix, you can just filter the `{}` signs.\n\nThe vulnerability impact seems to be **higher than usual**, because after publishing this plugin, **every user from any account can be attacked**, when he visits the infected plugin page, not only users inside the attacker's account. So the impact here is up to the **arbitrary account takeover**.\n\n## Impact\n\nAttacker can force victim to execute arbitrary JS-code.",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 494473,
+            "file_name": "______________2019-05-22___15.29.56.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/473/b9b483ef48d6d0c36fd90708a786c87398c3fa3f/______________2019-05-22___15.29.56.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-22___15.29.56.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-22___15.29.56.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c3271d71d43ea5152b2af62ffac925bc1b9e8f23b0d9cb0f24c331b964d7c98c",
+            "file_size": 302033,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-09-10T09:30:34.766Z",
+    "allow_singular_disclosure_after": -93563400.68678133,
+    "singular_disclosure_allowed": true,
+    "vote_count": 91,
+    "voters": [
+        "wi11",
+        "p1stachios",
+        "sourc7",
+        "mashoud1122",
+        "e4366eolywrgpidfbio",
+        "newbipath12",
+        "vovohelo",
+        "spongebhav",
+        "ali",
+        "amine_sec",
+        "and 81 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18678,
+        "asset_type": "URL",
+        "asset_identifier": "rpm.newrelic.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4902217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Here is the python script.",
+            "automated_response": false,
+            "created_at": "2019-05-22T12:46:09.605Z",
+            "updated_at": "2019-05-22T12:46:09.605Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 494487,
+                    "filename": "nr_new_plugin.py",
+                    "type": "text/plain",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/487/488099a52d0f103f42038194f736200d4c8a5f37/nr_new_plugin.py?response-content-disposition=attachment%3B%20filename%3D%22nr_new_plugin.py%22%3B%20filename%2A%3DUTF-8%27%27nr_new_plugin.py&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=29d54c52915f870f8d4528bf955aed2cb949ac50a54ad5dfb00a4981eb2741fb"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4903673,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @skavans ! Woah, I had to show my co-worker this XSS payload, that looks like a great catch! Since I'm going to take a flight today I may not be able to confirm it until tomorrow, but rest assured we're on it.",
+            "automated_response": false,
+            "created_at": "2019-05-22T17:26:02.051Z",
+            "updated_at": "2019-05-22T17:26:02.051Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4904098,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Great, I'm waiting in patience :)",
+            "automated_response": false,
+            "created_at": "2019-05-22T18:29:29.634Z",
+            "updated_at": "2019-05-22T18:29:29.634Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4909645,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @scutler,\n\nIt looks like I was wrong a little with this\n> The vulnerability impact seems to be higher than usual, because after publishing this plugin, every user from any account can be attacked, when he visits the infected plugin page, not only users inside the attacker's account. So the impact here is up to the arbitrary account takeover.\n\nThe payload doesn't fire at published plugin page (at least if I don't list it at Plugin Central). So it is usual `User to Admin XSS` (I realized that there is no admin account needed to plant the payload, because you can specify the infected publisher name at plugin publishing step, so it is enough to be a User to plant the infection).",
+            "automated_response": false,
+            "created_at": "2019-05-23T12:26:09.388Z",
+            "updated_at": "2019-05-23T12:26:09.388Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4912096,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @skavans , can you provide a screenshot or details about where/how a normal user can specify the publisher name? I successfully reproduced this according to your original instructions but was unable to see where a normal user can modify that payload.\n\n> you can specify the infected publisher name at plugin publishing step, so it is enough to be a User to plant the infection",
+            "automated_response": false,
+            "created_at": "2019-05-23T18:45:40.283Z",
+            "updated_at": "2019-05-23T18:45:40.283Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4912426,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hey @scutler,\n\nThe normal user can publish the apps. So he can specify the \"Publisher name\" at the publishing step.\n{F495455}\n\nThe new name appears then at the published plugin page (where the payload is not executed):\n{F495459}\nAnd **at the developer plugin page too**, where the payload can be plant:\n{F495463}",
+            "automated_response": false,
+            "created_at": "2019-05-23T18:53:37.084Z",
+            "updated_at": "2019-05-23T18:53:37.084Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 495463,
+                    "filename": "______________2019-05-23___21.52.40.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/495/463/12e5df68aab39b3a2e0f4db2a6c66c48ef9908eb/______________2019-05-23___21.52.40.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-23___21.52.40.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-23___21.52.40.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=63c5930b52412e8eba7e95ae08a07069858b8d8e1cd6366832fd114d902922f4"
+                },
+                {
+                    "id": 495459,
+                    "filename": "______________2019-05-23___21.51.58.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/495/459/6d8b6f168bec8498e0fa5056e9e7628043c1c532/______________2019-05-23___21.51.58.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-23___21.51.58.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-23___21.51.58.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=aa14b36d5396d73d136de5d6bd97c33d5e44eb4c82eab3bee388564574ccf927"
+                },
+                {
+                    "id": 495455,
+                    "filename": "______________2019-05-23___21.50.35.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/495/455/3bdc7dc34bf10847d135ce9e3621fee7b9fa2669/______________2019-05-23___21.50.35.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-23___21.50.35.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-23___21.50.35.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1e910405bb543c1657c62e0017d1bc68d6290fad486daa6afef422028a5a450b"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4912766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I mean that before the plugin is published, the publisher name is account name. But when you publish it, you can specify the arbitrary publisher name, which will then appear at the vulnerable page.",
+            "automated_response": false,
+            "created_at": "2019-05-23T19:07:55.573Z",
+            "updated_at": "2019-05-23T19:07:55.573Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4912948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I'm changing this over to triaged since I was able to reproduce it.",
+            "automated_response": false,
+            "created_at": "2019-05-23T19:41:18.241Z",
+            "updated_at": "2019-05-23T19:41:18.241Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 4912962,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for finding this issue, it really was impressive! We look forward to working with you on other issues!\n{F495496}",
+            "automated_response": false,
+            "created_at": "2019-05-23T19:44:56.666Z",
+            "updated_at": "2019-05-23T19:44:56.666Z",
+            "actor": {
+                "url": "/newrelic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "New Relic"
+                }
+            },
+            "bounty_currency": "usd",
+            "attachments": [
+                {
+                    "id": 495496,
+                    "filename": "giphy.gif",
+                    "type": "image/gif",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/495/496/5621f8310085a38d6916868c8dc0f1e2ed31ec6e/giphy.gif?response-content-disposition=attachment%3B%20filename%3D%22giphy.gif%22%3B%20filename%2A%3DUTF-8%27%27giphy.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bd66e1d26e262df4b5c6b4c64e85ed595628afa9bea4d0d9b8f8427e21e99029"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic",
+            "collaborator": {
+                "username": "skavans",
+                "url": "/skavans"
+            }
+        },
+        {
+            "id": 5149870,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "The devs finished this work. Let us know if the fix appears incomplete. Thanks!",
+            "automated_response": false,
+            "created_at": "2019-06-20T18:19:31.568Z",
+            "updated_at": "2019-06-20T18:19:31.568Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "skavans",
+                "url": "/skavans"
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 5166954,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@scutler, it seems to be safe now :)",
+            "automated_response": false,
+            "created_at": "2019-06-22T07:53:55.335Z",
+            "updated_at": "2019-06-22T07:53:55.335Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8902505,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-11T09:30:34.744Z",
+            "updated_at": "2020-08-11T09:30:34.744Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8923209,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can we disclose this?",
+            "automated_response": false,
+            "created_at": "2020-08-13T08:31:21.798Z",
+            "updated_at": "2020-08-13T08:31:21.798Z",
+            "actor": {
+                "username": "skavans",
+                "cleared": false,
+                "verified": false,
+                "url": "/skavans",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8924736,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-13T10:57:40.476Z",
+            "updated_at": "2020-08-13T10:57:40.476Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 8924737,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-13T10:57:40.573Z",
+            "updated_at": "2020-08-13T10:57:40.573Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 127132,
+            "category": "researcher",
+            "content": "My Telegram channel about being the full-time bug bounty hunter, my tips and tricks:\n🇺🇸 [BugBountyPLZen](https://t.me/+mY0ndZYzGbYxYmYy)\n\nМой Telegram-канал про фуллтайм баг-хантинг, советы и методики:\n🇷🇺 [BugBountyPLZ](https://t.me/+WYgyG5n2_kM1Yzdi)",
+            "user": {
+                "id": 14089,
+                "username": "skavans",
+                "name": "Anton Subbotin",
+                "bio": "Swapped my office work for the bounty hunting ⚔️",
+                "cleared": false,
+                "verified": false,
+                "website": "https://skavans.ru/en/",
+                "location": "Russia",
+                "created_at": "2014-11-14T23:02:26.903Z",
+                "url": "https://hackerone.com/skavans",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

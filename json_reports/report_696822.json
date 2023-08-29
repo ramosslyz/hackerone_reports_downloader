@@ -1,0 +1,627 @@
+{
+    "id": 696822,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTY4MjI=",
+    "url": "https://hackerone.com/reports/696822",
+    "title": "Potential invocation of qsort on uninitialized memory during cookie save",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2019-09-18T01:52:21.989Z",
+    "submitted_at": "2019-09-18T01:52:21.989Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "pauldreik",
+        "url": "/pauldreik",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-02-08T07:54:36.887Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2021-01-08T08:23:32.030Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nIf cookiejar is set, cookies are written to file at exit. That is done by the function cookie_output() in cookie.c. The cookies are sorted before being stored, using qsort on a temporary array. That temporary array is uninitialized (gotten from malloc at https://github.com/curl/curl/blob/7c596f5dea586c1ba99dfbe7f3ce1996d82f7de0/lib/cookie.c#L1534 ). This would not be a problem unless there also is a bug in the range given to qsort \nhttps://github.com/curl/curl/blob/7c596f5dea586c1ba99dfbe7f3ce1996d82f7de0/lib/cookie.c#L1550\nwhich is numcookies. However, it should be j which is used for counting at https://github.com/curl/curl/blob/7c596f5dea586c1ba99dfbe7f3ce1996d82f7de0/lib/cookie.c#L1546.\n\nThe buffer passed to qsort is partially filled with cookie data, and the rest is uninitialized. When qsort sorts, it will dereference the supposed to be pointers to compare the elements and depending on the results jump around reading in memory.\n\n## Steps To Reproduce:\nI found this through fuzzing and I do not want to make that public until the problems I find are fixed - in case you want it now already, just hit me up. I attached the most important part of the fuzzer.\n\n\nIt is not obvious how to reproduce without the fuzzer: (c->numcookies must be nonzero and co->domain must not be set on at least one of them for this bug to be triggered. Perhaps by loading an evil cookie file from disk.\n\nTo detect it, address and undefined sanitizers are not sufficient. That is likely because qsort is a library function, so it's not instrumented. Valgrind does not always catch it either. I found it by adding an assert on pointer alignment inside the cookie_sort_ct(), and eventually found which of the 60000 test cases I had caused it.\n\n## Suggested fix\n```\ndiff --git a/lib/cookie.c b/lib/cookie.c\nindex 53ca40237..875569bb0 100644\n--- a/lib/cookie.c\n+++ b/lib/cookie.c\n@@ -1547,7 +1547,7 @@ static int cookie_output(struct CookieInfo *c, const char *dumphere)\n       }\n     }\n \n-    qsort(array, c->numcookies, sizeof(struct Cookie *), cookie_sort_ct);\n+    qsort(array, j, sizeof(struct Cookie *), cookie_sort_ct);\n \n     for(i = 0; i < j; i++) {\n       char *format_ptr = get_netscape_format(array[i]);\n\n```\n\nEven better (defence in depth) would be to allocate array with calloc instead of malloc which would cause (near null) pointer dereference instead of \"random\" values.\n\n## Supporting Material/References:\nAttached is\n  - the test case to feed as input to the fuzzer above.\n  - crash report from valgrind and assert()\n\n## Impact\n\nThis is read access, and if triggered it will perhaps cause a crash (segmentation fault), and the cookie jar is not written. So a fairly benign bug.",
+    "weakness": {
+        "id": 2,
+        "name": "Memory Corruption - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 585411,
+            "file_name": "aadaae36b4be454366dff6257c995dfa18f8d539",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/euHfmYgHLsfj33c9HHXi8Kg7?response-content-disposition=attachment%3B%20filename%3D%22aadaae36b4be454366dff6257c995dfa18f8d539%22%3B%20filename%2A%3DUTF-8%27%27aadaae36b4be454366dff6257c995dfa18f8d539&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1e8e0667abad3625c93c368731af2dc14c57ca1f264a21754ac3d5ec93601b4c",
+            "file_size": 939,
+            "type": "application/octet-stream"
+        },
+        {
+            "id": 585415,
+            "file_name": "README.txt",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/eFy8PgHBFyy713LxwkR8BHwa?response-content-disposition=attachment%3B%20filename%3D%22README.txt%22%3B%20filename%2A%3DUTF-8%27%27README.txt&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1601d38fbf75ad23991721fd975d9a24be7871572908fd109ed2014e4209c100",
+            "file_size": 7764,
+            "type": "text/plain"
+        },
+        {
+            "id": 585416,
+            "file_name": "fuzz_cookies.cc",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/XFcTWFEGgDU87v3ajPV8ju9y?response-content-disposition=attachment%3B%20filename%3D%22fuzz_cookies.cc%22%3B%20filename%2A%3DUTF-8%27%27fuzz_cookies.cc&response-content-type=text%2Fx-c%2B%2Bsrc&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=48b12e93de97fa3a10c422e6b51bfa40846ea550a590a8b1935c56308e98090a",
+            "file_size": 4661,
+            "type": "text/x-c++src"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 1,
+    "voters": [
+        "monke"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5831142,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, will give it a look!",
+            "automated_response": false,
+            "created_at": "2019-09-18T06:55:12.925Z",
+            "updated_at": "2019-09-18T06:55:12.925Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5831833,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I just found how to trigger it much easier, not having to use the internals:\n```\n#include <curl/curl.h>\nextern \"C\" int\nLLVMFuzzerTestOneInput(const uint8_t* rawdata, size_t rawsize)\n{\n  std::istringstream iss(std::string((const char*)rawdata,rawsize+(const char*)rawdata));\n  CURL* handle =  curl_easy_init();\n  std::string line;\n  while (std::getline(iss, line)) {\n          curl_easy_setopt(handle, CURLOPT_COOKIELIST,line.c_str());\n      }\n  curl_easy_setopt(handle, CURLOPT_COOKIEJAR, \"/dev/null\");\n  curl_easy_perform(handle);\n  curl_easy_cleanup(handle);\n  return 0;\n}\n``` ",
+            "automated_response": false,
+            "created_at": "2019-09-18T07:36:05.083Z",
+            "updated_at": "2019-09-18T07:36:05.083Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834029,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok, I can now reproduce it with a vanilla setup. First I compile curl from master, using the following steps\n```\n# in curl\n./buildconf\n./configure --prefix /tmp/slafs\nmake\nmake install\n```\nand then the following program\n```\n#include <vector>\n#include <fstream>\n#include <curl/curl.h>\n\nint main(int argc, char* argv[]) {\n    for(int i=1; i<argc; ++i) {\n        std::ifstream iss(argv[i]);\n        if(!iss) {continue;}\n\n        CURL* handle =  curl_easy_init();\n\n        std::string line;\n        while (std::getline(iss, line)) {\n                curl_easy_setopt(handle, CURLOPT_COOKIELIST,line.c_str());\n            }\n\n        curl_easy_setopt(handle, CURLOPT_COOKIEJAR, \"/dev/null\");\n        curl_easy_perform(handle);\n\n        curl_easy_cleanup(handle);\n    }\n}\n```\ncompiled with (the optimization level is not important, and neither is the compiler, works with clang as well)\n```\ng++ easy.cc -O3 -I /tmp/slafs/include/ -L /tmp/slafs/lib/ -lcurl\n```\nand then invoked with\n```\nexport LD_LIBRARY_PATH=/tmp/slafs/lib\n ./a.out 323361f03b8d0424ba2e32729828596a16837f8c\n```\nwhich gives a segfault. running it through valgrind also gives errors.\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T09:43:08.994Z",
+            "updated_at": "2019-09-18T09:43:08.994Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834195,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Lovely. I'll just get a coffee refill and dive right in!",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:21:56.538Z",
+            "updated_at": "2019-09-18T10:21:56.538Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834244,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Stripping out the C++ from the example, isn't this doing the same thing? I'm not sure what the loop around getline() accomplishes?\n~~~c\n#include <curl/curl.h>\n\nint main(int argc, char* argv[])\n{\n  for(int i=1; i<argc; ++i) {\n    CURL *handle =  curl_easy_init();\n    curl_easy_setopt(handle, CURLOPT_COOKIELIST, argv[i]);\n    curl_easy_setopt(handle, CURLOPT_COOKIEJAR, \"/dev/null\");\n    curl_easy_perform(handle);\n    curl_easy_cleanup(handle);\n  }\n}\n\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:34:15.086Z",
+            "updated_at": "2019-09-18T10:34:15.086Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834271,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Oh, I just read the documentation (say whaaaat?) at https://curl.haxx.se/libcurl/c/CURLOPT_COOKIELIST.html which shows how to insert a string. Seems weird that a string can be interpreted either as a file name or a cookie string?\nBut your are the expert, if you can reproduce it that way I won't complain!",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:43:44.940Z",
+            "updated_at": "2019-09-18T10:44:10.694Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834290,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I tried your file, it does not work, did you perhaps mean CURLOPT_COOKIEFILE and not CURLOPT_COOKIELIST? With that, your code works totally fine for reproducing!",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:49:52.024Z",
+            "updated_at": "2019-09-18T10:49:52.024Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834298,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I don't understand. Isn't  `323361f03b8d0424ba2e32729828596a16837f8c` what gets passed as a string to `CURLOPT_COOKIELIST` in the case you say causes the valgrind warning?\n\n> a file name or a cookie string\n\nIt doesn't! `COOKIELIST` accepts a string. That string can be a single cookie using either of two formats or an instruction.",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:51:00.693Z",
+            "updated_at": "2019-09-18T10:51:00.693Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834307,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Feel free to give me a call at ████████ if you want , that might be the fastest way forward.\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:52:49.394Z",
+            "updated_at": "2019-09-19T12:34:01.094Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834313,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "But the 323... is the name of the file, whose contents is to be fed into CURLOPT_COOKIELIST. Oh I see I forgot to attach it!\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:53:56.984Z",
+            "updated_at": "2019-09-18T10:53:56.984Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834321,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Here is the file, sorry.",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:54:37.233Z",
+            "updated_at": "2019-09-18T10:54:37.233Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 585688,
+                    "filename": "323361f03b8d0424ba2e32729828596a16837f8c",
+                    "type": "application/octet-stream",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qeDvQEWRjKybc4zopn8ff8kM?response-content-disposition=attachment%3B%20filename%3D%22323361f03b8d0424ba2e32729828596a16837f8c%22%3B%20filename%2A%3DUTF-8%27%27323361f03b8d0424ba2e32729828596a16837f8c&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=61363b0a31f294e0f50c16875f5411ae00f4e9e618d1e5afc0bdd1e740003374"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834322,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Aaaaaaah! =)",
+            "automated_response": false,
+            "created_at": "2019-09-18T10:54:58.133Z",
+            "updated_at": "2019-09-18T10:54:58.133Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834438,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Reproduced!",
+            "automated_response": false,
+            "created_at": "2019-09-18T11:06:48.467Z",
+            "updated_at": "2019-09-18T11:06:48.467Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5834879,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "# what happens\n\n1. `c->numcookies` is the total number of cookies kept in the jar.\n2. When saving the cookies, the code iterates over them to build an array so that it can sort them with `qsort()`\n3. in that [loop](https://github.com/curl/curl/blob/2a2404153bb427a8c4b046a96389fc9862944aa3/lib/cookie.c#L1542-L1548) it *excludes* cookies that don't have a 'domain'  property and uses `j` to count.the valid ones\n4. when later [invoking qsort](https://github.com/curl/curl/blob/2a2404153bb427a8c4b046a96389fc9862944aa3/lib/cookie.c#L1550) it uses `c->numcookies` instead of the correct counter `j` as they may now differ (if there are cookies in memory without domain)!\n\n# impact\n\n`qsort()` gets invoked and will read uninitialized pointers from the malloc()ed array.\n\n# security flaw?\n\nCan this be triggered by \"someone\" and what can said \"someone\" do with it?\n\nTo get a cookie set without a domain it needs to be read from a file or set with the API, as when receiving cookies over the wire with HTTP there's always a default domain. I don't think a malicious site can trigger this.\n\nAn application that allows the user to pass in a cookie file or cookie values at startup can be made to trigger this. But can that be considered a security problem? I don't think so. Or maybe my imagination is just too weak?\n\n# fix\n\nI'd like to fix it in two ways.\n\n1. Use `j` in the qsort() line\n2. Filter out cookies without domain already when set\n\n# patch\n~~~diff\ndiff --git a/lib/cookie.c b/lib/cookie.c\nindex 53ca40237..7def53489 100644\n--- a/lib/cookie.c\n+++ b/lib/cookie.c\n@@ -731,10 +731,13 @@ Curl_cookie_add(struct Curl_easy *data,\n         /* no domain was given in the header line, set the default */\n         co->domain = strdup(domain);\n         if(!co->domain)\n           badcookie = TRUE;\n       }\n+      else\n+        /* we can't go on without a domain */\n+        badcookie = TRUE;\n     }\n \n     if(!badcookie && !co->path && path) {\n       /* No path was given in the header line, set the default.\n          Note that the passed-in path to this function MAY have a '?' and\n@@ -1545,11 +1548,11 @@ static int cookie_output(struct CookieInfo *c, const char *dumphere)\n           continue;\n         array[j++] = co;\n       }\n     }\n \n-    qsort(array, c->numcookies, sizeof(struct Cookie *), cookie_sort_ct);\n+    qsort(array, j, sizeof(struct Cookie *), cookie_sort_ct);\n \n     for(i = 0; i < j; i++) {\n       char *format_ptr = get_netscape_format(array[i]);\n       if(format_ptr == NULL) {\n         fprintf(out, \"#\\n# Fatal libcurl error\\n\");\n\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T12:27:43.157Z",
+            "updated_at": "2019-09-18T12:27:43.157Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5835000,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If you are sure domainless cookies can't happen, I agree it's not a remote threat.\nI like the patch. May I suggest that j is renamed to nvalidcookies, to make it more obvious? And would you mind using calloc instead of malloc for the array? That makes this kind of bugs more likely to be promptly detected and harder to exploit.\n",
+            "automated_response": false,
+            "created_at": "2019-09-18T12:45:14.624Z",
+            "updated_at": "2019-09-18T12:45:14.624Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5840679,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> If you are sure domainless cookies can't happen, I agree it's not a remote threat.\n\nI double-checked. Cookies can only be stored without domain when one of `CURLOPT_COOKIELIST` or `CURLOPT_COOKIEFILE` is used. When cookies arrive over the wire, they get set [here](https://github.com/curl/curl/blob/2a2404153bb427a8c4b046a96389fc9862944aa3/lib/http.c#L4021-L4029) and that code always have a default domain.\n\nI also realized we can't fail on lack of domain as my previous patch did, as that stops some use cases (and causes test failures).\n\n> May I suggest that\n\nSensible advice, thanks. I've incorporated.\n\nIf nobody objects, I will create a public PR for this fix. I can't see a security problem here, \"only\" a potential crash  or other misbehavior.",
+            "automated_response": false,
+            "created_at": "2019-09-19T06:43:37.807Z",
+            "updated_at": "2019-09-19T06:43:37.807Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5840705,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Nice!\nIf you want to, I can make the pull request. Now when you verified the cookie is always stored with the domain,  writing this fix is easy.\n\nSorry for reporting stuff that in the end are not remotely exploitable but I think it's better to have the discussion here until we agree that is the case.\n",
+            "automated_response": false,
+            "created_at": "2019-09-19T06:51:37.116Z",
+            "updated_at": "2019-09-19T06:51:37.116Z",
+            "actor": {
+                "username": "pauldreik",
+                "cleared": false,
+                "verified": false,
+                "url": "/pauldreik",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5841455,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the offer, but I already have the code written here that passes both existing tests and your test case. I'm just giving the other curl security team peeps a little more time to chime in if they want to before I proceed.",
+            "automated_response": false,
+            "created_at": "2019-09-19T08:48:46.474Z",
+            "updated_at": "2019-09-19T08:48:46.474Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5850134,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks again. We deem this not a security issue and the fix has been filed as a public PR at https://github.com/curl/curl/pull/4386",
+            "automated_response": false,
+            "created_at": "2019-09-20T07:01:43.889Z",
+            "updated_at": "2019-09-20T07:01:43.889Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 10302536,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-08T08:23:32.052Z",
+            "updated_at": "2021-01-08T08:23:32.052Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 10607043,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-08T07:54:36.636Z",
+            "updated_at": "2021-02-08T07:54:36.636Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071404Z&X-Amz-Expires=1868&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1a928f3da7e1c4c44635a22fe397e48412bac5f6efe5f2fafec88d3bf5fa5f21"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

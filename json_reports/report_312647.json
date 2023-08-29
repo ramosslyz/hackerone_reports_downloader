@@ -1,0 +1,426 @@
+{
+    "id": 312647,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMTI2NDc=",
+    "url": "https://hackerone.com/reports/312647",
+    "title": "Gaining access to private topics using quoting feature",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2018-02-05T21:45:55.181Z",
+    "submitted_at": "2018-02-05T21:45:55.181Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "mishre",
+        "url": "/mishre",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 16893,
+        "url": "https://hackerone.com/discourse",
+        "handle": "discourse",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/016/893/0bc08a2076b0f1f4a2c58636b8171b32cc367a52_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/893/0bc08a2076b0f1f4a2c58636b8171b32cc367a52_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Discourse",
+            "twitter_handle": "discourse",
+            "website": "https://discourse.org",
+            "about": "Discourse is JavaScript (ember.js) and Ruby on Rails based 100% open source discussion software -- https://github.com/discourse/discourse"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2018-03-17T18:27:00.122Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-02-15T18:26:47.246Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Description\nSome topics have limited access to certain groups and users, and while there exists a validation for access on this topic, it can be bypassed by abusing a vulnerability in the \"onebox\" quoting feature. \nWhen pasting a link in a reply, if this link happens to be a link to another topic on Discourse a small preview is shown which includes the topic content or the post content where the link is pointing to. Also there are some protections in place to make sure that the user can view the linked content, the said protections can be bypassed by adding a query string parameter to the link containing the value \n```\n?source_topic_id={victim-topic-id}\n```\n\n## Steps to reproduce\n1. Login as an administrator to Discourse and create a topic which can only be viewed by the staff.\n2. Copy the topic's id from the topic's page. the topic id can be found by browsing the topic and then copying the number in the end of the url (`http://localhost:4000/t/{topic-name}/{topic-id}`)\n3. Login with a non-admin user.\n4. Go to any topic you have access to, and type in the following reply:\n```\nhttp://localhost:80/t/blablabla/?source_topic_id=29\n```\nplease note that the port should 80 or 443 even if the url of your local installation is a different (probably some software bug)\n5. Wait for the preview to load and see that you can see topic's content.\n\n## Root cause\nThe following piece of code determines if the logged-in user is capable of viewing the post/topic :\n\n```\n        def can_see_post?(post, source_topic)\n          return false if post.nil? || post.hidden || post.trashed? || post.topic.nil?\n          Guardian.new.can_see_post?(post) || same_category?(post.topic.category, source_topic)\n        end\n\n        def can_see_topic?(topic, source_topic)\n          return false if topic.nil? || topic.trashed? || topic.private_message?\n          Guardian.new.can_see_topic?(topic) || same_category?(topic.category, source_topic)\n        end\n```\nas can be seen here: https://github.com/discourse/discourse/blob/master/lib/onebox/engine/discourse_local_onebox.rb#L113\n\nHowever, the source_topic parameter is controlled directly by user input:\n```\nsource_topic_id = @url[/[&?]source_topic_id=(\\d+)/, 1].to_i\n```\nas can be seen here: \nhttps://github.com/discourse/discourse/blob/master/lib/onebox/engine/discourse_local_onebox.rb#L47\nSo if we pass in the same topic id as the one we are trying to view, basically the function same_category will always return true, effectively bypassing any protection in place.\n\n## Impact\n\nAn attacker will be able to access all private topics and posts on Discourse.",
+    "weakness": {
+        "id": 26,
+        "name": "Improper Access Control - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2018-03-17T18:26:47.394Z",
+    "allow_singular_disclosure_after": -171983665.34036228,
+    "singular_disclosure_allowed": true,
+    "vote_count": 18,
+    "voters": [
+        "sp1d3rs",
+        "kapytein",
+        "muon4",
+        "hunter",
+        "spam404",
+        "emitrani",
+        "asad0x01_",
+        "apapedulimu",
+        "malcolmx",
+        "eveeez",
+        "and 8 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2353607,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Oups, I have posted an incorrect link in step 4. The link should have been:\n```\nhttp://localhost:80/t/blablabla/{copied-topic-id}?source_topic_id={copied-topic-id}\n```\nfor example:\nhttp://localhost:80/t/blablabla/29?source_topic_id=29",
+            "automated_response": false,
+            "created_at": "2018-02-05T21:56:13.261Z",
+            "updated_at": "2018-02-05T21:56:13.261Z",
+            "actor": {
+                "username": "mishre",
+                "cleared": false,
+                "verified": false,
+                "url": "/mishre",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2358719,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "@mishre \n\nThanks for the submission. I was not able to reproduce the issue. If I got your report correct, there's no need to have a link between both accounts...right? Basically, any account should be able to see any topic using this bug, is that correct? \n\nI'm trying to reproduce this on the live demo site with a random topic id, but the preview never opened:\n{F261075}\n\nCan you double check you PoC and the permissions/groups for both IDs you've used in your PoC?\n\nBest Regards.",
+            "automated_response": false,
+            "created_at": "2018-02-07T13:01:37.426Z",
+            "updated_at": "2018-02-07T13:01:37.426Z",
+            "actor": {
+                "username": "h1_analyst_everton",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_everton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/997/bf60ed9bb749786ae3f68f25703bf0528699cda7_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 261075,
+                    "filename": "Screen_Shot_2018-02-07_at_10.57.30_AM.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/261/075/c0c252f8589281fa2f10939226dd64c4a7dbd79f/Screen_Shot_2018-02-07_at_10.57.30_AM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-02-07_at_10.57.30_AM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-02-07_at_10.57.30_AM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074112Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4c9adbce3f544e12494a30a296312a59ff8e94ccfce804181709e9bf95656210"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2358738,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hey,\n\nI have tested this on my local deployment with a topic id that I know exists and it seems to work. Are you sure that a topic with this id exists on the live demo site? (the topic could have been deleted, or it could actually be a private-message which is also represented by a topic object). \n\nAnd yes, anyone can view any private topic using this bug.",
+            "automated_response": false,
+            "created_at": "2018-02-07T13:11:47.869Z",
+            "updated_at": "2018-02-07T13:14:14.740Z",
+            "actor": {
+                "username": "mishre",
+                "cleared": false,
+                "verified": false,
+                "url": "/mishre",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2359166,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "@mishre \n\nCan you record a video of the exploitation in motion?",
+            "automated_response": false,
+            "created_at": "2018-02-07T16:11:06.994Z",
+            "updated_at": "2018-02-07T16:11:06.994Z",
+            "actor": {
+                "username": "h1_analyst_everton",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_everton",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/997/bf60ed9bb749786ae3f68f25703bf0528699cda7_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2360862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The repro steps are off, the URL is incorrect.. try this one:\n\n`https://try.discourse.org/t/blah/128?source_topic_id=128`\n\nThere is a topic 128 on try.discourse.org that you shouldn't have visibility into, and you can repro that way.",
+            "automated_response": false,
+            "created_at": "2018-02-08T01:06:05.238Z",
+            "updated_at": "2018-02-08T01:06:05.238Z",
+            "actor": {
+                "username": "discourse_team",
+                "cleared": false,
+                "verified": false,
+                "url": "/discourse_team",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/130/970/7a0cbe82b76df13bcdbf07365f42abe856650525_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2361151,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi,\n\nIt seems I can view this topic. The title of topic is: \"Secret assets that should not be removed\". From some reason I cannot seem to be able to embed different images in it, However I do seem to see the text inside. I can also see that there is a single comment in the topic which was written by the user codinghorror and contains an image.\nSee attached images.\n\nIf you are still not able to reproduce I'll record a video.",
+            "automated_response": false,
+            "created_at": "2018-02-08T04:43:59.787Z",
+            "updated_at": "2018-02-08T04:43:59.787Z",
+            "actor": {
+                "username": "mishre",
+                "cleared": false,
+                "verified": false,
+                "url": "/mishre",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 261310,
+                    "filename": "first.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/261/310/db32d2b62051162348408e9ed1efb59e8af6652d/first.png?response-content-disposition=attachment%3B%20filename%3D%22first.png%22%3B%20filename%2A%3DUTF-8%27%27first.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074112Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8adc0eb4c79298086881f5573fa746a3978aa1e9544e3f93f71ee0adb02343b4"
+                },
+                {
+                    "id": 261309,
+                    "filename": "second.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/261/309/af376cde23cd440321a944d2470d39fe27b65304/second.png?response-content-disposition=attachment%3B%20filename%3D%22second.png%22%3B%20filename%2A%3DUTF-8%27%27second.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074112Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=81b45dfff4d3e45f9831a32d0d0a5e6bd48d88d98bbdace6588b5caecd40204d"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2362740,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-08T14:11:23.928Z",
+            "updated_at": "2018-02-08T14:11:23.928Z",
+            "actor": {
+                "username": "discourse_team",
+                "cleared": false,
+                "verified": false,
+                "url": "/discourse_team",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/130/970/7a0cbe82b76df13bcdbf07365f42abe856650525_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2362744,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks @mishre for the report. We're working on a fix.",
+            "automated_response": false,
+            "created_at": "2018-02-08T14:13:27.672Z",
+            "updated_at": "2018-02-08T14:13:27.672Z",
+            "actor": {
+                "username": "discourse_team",
+                "cleared": false,
+                "verified": false,
+                "url": "/discourse_team",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/130/970/7a0cbe82b76df13bcdbf07365f42abe856650525_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2384406,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "OK, thanks for this repro excellent as usual!",
+            "automated_response": false,
+            "created_at": "2018-02-14T22:18:44.903Z",
+            "updated_at": "2018-02-14T22:18:44.903Z",
+            "actor": {
+                "url": "/discourse",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/893/0bc08a2076b0f1f4a2c58636b8171b32cc367a52_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Discourse"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "discourse",
+            "collaborator": {
+                "username": "mishre",
+                "url": "/mishre"
+            }
+        },
+        {
+            "id": 2384407,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-14T22:18:56.131Z",
+            "updated_at": "2018-02-14T22:18:56.131Z",
+            "actor": {
+                "username": "discourse_team",
+                "cleared": false,
+                "verified": false,
+                "url": "/discourse_team",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/130/970/7a0cbe82b76df13bcdbf07365f42abe856650525_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "mishre",
+                "url": "/mishre"
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2387416,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "That was a pretty interesting bug, mind disclosing?",
+            "automated_response": false,
+            "created_at": "2018-02-15T18:26:47.305Z",
+            "updated_at": "2018-02-15T18:26:47.305Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mishre",
+                "cleared": false,
+                "verified": false,
+                "url": "/mishre",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        },
+        {
+            "id": 2502014,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-17T18:27:00.143Z",
+            "updated_at": "2018-03-17T18:27:00.143Z",
+            "actor": {
+                "url": "/discourse",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/893/0bc08a2076b0f1f4a2c58636b8171b32cc367a52_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Discourse"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "discourse"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,973 @@
+{
+    "id": 1817214,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODE3MjE0",
+    "url": "https://hackerone.com/reports/1817214",
+    "title": "Mystery with a leaked token and Reusability of email confirmation link leading to Account Takeover",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2022-12-26T20:08:14.758Z",
+    "submitted_at": "2022-12-26T20:08:14.892Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "gokulsk",
+        "url": "/gokulsk",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55988,
+        "url": "https://hackerone.com/sorare",
+        "handle": "sorare",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Sorare",
+            "twitter_handle": "sorare",
+            "website": "https://sorare.com",
+            "about": "Sorare is a global fantasy football game where managers can trade official digital collectibles."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2023-02-03T14:41:14.518Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-01-04T14:41:11.713Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi Team, \nFirst of all hope you are well and belated christmas wishes! Sorry for this long report. I need to write it long because many things happened during the testing and the report wont be complete if I didnt mention each and everything. During the test I end up modifying another user's profile. I'm sorry for that and I trust your safe harbor policy. \n\nIf you dont want to read everything, please read the first part and must watch the Video POCs.\n\nSo here I'm with a mystery bug and I have a long story to tell. Please listen carefully. I was fed up not getting any bugs and was thinking to try my luck using google dorking. I tried many dorks and finally I came up with this one:\n\nsite:sorare.com inurl:token\n=====================\n{F2092332}\n\nHere, as you can see there are two search results:\n\n1. A random user's Email-confirmation link\n2. A device confirmation link.\nBoth these links consists of tokens respective of the aim of these links. \n\nSo, as I said earlier I was fed up and surfing without hope through these links. \nNow:\n1. I opened up the second result which is of a confirm_device link with a token for a random user.\n2. Initially the site said me the link is no longer valid and redirected to me to a settings option which asked me to upload profile picture.\n3. Initially I thought that link was invalid and it got redirected me to my Sorare profile.\n4. But it wasnt my profile.\n5. The link brought me to a person named JACK3422's profile. Here I'd like to say thanks to Safe Harbor policy. Because I accidently changed the profile picture and some game settings the app asked me to do. Honestly I thought it is my profile.\n=====================\n6. So this leaked device confirmation link allowed me to get into a random person's profile.\n7. Now I forgot to take a POC of this issue and was desparate. I logout from his profile and I tried to use that link again and it wasn't working again. :(\nSo I was about to quit. Before explaining further let me point out the steps worked here:\n\nA. Google dorking using site:sorare.com inurl:token\nB. Go to the second link, i.e; https://sorare.com/confirm_device?token=N04J3Zczv1GaFrniJisN1QgsisoJHQ\nC. Click OK. It redirected me to that persons profile settings.\n\nUnfortunately, the above link doesn't work anymore. So I decided to leave that sadly.\n=====================\n\nThen I opened the first link which is of a email confirmation link. You can guess its result. It was an expired confirmation link. But I have a behavior of trying IDOR everywhere even if it is a random encoded string.\n\nHere  I'd like to mention the flow of Sorare sign up process:\nA user enters email, username and password and on next step sorare sends a confirm email link to the entered email. Only if the mail is confirmed a user can sign in to his new account. \n\nOn clicking email confirmation link after going to mail provider, the user directly enters into his/her account. i.e, this confirmation link signs in users and there is no need to enter credentials again.\n=====================\nSince there is no need to enter credentials again and a email confirmation link can sign in users, imagine if these links are leaked like our google dork results? Anyone can enter in to anyone's account using these email confirmation links right?So the best part is the email confirmation link can be only used once.  That's why when I opened that link it showed the profile is already verified. But what if an attacker can bypass this expired links and get into anyone's account without password? That's what the bug I observed here:\n=====================\nHow I bypassed the confirm link I got using google dorks.\n\nA. Google dork: site:sorare.com inurl:token\nB. Open the first link which is an email confirmation link:(Remember to logout from your sorare account)\n\nhttps://sorare.com/confirm_email?token=Jt7S7WS_4EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F\n\nC. Now it will show like this: \nErrors: was already confirmed, please try signing in\n\nD. So you may think \"Oh, the link is not valid anymore, we should try some other bugs.\" NO!\n\nJust observe this confirmation link:\n\nAlready used link: https://sorare.com/confirm_email?token=Jt7S7WS_4EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F  (Invalid)\n=====================\n \nNow here is a token parameter in this URL:\n\ntoken=Jt7S7WS_4EphEyiDn6z_ (invalid token)\n=====================\n\nNow focus on the numbers in this token. So what to do to reuse this link is token is to concentrate on the numbers that stays freely and not in between the alphabets. I mean '4'. Because 4 is not in between those strings but it starts after an underscore. So chage this 4 to 6 or5.\n\nNow the token manipulated to: \n\ntoken=Jt7S7WS_6EphEyiDn6z_  (Valid)\n=====================\n\nAnd the URL changes to: \n\n https://sorare.com/confirm_email?token=Jt7S7WS_6EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F (Valid)\n=====================\n\n\nE. Do not open this link directly. You need to go through the above steps. Open the link in step B and modify 4 to 6 from the address bar as shown in video poc.\n=====================\n\n{F2092372}\n\nF. So those two google dork results are of same person. Somehow it got leaked and anyone can use it now from Google. What happens if more people's confirmation links and device confirmation links are leaked like this?\n\nNow to check if it is valid for all email confirmation link I created a new account and tested the confirmation link I got.\n\nThe link I got:\n\nhttps://sorare.com/confirm_email?redirectUrl=https%3A%2F%2Fsorare.com%2F&token=qvQfgPqvWV-2FiM5k2f7(Invalid link)\n\nHere I observed the token and changed the number 2(after hyphen) to 5 or something:\n\nhttps://sorare.com/confirm_email?redirectUrl=https%3A%2F%2Fsorare.com%2F&token=qvQfgPqvWV-5FiM5k2f7\n\nBang! Got access to my account without password.\n\nAgain do not open this link directly. First open the invalid link and modify the url from address bar. Then only it works.\n\n{F2092373}\n\nSo that's it.\n\n## Impact\n\nEven though the email confirmation links shows theyre expired they can be reused using this method. Since these links directly sign in users an attacker who got such a leaked link didnt want to know the password to sign in. So this is a highly dangerous bug. Leakage of these links can end up in account takeover easily. (As I did here using Google Dork)",
+    "bounty_amount": "300.0",
+    "formatted_bounty": "$300",
+    "weakness": {
+        "id": 40,
+        "name": "Inadequate Encryption Strength"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 2092332,
+            "file_name": "Screenshot_2022-12-27_00_15_22.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tb3ytn72iuvhsw99d5ok2brny9qq?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-12-27_00_15_22.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-12-27_00_15_22.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065801Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e83a24abb10d5f9c835809b6f0ff43810120fb885a041151228973c62ad66ca3",
+            "file_size": 129603,
+            "type": "image/png"
+        },
+        {
+            "id": 2092372,
+            "file_name": "Accidental_takeover.mkv",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/mx076p3u6hq29gjqproyqh14sz7i?response-content-disposition=attachment%3B%20filename%3D%22Accidental_takeover.mkv%22%3B%20filename%2A%3DUTF-8%27%27Accidental_takeover.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065801Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=221dab00048dc9af75d5d7249585afe8ff181c0ac507010b0416cf8eaaef433b",
+            "file_size": 7421287,
+            "type": "video/x-matroska"
+        },
+        {
+            "id": 2092373,
+            "file_name": "My_Sorare.mkv",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ho2hsgdq9qvs68kjv4pal22m7s0g?response-content-disposition=attachment%3B%20filename%3D%22My_Sorare.mkv%22%3B%20filename%2A%3DUTF-8%27%27My_Sorare.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065801Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5ef3c34974b41f5f126cf7fb3c2b575f6040b6e0e549f71d617c02565e08696f",
+            "file_size": 17574410,
+            "type": "video/x-matroska"
+        }
+    ],
+    "allow_singular_disclosure_at": "2023-02-03T14:41:11.790Z",
+    "allow_singular_disclosure_after": -17857009.28277785,
+    "singular_disclosure_allowed": true,
+    "vote_count": 33,
+    "voters": [
+        "k3rnel_p4nic",
+        "gokulsk",
+        "winteri3coming",
+        "awararesearcher",
+        "13ph03nix",
+        "zy9ard3",
+        "ali",
+        "shubham_srt",
+        "red_darkin",
+        "robin_bl4z3",
+        "and 23 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 92340,
+        "asset_type": "URL",
+        "asset_identifier": "sorare.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 19711340,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Kindly Watch POC for better understanding.",
+            "automated_response": false,
+            "created_at": "2022-12-26T20:09:09.676Z",
+            "updated_at": "2022-12-26T20:09:09.676Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19727417,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Give me an update! 98% of reports Meet response standards?  :(",
+            "automated_response": false,
+            "created_at": "2022-12-28T19:01:01.673Z",
+            "updated_at": "2022-12-28T19:01:01.673Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19742446,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Average time for 1st response 2days? ",
+            "automated_response": false,
+            "created_at": "2022-12-30T11:21:11.663Z",
+            "updated_at": "2022-12-30T11:21:11.663Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753390,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @gokulsk,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@h1_analyst_pablo",
+            "automated_response": false,
+            "created_at": "2023-01-01T11:40:05.531Z",
+            "updated_at": "2023-01-01T11:40:05.531Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753421,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @gokulsk - \nThank you very much for your report.!\n\nWe do understand the effort that you had to go through to find the particular issue and appreciate your hard work in making Sorare application more secure. \n\n1. Adding the complete testing scenarios and thought processes behind the finding in the report sometimes causes more confusion while trying to verify the issue on our end. \nTherefore we request you to update this report with step-by-step instructions to reproduce the core components of the issue.\n\n2. Based on the review it seems that this is only a one-time issue because the email verification link was indexed by a search engine. This is likely due to the negligence of the particular user and thus will likely be not considered a security vulnerability. Please let us know your thoughts on this.\n\nThank you very much for your cooperation and support.\n\nRegards,\n@h1_analyst_pablo ",
+            "automated_response": false,
+            "created_at": "2023-01-01T11:51:46.273Z",
+            "updated_at": "2023-01-01T11:51:46.273Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753500,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @h1_analyst_pablo , (Watch the poc completely which is attached with this message, You.ll surely understand the trouble){F2098678}\n\nFirst of all this is not a one time issue. I tested it n times, even now before writing this one. There is a reusability of this confirmation ink. If this links are got into wrong hands it will cause trouble and will end up in account takeover. Even though the search engine showed this particular user's link, there are chances for such leakages in the future. Also when the user uses a public computer or office computers there are chances to get this link in malicious hands.\n\nSo let me explain the steps:\n\n1. Logout from your sorare account in the browser.(If you're logged in already.)\n2. I'm taking this particular link as an example:\n\nhttps://sorare.com/confirm_email?token=Jt7S7WS_4EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F\n \nOpen this link.\n\n3.This will show you the \"profile is already confirmed and login to continue.\"\n4. Actualy the link is not expired. In order to expose this vulnerability you can:\n\nA. Wait for 5 minutes after opening this link. It will directly redirects to users profile.\n\nOR\n\nB. Modify this link on address bar. That is try to change a value in the token. For example try to change 4 to 5 or something. Do not open it directly.\n\nThis will speed up the process. I'll include both in my video poc. Kindly watch it. I'm 100% sure that this is a potential vulnerability\n\nand more users will be in trouble. Watch video:",
+            "automated_response": false,
+            "created_at": "2023-01-01T12:23:53.504Z",
+            "updated_at": "2023-01-01T12:23:53.504Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2098678,
+                    "filename": "simplescreenrecorder-2023-01-01_17.46.03.mkv",
+                    "type": "video/x-matroska",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rdnrk0gmiaa7alhjzd29edtut9nf?response-content-disposition=attachment%3B%20filename%3D%22simplescreenrecorder-2023-01-01_17.46.03.mkv%22%3B%20filename%2A%3DUTF-8%27%27simplescreenrecorder-2023-01-01_17.46.03.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065801Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=77fccd936fae0be786c09a068a83d9c388b61d1b1853e816c8971306515683b0"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753543,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Note that I also attached the case with my sorare account confirmation link also in the very end of the video. So this is not Jack's problem. Every confirmation link has this problem. I even tried it in my mobile phone. Still the result was same.\n========================================\nIn simple steps, sign up for sorare, receive  confirmation link, open it once, logout, open it second time, wait for five minutes or modify the token in the address bar...boom! you entered into user profile.",
+            "automated_response": false,
+            "created_at": "2023-01-01T12:35:57.854Z",
+            "updated_at": "2023-01-01T12:43:35.955Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753658,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Here is something fresh. I created a new sorare account in mobile phone also and tried its confirmation link. Watch video please:{F2098719}",
+            "automated_response": false,
+            "created_at": "2023-01-01T13:20:59.710Z",
+            "updated_at": "2023-01-01T13:20:59.710Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2098719,
+                    "filename": "RPReplay_Final1672578897.MP4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/herfpzke3d4efrfhxo3oznq8x9t2?response-content-disposition=attachment%3B%20filename%3D%22RPReplay_Final1672578897.MP4%22%3B%20filename%2A%3DUTF-8%27%27RPReplay_Final1672578897.MP4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065801Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1edfe61e52a1e645b57d28b69ddf69b1d4bdad7b957761ad8dd36e6e2d0d22bd"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753973,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2023-01-01T15:03:20.306Z",
+            "updated_at": "2023-01-01T15:03:20.306Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Medium",
+                "old_severity_id": 1797177,
+                "new_severity_id": 1800559
+            },
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19753976,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugPendingProgramReview",
+            "message": "Hello @gokulsk,\n\nThank you for your submission!\n\n I'm discussing this submission internally with the Sorare team. You will be updated as soon as there is additional information to share. Thanks for your patience!\n\n\n\nThanks,\n@h1_analyst_pablo",
+            "automated_response": false,
+            "created_at": "2023-01-01T15:03:58.054Z",
+            "updated_at": "2023-01-01T15:03:58.054Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19754067,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you @h1_analyst_pablo \nHope you were able to reproduce it.",
+            "automated_response": false,
+            "created_at": "2023-01-01T15:35:15.609Z",
+            "updated_at": "2023-01-01T15:35:15.609Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770149,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "Hi @gokulsk\n\nThank you for your report, this is something we haven't spotted.\n\nFor an unknown reason the link was indexed in google but that's the only one and user is not playing anymore to the game an only have free cards.\n\nWe also have other security levels for the wallet actions (bid / buy / sell cards) so like you mentioned, you can only change non critical things in the interface (avatar, name...).\n\nFor all these reasons I am changing the severity to low and will reward you accordingly. \n\nArnaud.",
+            "automated_response": false,
+            "created_at": "2023-01-03T11:21:18.674Z",
+            "updated_at": "2023-01-03T11:21:18.674Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Low",
+                "old_severity_id": 1800559,
+                "new_severity_id": 1801972
+            },
+            "actor": {
+                "username": "arnaud_beun",
+                "cleared": false,
+                "verified": false,
+                "url": "/arnaud_beun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e2n8fh6usguuxxy0c1tqv3464p1b/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770168,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thank you again for the report, we are actively working on a fix.",
+            "automated_response": false,
+            "created_at": "2023-01-03T11:22:06.734Z",
+            "updated_at": "2023-01-03T11:22:06.734Z",
+            "actor": {
+                "url": "/sorare",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Sorare"
+                }
+            },
+            "bounty_amount": "300.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "sorare",
+            "collaborator": {
+                "username": "gokulsk",
+                "url": "/gokulsk"
+            }
+        },
+        {
+            "id": 19770228,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@arnaud_beun But not only that particular user but every confirmation link has this problem in my findings. So there are still chances to get those confirmation links on attacker hands ryt? \n1. If email is compromised any user with this confirmation link can get hacked.\n2. Using public computers and office systems will help other people to access mail and also can check the history.\n\nSo what im saying is its not only the case of that particular user. This is a medium severity I guess.",
+            "automated_response": false,
+            "created_at": "2023-01-03T11:28:01.129Z",
+            "updated_at": "2023-01-03T11:28:01.129Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770233,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can you please look in to that and increase severity?",
+            "automated_response": false,
+            "created_at": "2023-01-03T11:29:45.602Z",
+            "updated_at": "2023-01-03T11:29:45.602Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770313,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Even though there are additional security implications inside this vulnerability potentially causes:\n1. Breaking into another profile.\n2. Attacker able to understand PII like email and other data.\n3. Access control issues.\n4. Impersonation by changing name and profile picture.\n5. etc..etc.\n\nAccording to my finding every user is affected by this risk, that is why I included my profile's verification poc too with the report. I'm requesting you to not to throw this report as a case of one particular user and as a low severity. This is a perfect medium severity.\n\nAlso I guess you've forgot to change the status to triaged.",
+            "automated_response": false,
+            "created_at": "2023-01-03T11:38:58.061Z",
+            "updated_at": "2023-01-03T11:39:43.580Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770871,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree with you that all users can be potentially impacted with this but like I said getting access to all our user email inboxes is not an easy task and getting all our users email is also complicated. \n\nIf you can get access to other user profiles with this hack please provide evidences, that will prove us that the scope is bigger than we thought.",
+            "automated_response": false,
+            "created_at": "2023-01-03T12:59:26.720Z",
+            "updated_at": "2023-01-03T12:59:26.720Z",
+            "actor": {
+                "username": "arnaud_beun",
+                "cleared": false,
+                "verified": false,
+                "url": "/arnaud_beun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e2n8fh6usguuxxy0c1tqv3464p1b/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770882,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-01-03T13:00:45.481Z",
+            "updated_at": "2023-01-03T13:00:45.481Z",
+            "actor": {
+                "username": "arnaud_beun",
+                "cleared": false,
+                "verified": false,
+                "url": "/arnaud_beun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e2n8fh6usguuxxy0c1tqv3464p1b/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19770996,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@arnaud_beun Gotcha! :( \n\nI'll try to find a proof meanwhile.\n\nThanks for the bounty though! <3",
+            "automated_response": false,
+            "created_at": "2023-01-03T13:12:48.189Z",
+            "updated_at": "2023-01-03T13:12:48.189Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19784540,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thank you again @gokulsk for your finding, do not hesitate to open an issue if you are able to find any email confirmation links or any other security issue on our stack. \n\nArnaud.",
+            "automated_response": false,
+            "created_at": "2023-01-04T14:05:06.926Z",
+            "updated_at": "2023-01-04T14:05:06.926Z",
+            "actor": {
+                "username": "arnaud_beun",
+                "cleared": false,
+                "verified": false,
+                "url": "/arnaud_beun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e2n8fh6usguuxxy0c1tqv3464p1b/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "gokulsk",
+                "url": "/gokulsk"
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19784562,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@arnaud_beun mo retesting? :(",
+            "automated_response": false,
+            "created_at": "2023-01-04T14:07:00.144Z",
+            "updated_at": "2023-01-04T14:07:00.144Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19784610,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Policy says so.",
+            "automated_response": false,
+            "created_at": "2023-01-04T14:10:31.557Z",
+            "updated_at": "2023-01-04T14:10:31.557Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19785831,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose it?",
+            "automated_response": false,
+            "created_at": "2023-01-04T14:41:11.742Z",
+            "updated_at": "2023-01-04T14:41:11.742Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19793663,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "HI @gokulsk - \nCould you please let us know what is the policy that you are referring to in your above comment.?",
+            "automated_response": false,
+            "created_at": "2023-01-05T05:19:18.091Z",
+            "updated_at": "2023-01-05T05:19:18.091Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19793669,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@h1_analyst_pablo thatbthey offers retesting?",
+            "automated_response": false,
+            "created_at": "2023-01-05T05:21:03.331Z",
+            "updated_at": "2023-01-05T05:21:03.331Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794214,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes. ",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:10:10.312Z",
+            "updated_at": "2023-01-05T06:10:10.312Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794226,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@h1_analyst_pablo Sorare didn't ask me for a retest..that's what I was mentioning.",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:12:23.930Z",
+            "updated_at": "2023-01-05T06:12:23.930Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794250,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @gokulsk - \nThank you for your query. \n\nThe team has confirmed the resolution of this by testing internally.\n\nAll the best for your future reports.!!\n\n",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:16:36.620Z",
+            "updated_at": "2023-01-05T06:16:36.620Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794269,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No problem @h1_analyst_pablo ! Also can you make a decision on my disclosure request?",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:19:07.464Z",
+            "updated_at": "2023-01-05T06:19:07.464Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794302,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "HI @gokulsk - \n\nThis report has been marked resolved and as requested by you - it will be publicly disclosed in 30 days.\n",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:23:58.552Z",
+            "updated_at": "2023-01-05T06:23:58.552Z",
+            "actor": {
+                "username": "h1_analyst_pablo",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_pablo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mmkjqfycb9h9djg8w9sook0h4w8c/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19794309,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you @h1_analyst_pablo ! And once again thanks to @arnaud_beun and Sorare!",
+            "automated_response": false,
+            "created_at": "2023-01-05T06:26:09.114Z",
+            "updated_at": "2023-01-05T06:26:09.114Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19888178,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-01-11T12:11:03.102Z",
+            "updated_at": "2023-01-11T12:11:03.102Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1820481
+            },
+            "actor": {
+                "username": "r0n3",
+                "cleared": false,
+                "verified": true,
+                "url": "/r0n3",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/r9sa6nh1hfimvxvw5p281rk242pt/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 19888317,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "what's happening?",
+            "automated_response": false,
+            "created_at": "2023-01-11T12:27:30.983Z",
+            "updated_at": "2023-01-11T12:27:30.983Z",
+            "actor": {
+                "username": "gokulsk",
+                "cleared": false,
+                "verified": false,
+                "url": "/gokulsk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rptxpifl9huld783m073rtcfzs5c/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        },
+        {
+            "id": 20235280,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-02-03T14:41:14.598Z",
+            "updated_at": "2023-02-03T14:41:14.598Z",
+            "actor": {
+                "url": "/sorare",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Sorare"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "sorare"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

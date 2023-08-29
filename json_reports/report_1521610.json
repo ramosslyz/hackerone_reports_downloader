@@ -1,0 +1,449 @@
+{
+    "id": 1521610,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTIxNjEw",
+    "url": "https://hackerone.com/reports/1521610",
+    "title": "Denial of Service vulnerability in curl when parsing MQTT server response",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2022-03-24T21:32:03.625Z",
+    "submitted_at": "2022-03-24T21:32:03.726Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jenny",
+        "url": "/jenny",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-03-28T20:00:44.401Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-03-28T20:00:44.344Z",
+    "team_member_agreed_on_going_public_at": "2022-03-28T17:48:36.612Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nCurl remains in infinite loop with suitable MQTT server response.\n\n## Steps To Reproduce:\n\n###Step 1:\nRun the following on linux with the attached file \"poc\" :\n```\n$ socat -u FILE:poc TCP-LISTEN:12345,reuseaddr,fork\n```\n###Step 2:\nUse curl:\n```\n$ curl mqtt://localhost:12345\n```\n###Step 3:\nObserve output of \"top\".\n\n## Supporting Material/References:\n[list any additional material (e.g. screenshots, logs, etc.)]\n\n  * F1667277 (poc file to host for curl to access)\n  * F1667276 (screen capture of top)\n  \n\n## Debugging Notes:\n\nDebug trace output before going to the loop:\n```\n=> Send header, 26 bytes (0x1a)\n0000: 10 18 00 04 4d 51 54 54 04 02 00 3c 00 0c 63 75 ....MQTT...<..cu\n0010: 72 6c 36 30 64 33 32 37 66 39                   rl60d327f9\n== Info: MQTT_FIRST (from MQTT_FIRST) (next is MQTT_CONNACK)\n== Info: STATE: DO => DOING handle 0x5555555dc0d8; line 2132 (connection #0)\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n== Info: mqtt_doing: state [0]\n...\n```\nThis section of lib/multi.c looks suspicious (line 2132 points here before entering the loop):\n```\n   2130             /* DO was not completed in one function call, we must continue\n   2131                DOING... */\n   2132             multistate(data, MSTATE_DOING);\n   2133             rc = CURLM_OK;\n   2134           }\n```\n## Credits\nJenny Heino and Antti Levomäki from Forcepoint\n\n## Impact\n\nAttacker can cause a Denial of Service by delivering malicious content behind a MQTT URL. For example internet crawlers could be affected, or any other implementations automatically fetching provided URLs using curl.",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1667276,
+            "file_name": "top.PNG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/djkhfsgjky4e1i2i8cu7ufrl79ih?response-content-disposition=attachment%3B%20filename%3D%22top.PNG%22%3B%20filename%2A%3DUTF-8%27%27top.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=30690c0fcf7e44d2dd2b9895a95267148a47805492f62714f726f5408b036fad",
+            "file_size": 39087,
+            "type": "image/png"
+        },
+        {
+            "id": 1667277,
+            "file_name": "poc",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/swfqytpv7n2fexpjfv7v7n5p1i41?response-content-disposition=attachment%3B%20filename%3D%22poc%22%3B%20filename%2A%3DUTF-8%27%27poc&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2d6817166ee50d22fae5f835f4c6f6d5ca6f45fc2df3bbba9a5a296361d0c524",
+            "file_size": 5,
+            "type": "application/octet-stream"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 3,
+    "voters": [
+        "alp",
+        "awararesearcher",
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 4.3,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16016766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report, we will investigate and get back to you.",
+            "automated_response": false,
+            "created_at": "2022-03-24T21:36:53.389Z",
+            "updated_at": "2022-03-24T21:36:53.389Z",
+            "actor": {
+                "username": "dgustafsson",
+                "cleared": false,
+                "verified": false,
+                "url": "/dgustafsson",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16019372,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I don't think this is a security problem.\n\nThis flaw makes libcurl not detect the disconnected connection and instead keep on retrying the read that will continuously fail in a what is mostly a busy-loop.\n\nHowever, due to the fact that servers can always basically stop and leave the connection idle, all users of libcurl must always be prepared to have the connection \"living forever\" and must set options/write code to avoid that. Thus: if this is a DOS due to the transfer never completing, then an idle connection is also a DOS. I don't think they are. I think this is a condition that all applications and users need to handle already. This bug doesn't introduce a new problem.\n\nThis bug might cause a near 100% CPU use while the condition remains, but that is similarly also not a security problem since it will return back and allow other code to run. It is just an inconvenient bug.\n\nFirst rough take at a patch for this bug:\n~~~diff\n--- a/lib/mqtt.c\n+++ b/lib/mqtt.c\n@@ -730,12 +730,16 @@ static CURLcode mqtt_doing(struct Curl_easy *data, bool *done)\n   infof(data, \"mqtt_doing: state [%d]\", (int) mqtt->state);\n   switch(mqtt->state) {\n   case MQTT_FIRST:\n     /* Read the initial byte only */\n     result = Curl_read(data, sockfd, (char *)&mq->firstbyte, 1, &nread);\n-    if(!nread)\n+    if(!nread) {\n+      failf(data, \"Connection disconnected\");\n+      *done = TRUE;\n+      result = CURLE_RECV_ERROR;\n       break;\n+    }\n     Curl_debug(data, CURLINFO_HEADER_IN, (char *)&mq->firstbyte, 1);\n     /* remember the first byte */\n     mq->npacket = 0;\n     mqstate(data, MQTT_REMAINING_LENGTH, MQTT_NOSTATE);\n     /* FALLTHROUGH */\n",
+            "automated_response": false,
+            "created_at": "2022-03-25T07:05:25.376Z",
+            "updated_at": "2022-03-25T07:05:25.376Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16020226,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I would like to argue for this being a security issue.\n\nI will attach a traffic capture of when this happens. The server immediately sends a FIN packet, and a minute later also a RST packet, thus clearly communicating that the connection has ended. The client remains in the loop. This is not the same as any server stopping sending traffic, and client waiting for more traffic. This is an infinite loop using all available CPU.\n\nVery recently, OpenSSL published a security advisory [1] about an infinite loop when parsing a certificate. Details aside: the process goes into an infinite loop when an external entity provides certain input to the process over the network. I have manually tested the OpenSSL vulnerability by providing a malicious certificate to the process. It goes into a loop, but you are able quit the process with CTRL+C. Other processes can continue at the same time, so the CPU load is not overwhelming. They have categorized this infinite loop as a High severity issue.\n\nThis issue is all in all very close to the infinite loop vulnerability in OpenSSL. An outside entity can cause the process into an infinite loop with certain input to the process over the network. The process behaviour in the infinite loop is identical. So, as opposed to not considering this a security issue, I would rather propose considering if this is a High secerity issue instead of Medium.\n\n[1] https://www.openssl.org/news/secadv/20220315.txt",
+            "automated_response": false,
+            "created_at": "2022-03-25T08:32:40.915Z",
+            "updated_at": "2022-03-25T08:32:40.915Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16020301,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Attachment: F1667707 ",
+            "automated_response": false,
+            "created_at": "2022-03-25T08:34:48.462Z",
+            "updated_at": "2022-03-25T08:34:48.462Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1667707,
+                    "filename": "mqtt_busyloop.pcap",
+                    "type": "application/vnd.tcpdump.pcap",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/3ao7kea4kt874zvfskj88nhwi1gp?response-content-disposition=attachment%3B%20filename%3D%22mqtt_busyloop.pcap%22%3B%20filename%2A%3DUTF-8%27%27mqtt_busyloop.pcap&response-content-type=application%2Fvnd.tcpdump.pcap&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ed2453063c3beb0cba5512275841976443fa23fc92ffae4078a518ee46d87fde"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16020878,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This is a different loop scenario than the OpenSSL one, and I think trying to draw parallels between them risk skewing this discussion and making us draw the wrong conclusions.\n\nThis is an infinite loop only if the application allows the transfer to be infinitely long. If an application allows an infinitely long transfer, then a malicious server can already easily allow the transfer to go on forever. An application allowing this to happen has therefore already accepted this risk.\n\nThis is a busy-looping transfer that goes on until any condition is met that stops it (most commonly the general timeout option) rather than for example just an idle connection, which makes it worse to some extent but also better in some others, since it makes the situation easier to detect.\n\nThe fact that it will stop if told to can be verified but tweaking the original recipe to pass on `-m3` to curl as well:\n\n   `curl -m3 mqtt://localhost:12345`\n\n... which then makes it stop after 3 seconds.\n\nWe can also see that it keeps updating the progress meter (calling the progress callback), which is another standard way for applications to monitor and potentially close transfers that go on for too long.\n\nThis does not necessarily use use \"all available CPU\":\n1. Most/many systems using curl's MQTT support are multi-core and this busy-loops one core\n2. It returns back out from libcurl to allow other things to be dealt with in the event-loop, it will not completely \"starve out\" all other activities\n\nThis situation actually very closely resembles how libcurl acts when the application downloads from localhost, or when the network bandwidth is higher than what the CPU manages to consume in terms of network traffic, and applications are typically assumed and designed to deal with that situation as well.",
+            "automated_response": false,
+            "created_at": "2022-03-25T09:11:21.683Z",
+            "updated_at": "2022-03-25T09:11:21.683Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16021569,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree, let's not draw too many parallels between this and the OpenSSL vulnerability.\n\nI disagree about this being the same as any infinitely long transfer. It is different for a process to wait for input than for it to be in an infinite loop when the other endpoint has already ended the connection.\n\nIn addition, I would like to argue that the problem going away by giving additional parameters to the process does not make this issue benign. The default behavior of the process is to remain in the loop.\n\nThis is also a very \"cheap\" DoS, as it only requires 5 bytes from the server, after which it can close the connection. It is different than a DoS where the server would need to keep the connection open for infinitely long.\n\nBut, the decision is yours.",
+            "automated_response": false,
+            "created_at": "2022-03-25T09:52:47.674Z",
+            "updated_at": "2022-03-25T09:52:47.674Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16056650,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "After further deliberating, we have concluded that this is not a security problem (in curl) for the reasons already stated in this issue.\n\nThis is still an annoying bug that should be fixed asap, and I will submit a pull-request to the curl git repo within soon with this intent.\n\nThanks a lot for your report.",
+            "automated_response": false,
+            "created_at": "2022-03-28T17:40:31.000Z",
+            "updated_at": "2022-03-28T17:40:31.000Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16056683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "https://github.com/curl/curl/pull/8644",
+            "automated_response": false,
+            "created_at": "2022-03-28T17:44:10.184Z",
+            "updated_at": "2022-03-28T17:44:10.184Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16056735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Understood, thanks for the discussion!\n\nTo clarify, it is now OK to discuss this publicly, as it is not a security issue?",
+            "automated_response": false,
+            "created_at": "2022-03-28T17:46:47.140Z",
+            "updated_at": "2022-03-28T17:46:47.140Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16056748,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, that should indeed be the logical conclusion.",
+            "automated_response": false,
+            "created_at": "2022-03-28T17:47:52.826Z",
+            "updated_at": "2022-03-28T17:47:52.826Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16056756,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "For full transparency, I also want to disclose the details of this report.",
+            "automated_response": false,
+            "created_at": "2022-03-28T17:48:36.636Z",
+            "updated_at": "2022-03-28T17:48:36.636Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070325Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7be979d7cffbc3b21bbb3b9c46d1703aad28c1b4b5637fc2f47642f24b8a7ef9"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16057815,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Of course!",
+            "automated_response": false,
+            "created_at": "2022-03-28T20:00:44.371Z",
+            "updated_at": "2022-03-28T20:00:44.371Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16057816,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-28T20:00:44.457Z",
+            "updated_at": "2022-03-28T20:00:44.457Z",
+            "actor": {
+                "username": "jenny",
+                "cleared": false,
+                "verified": false,
+                "url": "/jenny",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y79251anlj4vzz8xbo84t69dc87j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

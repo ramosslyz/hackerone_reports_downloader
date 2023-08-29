@@ -1,0 +1,314 @@
+{
+    "id": 704621,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MDQ2MjE=",
+    "url": "https://hackerone.com/reports/704621",
+    "title": "SSRF via maliciously crafted URL due to host confusion",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "critical",
+    "readable_substate": "Informative",
+    "created_at": "2019-10-01T02:48:40.536Z",
+    "submitted_at": "2019-10-01T02:48:40.536Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jlleitschuh",
+        "url": "/jlleitschuh",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/388/267/887b2ef55debfc7b243bdf563d314329cf750468_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2018-3774"
+    ],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-01-08T21:03:17.955Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-01-08T21:03:17.918Z",
+    "team_member_agreed_on_going_public_at": "2021-01-08T08:22:20.180Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n\nCurl is vulnerable to SSRF due to improperly parsing the host component of the URL compared to other URL parsers and the [URL living standard](https://url.spec.whatwg.org/).\n\n## POC\n\n`curl -sD - -o /dev/null \"http://google.com:80\\\\@yahoo.com/\"`\n\nCurl makes a request to `yahoo.com` instead of `google.com`.\n\n## Supporting Material/References:\n  * [Exact question to URL standards body](https://github.com/jsdom/whatwg-url/issues/137#issuecomment-536797948)\n  * [CVE-2018-3774](https://nvd.nist.gov/vuln/detail/CVE-2018-3774) similar vulnerability in an NPM lib\n    * See also: https://hackerone.com/reports/384029\n\nTo quote the standards body issue:\n\n> Specifically the authority state deals with parsing the @ properly. However as you'll notice if it encounters the `\\` beforehand, it'll go into the host state and reset the pointer at which point it won't consider `google.com:80\\\\` auth data for `yahoo.com` anymore.\n\n## Other Libraries\n\n```javascript\nconst whatwg_url = require('whatwg-url'); // Created by the RFC maintainers\n\nconst theUrl = new whatwg_url.URL(\"https://google.com:80\\\\\\\\@yahoo.com/\");\nconst theUrl2 = new whatwg_url.URL(\"https://google.com:80\\\\@yahoo.com/\");\n\nconst nodeUrl = new URL(\"https://google.com:80\\\\\\\\@yahoo.com/\");\nconst nodeUrl2 = new URL(\"https://google.com:80\\\\@yahoo.com/\");\n\nconsole.log(theUrl.hostname); // Prints google.com\nconsole.log(theUrl2.hostname); // Prints google.com\nconsole.log(nodeUrl.hostname); // Prints google.com\nconsole.log(nodeUrl2.hostname); // Prints google.com\n```\n\n## Impact\n\nIf another library implementing the URL standard is used to white/blacklist a request by host but the actual request is made via curl or the curl library, an attacker can smuggle the request past the URL validator thus allowing an attacker to perform SSRF or an open redirect attack.",
+    "weakness": {
+        "id": 68,
+        "name": "Server-Side Request Forgery (SSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "rook1337",
+        "sudi",
+        "ramin0x53",
+        "rootonlinux"
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 10.0,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5927550,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report, we will investigate.\n\nHowever, note that curl and libcurl speak URLS as per the IETF spec RFC 3986 and not per the \"URL standard\" that WHATWG ships and that browsers tend to mostly adhere to. The state of URLs in the world remains very very poor and there's no universal standard.",
+            "automated_response": false,
+            "created_at": "2019-10-01T06:44:53.242Z",
+            "updated_at": "2019-10-01T06:44:53.242Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071521Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf52976a39eb11b8d4f38e289d6bfff5f6c7f46d95e6f68b0f49fca24afcf50"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5927626,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "tl;dr: I don't consider this a bug. At least not our bug.\n\nUnfortunately, this is a bug WHATWG brought to the world when they broke backwards compatibility with RFC3986. curl has consistently handled the authority part of the URL exactly as RFC 3986 declares from  back when the RFC was published (2005).\n\nHere's a document explaining some of the most glaring [URL interop issues](https://github.com/bagder/docs/blob/master/URL-interop.md).\n\nWHATWG *changed* how a \"URL\" works in a non-compatible way that we couldn't easily follow as that would break functionality for our users (plus all the other craziness crap they do in that spec) so we've stuck to the RFC meaning. In order to mitigate some of the most obvious problems in this new world of URL chaos curl contains a bunch of \"kludges\" to bridge the gap between the RFC and what browsers do but not all gaps are possible to bridge. The authority part of the URL is one of those.\n\nIn my opinion, [the RFC](https://tools.ietf.org/html/rfc3986#section-3.2) is quite clear in that the `@`-letter is a separator between the userinfo and the host name. To quote it:\n\n> The user information, if present, is followed by a  commercial at-sign (\"@\") that delimits it from the host.\n\n... and there's no special treatment for backslashes so you can't \"escape\" the at symbol in the userinfo part. It needs to be URL encoded (`%40`) if you want it to be part of the name or the password.\n\nFinally I want to add that I've struggled and fought against WHATWG's destroying compatibility with legacy URLs but without much success.\n\ncurl and libcurl are certainly not alone in parsing URLs per the RFC. And since the WHATWG standard is \"living\", basically no one follows it exactly - and I've pointed out several such omissions over the years.",
+            "automated_response": false,
+            "created_at": "2019-10-01T07:13:52.195Z",
+            "updated_at": "2019-10-01T07:13:52.195Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071521Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf52976a39eb11b8d4f38e289d6bfff5f6c7f46d95e6f68b0f49fca24afcf50"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5936456,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Well, that URL interop document is a sobering look at the current state of the ecosystem.\n\n@bagder if you have the time, that whole document could be turned into a very interesting Defcon talk that I would 100% want to watch.\n\nThe problem that I see is that, as a Java developer implementing a URL whitelist for, say, protecting against open-redirect, I'm going to use the libraries URL parser and ensure that the host declared matches my white list. However, as we can clearly see, the whitelist that I create could easily be bypassed by an attacker by hiding their own URL in something that my server-side logic will have validated as safe.\n\nThis conflict around who's right isn't actually doing the users we're trying to protect much good.\n\nGiven that all major browsers seem to use the WHATWG standard, wouldn't it be better to push our industry forward instead of holding on to older standards? If that's not the right answer, do we as an industry need to make a bigger push back against the ratification of the WHATWG standard and get browser vendors to roll back their decision to support it?\n\nWhat is the correct path forward here to protect the users that have no idea that this issue even exists?",
+            "automated_response": false,
+            "created_at": "2019-10-01T19:24:37.583Z",
+            "updated_at": "2019-10-01T19:24:37.583Z",
+            "actor": {
+                "username": "jlleitschuh",
+                "cleared": false,
+                "verified": false,
+                "url": "/jlleitschuh",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/388/267/887b2ef55debfc7b243bdf563d314329cf750468_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5937360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks. It certainly could've been fun to do a talk based on that document as I have in fact been on this URL standards crusade for many years already. I even went back and found this blog post of mine from 19 months ago: [One URL standard please](https://daniel.haxx.se/blog/2017/01/30/one-url-standard-please/) which discusses pretty much *exactly* this userauth parsing problem you've mentioned here. That was a follow-up from my 2016 blog post [My URL isn't your URL](https://daniel.haxx.se/blog/2016/05/11/my-url-isnt-your-url/).\n\nAs [I'm barred from entering the US](https://daniel.haxx.se/us-visa.html), it could never be done on a US based conference though. A good previous talk that is basically a version of what it could be is this: [Exploiting URL Parser in Trending Programming Languages!](https://youtu.be/2MslLrPinm0) (even if some of what he says in there has been fixed since, it was a contributing reason to why libcurl introduced a URL parser API.)\n\n> Given that all major browsers seem to use the WHATWG standard\n\nBrowsers do yes, especially over time because they can forget history rather swiftly in ways not everyone else can.\n\n> wouldn't it be better to push our industry forward instead of holding on to older standards?\n\nI don't think we've seen proof that WHATWG is a good shepherd or caretaker of such an important document as a URL spec (I would actually argue the contrary). They're just too focused on browsers and their own game only and ignores pretty much everything else - and in case you've missed it: URLs are used for much than just in browsers. Also, the way the document is maintained and handled leaves a lot to be desired in my view.\n\nI realize this \"URL spec battle\" is often little me against enormous company behemoths but I wouldn't do it if I didn't think that the Internet loses the day we all give in and let WHATWG dictate this.\n\nI mostly blame WHATWG for this state of affairs (and they know I do). Secondarily, I blame the IETF who hasn't had the nerve to step up to challenge WHATWG and work on a RFC3986 update to unify the world - and I know there are a lot of IETF people (friends!) who refuse to accept the WHATWG way of defining URLs.\n\n> What is the correct path forward here to protect the users\n\nI really, strongly and sincerely wish I had a good answer for this. I don't.\n\nFor users of libcurl, I can only strongly urge and recommend users to also use the libcurl API for parsing URLs etc. It is the *mixing* of URL parsers that is the risky thing.\n\nI'll keep talking, blogging, complaining and informing the world of how URLs (don't) work. One of these days something will change and improve.\n\nSo, back to this issue at hand. This is not a new issue and it is widely known in these circles. It is not something we can easily address in the short term.",
+            "automated_response": false,
+            "created_at": "2019-10-01T21:38:03.286Z",
+            "updated_at": "2019-10-01T21:38:03.286Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071521Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf52976a39eb11b8d4f38e289d6bfff5f6c7f46d95e6f68b0f49fca24afcf50"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 5938955,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "This is an already known URL problem and not strictly curl's. There's no easy nor immediate known current fix.",
+            "automated_response": false,
+            "created_at": "2019-10-02T06:33:21.437Z",
+            "updated_at": "2019-10-02T06:33:21.437Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071521Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf52976a39eb11b8d4f38e289d6bfff5f6c7f46d95e6f68b0f49fca24afcf50"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 10302529,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-08T08:22:20.198Z",
+            "updated_at": "2021-01-08T08:22:20.198Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071521Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf52976a39eb11b8d4f38e289d6bfff5f6c7f46d95e6f68b0f49fca24afcf50"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 10311827,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-08T21:03:17.939Z",
+            "updated_at": "2021-01-08T21:03:17.939Z",
+            "actor": {
+                "username": "jlleitschuh",
+                "cleared": false,
+                "verified": false,
+                "url": "/jlleitschuh",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/388/267/887b2ef55debfc7b243bdf563d314329cf750468_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 10311828,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-08T21:03:17.977Z",
+            "updated_at": "2021-01-08T21:03:17.977Z",
+            "actor": {
+                "username": "jlleitschuh",
+                "cleared": false,
+                "verified": false,
+                "url": "/jlleitschuh",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/388/267/887b2ef55debfc7b243bdf563d314329cf750468_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

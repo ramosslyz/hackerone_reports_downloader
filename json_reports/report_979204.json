@@ -1,0 +1,441 @@
+{
+    "id": 979204,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NzkyMDQ=",
+    "url": "https://hackerone.com/reports/979204",
+    "title": "XSS on https://partners.acronis.com/",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2020-09-11T06:11:21.913Z",
+    "submitted_at": "2020-09-11T06:11:22.104Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "yash_",
+        "url": "/yash_",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/hfX1HzJ4HtreSfHG2VRuHbN2/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13428,
+        "url": "https://hackerone.com/acronis",
+        "handle": "acronis",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Acronis",
+            "twitter_handle": "Acronis",
+            "website": "https://www.acronis.com",
+            "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-06-17T01:28:32.571Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-06-17T01:28:32.460Z",
+    "team_member_agreed_on_going_public_at": "2021-06-16T18:24:51.500Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello,\n\nI found DOM XSS on login page of https://partners.acronis.com/\nOpen this URL https://partners.acronis.com/en-us/profile/login.html?-back=test123\"> and search for `var back =`. Here input is HTML encoded but from that reflected value, element is created and appended to the form. \n{F983552}\nWe can use JavaScript's unicode escaping to bypass this..\n  \n  \n\n## Steps To Reproduce\n  1. For this payload `\"><img src=x onerror=alert(1)><x y=\"` we have to replace `\"` with `\\u0022`, `>` with `\\u003e` and `<` with `\\u003c`.\nSo the payload will be `\\u0022\\u003e\\u003cimg src=x onerror=alert(1)\\u003e\\u003cx y=\\u0022`\n  1. Open this URL   \n   ```\nhttps://partners.acronis.com/en-us/profile/login.html?-back=\\u0022\\u003e\\u003cimg+src=x+onerror=alert(1)\\u003e\\u003cx+y=\\u0022\n    ```\n  1. And you'll see alert dialog.  \n{F983553}\n\n## Impact\n\nAttacker can execute JavaScript code on users who open the link. This XSS is in the login page so it can be used to get someone's credentials..",
+    "weakness": {
+        "id": 63,
+        "name": "Cross-site Scripting (XSS) - DOM"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 983552,
+            "file_name": "1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4w5m9s6AytPdavgXVayBdCQz?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071001Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0979f14cfe8b2c3c4fbe688328cfb4bc4b76db109a98ee4355c5a12b7b42b4f7",
+            "file_size": 11302,
+            "type": "image/png"
+        },
+        {
+            "id": 983553,
+            "file_name": "2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/yapoE5juawPnMoqz2EMQDGqy?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071001Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e56301eedc94abcab5bb02677f6cd08a6c45c20c355b2f74dfa1e8fbb621bfa4",
+            "file_size": 150638,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 71,
+    "voters": [
+        "hotshotgg",
+        "mr-medi",
+        "osman1337",
+        "alp",
+        "bombon",
+        "run_win",
+        "fdeleite",
+        "dhakal_bibek",
+        "und3sc0n0c1d0",
+        "dastan_9408",
+        "and 61 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 50773,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.acronis.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9188153,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @yash_ \n\nThanks for participating in Acronis bug bounty program!\nWe will review the report and come back to you asap.",
+            "automated_response": false,
+            "created_at": "2020-09-11T08:13:57.372Z",
+            "updated_at": "2020-09-11T08:13:57.372Z",
+            "actor": {
+                "username": "iradostev",
+                "cleared": false,
+                "verified": false,
+                "url": "/iradostev",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/exz476wuurqsptes5cmn2pgxvf8v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22iradostev.jpg%22%3B%20filename%2A%3DUTF-8%27%27iradostev.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071001Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c4a02efe63400f1e34be8ebcbf71a86871cb0cd7f9edc121c79c0dc3ced2827a"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 9189573,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-11T09:10:24.897Z",
+            "updated_at": "2020-09-11T09:10:24.897Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Low",
+                "old_severity_id": 842893,
+                "new_severity_id": 843283
+            },
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 9189575,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-11T09:10:27.935Z",
+            "updated_at": "2020-09-11T09:10:27.935Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 9350748,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for participating in Acronis bug bounty program! Bounty is transferred to your account.\nHappy bug hunting and we are waiting for new reports from you.",
+            "automated_response": false,
+            "created_at": "2020-09-28T09:12:05.408Z",
+            "updated_at": "2020-09-28T09:12:05.408Z",
+            "actor": {
+                "url": "/acronis",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Acronis"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "acronis",
+            "collaborator": {
+                "username": "yash_",
+                "url": "/yash_"
+            }
+        },
+        {
+            "id": 10656189,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-12T14:57:02.982Z",
+            "updated_at": "2021-02-12T14:57:02.982Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1102122
+            },
+            "actor": {
+                "username": "cabelo",
+                "cleared": false,
+                "verified": false,
+                "url": "/cabelo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rlpilkpvkyndcu2hqf334uw2ka7y/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 10992912,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-15T08:38:51.646Z",
+            "updated_at": "2021-03-15T08:38:51.646Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1125345
+            },
+            "actor": {
+                "username": "bd38c0d1c668b551935d29f",
+                "cleared": false,
+                "verified": false,
+                "url": "/bd38c0d1c668b551935d29f",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11614419,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-05-04T15:28:33.951Z",
+            "updated_at": "2021-05-04T15:28:33.951Z",
+            "actor": {
+                "username": "cabelo",
+                "cleared": false,
+                "verified": false,
+                "url": "/cabelo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rlpilkpvkyndcu2hqf334uw2ka7y/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/cabelo",
+                "username": "cabelo"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11754924,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for catching this bug!\n\nWe have fixed it, please confirm that you are no longer able to reproduce the issue.\n",
+            "automated_response": false,
+            "created_at": "2021-05-14T17:14:29.210Z",
+            "updated_at": "2021-05-14T17:14:29.210Z",
+            "actor": {
+                "username": "security-bot",
+                "cleared": false,
+                "verified": false,
+                "url": "/security-bot",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8j8hgg8lahteormio6374m2zn4on/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "yash_",
+                "url": "/yash_"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11757878,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The login.html page might be removed because on visiting the URL, it redirects to `/` So it seems that the issue is fixed now.\n\nThank You!",
+            "automated_response": false,
+            "created_at": "2021-05-15T03:01:58.855Z",
+            "updated_at": "2021-05-15T03:01:58.855Z",
+            "actor": {
+                "username": "yash_",
+                "cleared": false,
+                "verified": false,
+                "url": "/yash_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hfX1HzJ4HtreSfHG2VRuHbN2/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12146152,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-16T18:24:51.523Z",
+            "updated_at": "2021-06-16T18:24:51.523Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12148623,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-17T01:28:32.500Z",
+            "updated_at": "2021-06-17T01:28:32.500Z",
+            "actor": {
+                "username": "yash_",
+                "cleared": false,
+                "verified": false,
+                "url": "/yash_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hfX1HzJ4HtreSfHG2VRuHbN2/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12148624,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-17T01:28:32.643Z",
+            "updated_at": "2021-06-17T01:28:32.643Z",
+            "actor": {
+                "username": "yash_",
+                "cleared": false,
+                "verified": false,
+                "url": "/yash_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/hfX1HzJ4HtreSfHG2VRuHbN2/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

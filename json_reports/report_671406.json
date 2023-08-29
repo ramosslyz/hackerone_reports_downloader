@@ -1,0 +1,705 @@
+{
+    "id": 671406,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NzE0MDY=",
+    "url": "https://hackerone.com/reports/671406",
+    "title": "Account takeover via Google OneTap",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-08-11T14:34:02.500Z",
+    "submitted_at": "2019-08-11T14:34:02.500Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "badca7",
+        "url": "/badca7",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 59,
+        "url": "https://hackerone.com/priceline",
+        "handle": "priceline",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/059/ebb250a0326046ab0360a7b35be8cb3f1fe46a2b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/059/ebb250a0326046ab0360a7b35be8cb3f1fe46a2b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Priceline",
+            "twitter_handle": "",
+            "website": "http://www.priceline.com/",
+            "about": "Deep Discounts on Hotels, Flights and Rental Cars."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-05-11T09:37:14.985Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-04-11T09:37:07.580Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n\nIt's possible to take over any priceline.com user's account knowing their email. The only requirement is that the victim's email domain is not registered with Google's Gsuite. The root cause of this issue is that the backend does not verify whether the email provided is a confirmed one.\n\n## Steps To Reproduce:\n\n1. Create Account A (in my case `badca7@wearehackerone.com`) with priceline.com, without any SSO, via the \"Create an account\" link (aka \"register with email\").\n2. Once the account has been created, add a dummy phone number to the profile. It will serve as a canary to demonstrate we accessed the same data in the next steps.\n3. In another browser/session (eg, incognito/private mode) sign up for a trial GSuite account at https://gsuite.google.com/signup/basic/welcome  . This will be Account B.\n4. Use any email to register as you won't need to confirm that email. \n5. When the wizard comes to the \"Does your business have a domain?\" confirm and enter `wearehackerone.com` (or any other domain that hosts the victim's email box) as in F552718. You may not use the same domain name at this stage, as I claimed it for the purposes of this PoC however you can do so when my GSuite trial expires. From this comes the requirement that the victim's email domain name must not be registered with Google prior to this attack. \n6. Once you saved the domain record with Google, stop there as there's no need to verify the domain.\n7. At this stage the OneTap/GoogleYOLO popup will be showing on priceline.com when visited in the same browser session. It took me some time to get it to show however signing in and out of Google Account several times with the newly created GSuite credentials and then refreshing the priceline.com page helped. On another occasion a Gmail account, which I signed in in the same browser window helped too. You may need to play around with these until you see the newly created account to show in the list. F552723 \n8. Once you have that, just sign in (`badca7@wearehackerone.com` in my case). You can confirm you accessed Account A by seeing the phone number you added in step (2). In the other browser window/session with Account A you can see that now there are two accounts showing in the top right corner and the profile data is blank.\n9. Account takeover complete. F552724\n\n# Notes\n\n- IP used for this PoC: 139.59.90.143\n\n## Impact\n\nAttackers can take over any priceline.com account given they were able to register a specific domain with GSuite.",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 552718,
+            "file_name": "gsuite.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/WRBUJW9BMYXYFNe6UPXguXki?response-content-disposition=attachment%3B%20filename%3D%22gsuite.png%22%3B%20filename%2A%3DUTF-8%27%27gsuite.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070210Z&X-Amz-Expires=1789&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=632f2e716695945cb912d98da5a5387c76cea6aad614cad18ede9c8521bcef82",
+            "file_size": 452861,
+            "type": "image/png"
+        },
+        {
+            "id": 552723,
+            "file_name": "popup_onetap.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ZgWnszG6fDSCm1z6JcvedJ2g?response-content-disposition=attachment%3B%20filename%3D%22popup_onetap.png%22%3B%20filename%2A%3DUTF-8%27%27popup_onetap.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070210Z&X-Amz-Expires=1789&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=57bf8ff4783c7a90150abfafbdf5a95fdafc1e66758f6067ecd6ba29ec02cc39",
+            "file_size": 2078055,
+            "type": "image/png"
+        },
+        {
+            "id": 552724,
+            "file_name": "AccountA_after_takeover.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/D4XrEU18NDB6jxMrfG5p7vxf?response-content-disposition=attachment%3B%20filename%3D%22AccountA_after_takeover.png%22%3B%20filename%2A%3DUTF-8%27%27AccountA_after_takeover.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070210Z&X-Amz-Expires=1789&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2399c8f18a71edf663a2881cacf2d4cf7fb1b69ef4389f628489cacf81e8844e",
+            "file_size": 437967,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2022-05-11T09:37:07.732Z",
+    "allow_singular_disclosure_after": -41030703.22592622,
+    "singular_disclosure_allowed": true,
+    "vote_count": 58,
+    "voters": [
+        "the_conscience",
+        "alp",
+        "quickjohn",
+        "yxw21",
+        "yassinek3ch",
+        "zy9ard3",
+        "yuvraj_dighe",
+        "imranhudaa",
+        "ta8ahi",
+        "bug_vs_me",
+        "and 48 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.1,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 6651,
+        "asset_type": "URL",
+        "asset_identifier": "www.priceline.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5562288,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @badca7 \n\nThank you for your submission. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nKind regards,\n@ktistai",
+            "automated_response": false,
+            "created_at": "2019-08-13T08:36:55.020Z",
+            "updated_at": "2019-08-13T08:36:55.020Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5562313,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @badca7 , \n\nThe described behaviour doesn't look like an actual security issue that can be used against another user. \n\nFeel free to close as N/A. \n\nThanks, \n@ktistai",
+            "automated_response": false,
+            "created_at": "2019-08-13T08:41:37.825Z",
+            "updated_at": "2019-08-13T08:41:37.825Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5563436,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @ktistai \n\nWhy do you think it's not a security issue? I confirm it can be used against another user if their email domain is not registered with GSuite which is ... a lot of domains :) In the PoC above I created a legitimate user `badca7@wearehackerone.com` and was able to log in as that user by spoofing that email ID with a trial of Gsuite before email verification.\n\nIt's a common issue with Google's OneTap (YOLO) in that it's different from the regular Google authentication (which _does_ require emails to be verified first). The issue with the backend is that it trusts the information returned by Google, however it also needs to make sure that the email provided is verified. This page https://developers.google.com/identity/sign-in/web/backend-auth explains how to do it correctly. In this instance, the backend simply needs to also check `\"email_verified\": \"true\"` in the payload that it gets from Google like this one below:\n\n```\n{\n // These six fields are included in all Google ID Tokens.\n \"iss\": \"https://accounts.google.com\",\n \"sub\": \"110169484474386276334\",\n \"azp\": \"1008719970978-hb24n2dstb40o45d4feuo2ukqmcc6381.apps.googleusercontent.com\",\n \"aud\": \"1008719970978-hb24n2dstb40o45d4feuo2ukqmcc6381.apps.googleusercontent.com\",\n \"iat\": \"1433978353\",\n \"exp\": \"1433981953\",\n\n // These seven fields are only included when the user has granted the \"profile\" and\n // \"email\" OAuth scopes to the application.\n \"email\": \"testuser@gmail.com\",\n \"email_verified\": \"true\",\n \"name\" : \"Test User\",\n \"picture\": \"https://lh4.googleusercontent.com/-kYgzyAWpZzJ/ABCDEFGHI/AAAJKLMNOP/tIXL9Ir44LE/s99-c/photo.jpg\",\n \"given_name\": \"Test\",\n \"family_name\": \"User\",\n \"locale\": \"en\"\n}\n```\n\nI hope this explains the attack better. Let me know what I can do to provide even more details (a video?).\n\nThanks",
+            "automated_response": false,
+            "created_at": "2019-08-13T11:31:02.515Z",
+            "updated_at": "2019-08-13T11:31:02.515Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5572757,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @badca7, \n\nOk, based on your last explanation I decided to give it a go, as my thinking was not at it's best. However, I got stuck at step 7). In which browser do I need to log-in? The one at step 1 or the one where I made the GSUITE account? Also, where is the YOLO button? I can't see any popups. \n\nThanks, \n@ktistai",
+            "automated_response": false,
+            "created_at": "2019-08-14T08:50:08.867Z",
+            "updated_at": "2019-08-14T08:50:08.867Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5572777,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-08-14T08:52:58.934Z",
+            "updated_at": "2019-08-14T08:52:58.934Z",
+            "additional_data": {
+                "old_severity": "Critical (9.0)",
+                "new_severity": "High (8.1)",
+                "old_severity_id": 490242,
+                "new_severity_id": 492337
+            },
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5572779,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "LE: Sorted it out. It's triaged. \n\nThank you for your report! \nI just opened an internal ticket.\n\n**You may ask for a status/update in 2 weeks**\n\nThank you again!",
+            "automated_response": false,
+            "created_at": "2019-08-14T08:53:23.983Z",
+            "updated_at": "2019-08-14T08:53:23.983Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5572820,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Awesome, glad you worked it out. I have the best results getting the popup to show right after signing in with the \"spoof\" account into GSuite and then refreshing the web page.\n\nThanks.",
+            "automated_response": false,
+            "created_at": "2019-08-14T09:01:47.355Z",
+            "updated_at": "2019-08-14T09:01:47.355Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5572824,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@badca7 , \n\nActually, if you go on Priceline in another tab, the Google sign in method will come up and then you are in. This is a really interesting find. Congrats. Also, I got to register my domain with G-Suite, which was in the queue for a long time so thanks :D \n\nHappy hacking, \n@ktistai",
+            "automated_response": false,
+            "created_at": "2019-08-14T09:03:56.540Z",
+            "updated_at": "2019-08-14T09:03:56.540Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5586648,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report! \nI just opened an internal ticket.\n\n**You may ask for a status/update in 2 weeks**\n\nThank you again!",
+            "automated_response": false,
+            "created_at": "2019-08-15T20:29:36.724Z",
+            "updated_at": "2019-08-15T20:29:36.724Z",
+            "actor": {
+                "username": "r0n",
+                "cleared": false,
+                "verified": false,
+                "url": "/r0n",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5586653,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-08-15T20:30:48.604Z",
+            "updated_at": "2019-08-15T20:30:48.604Z",
+            "actor": {
+                "url": "/priceline",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/059/ebb250a0326046ab0360a7b35be8cb3f1fe46a2b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Priceline"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "priceline",
+            "collaborator": {
+                "username": "badca7",
+                "url": "/badca7"
+            }
+        },
+        {
+            "id": 5587415,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, @r0n ",
+            "automated_response": false,
+            "created_at": "2019-08-15T23:15:04.872Z",
+            "updated_at": "2019-08-15T23:15:04.872Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5733750,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-05T04:49:58.081Z",
+            "updated_at": "2019-09-05T04:49:58.081Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 683431
+            },
+            "actor": {
+                "username": "csanuragjain",
+                "cleared": true,
+                "verified": true,
+                "url": "/csanuragjain",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5737441,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@lollipup why was another researcher added to this report? I don't remember asking disclosure :)",
+            "automated_response": false,
+            "created_at": "2019-09-05T11:08:16.180Z",
+            "updated_at": "2019-09-05T11:12:08.200Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5737445,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If.. that was you of course.",
+            "automated_response": false,
+            "created_at": "2019-09-05T11:08:37.066Z",
+            "updated_at": "2019-09-05T11:08:37.066Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 5737868,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@badca7 I was added since I filled a duplicate issue on this program. To be honest I am a bit surprised that it is duplicate since I was under the belief that no one was aware of this issue. :)",
+            "automated_response": false,
+            "created_at": "2019-09-05T12:42:06.704Z",
+            "updated_at": "2019-09-05T12:42:06.704Z",
+            "actor": {
+                "username": "csanuragjain",
+                "cleared": true,
+                "verified": true,
+                "url": "/csanuragjain",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6232231,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @badca7 , \n\nCan you test this again? A fix has been deployed to production.",
+            "automated_response": false,
+            "created_at": "2019-11-06T15:39:10.330Z",
+            "updated_at": "2019-11-06T15:39:10.330Z",
+            "actor": {
+                "username": "r0n",
+                "cleared": false,
+                "verified": false,
+                "url": "/r0n",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6235850,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "To the best of my knowledge Google has closed the loophole quite some time ago now. I don't think this attack works anymore. @csanuragjain - do you observe the same, that Google now won't allow unconfirmed accounts to be used to sign in (just like they correctly do for the oAuth flow)?",
+            "automated_response": false,
+            "created_at": "2019-11-06T21:13:48.512Z",
+            "updated_at": "2019-11-06T21:13:48.512Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6236249,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @badca7,\n\nWhere is the update from Google that this is fixed? \n\nDid you test again just to confirm? ",
+            "automated_response": false,
+            "created_at": "2019-11-06T22:58:09.768Z",
+            "updated_at": "2019-11-06T22:58:09.768Z",
+            "actor": {
+                "username": "r0n",
+                "cleared": false,
+                "verified": false,
+                "url": "/r0n",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6267919,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @r0n,\n\nHope you're doing well. I'm not aware of any public updates from Google however I did test and can confirm that now I can't get unverified accounts in Gsuite to sign in using SmartLock. The account won't appear in any SmartLock popup anymore, neither forcing various parameters on Google's side of things allows bypassing that. I thus assume this has been fixed or improved by G in the first place, hence Priceline.com should not be vulnerable either.\n\nCurious if @csanuragjain observed the same recently. Otherwise what's the point of adding other researchers to others' reports, right? ;)\n\nThanks.",
+            "automated_response": false,
+            "created_at": "2019-11-10T00:50:29.021Z",
+            "updated_at": "2019-11-10T00:50:29.021Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6292199,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @badca7, \n\nWe applied some changes based on google documentation. i was not able to reproduce this after that. Not sure if google fixed it before that.\n\nI will be closing this ticket. \n\nThanks!",
+            "automated_response": false,
+            "created_at": "2019-11-12T21:34:21.029Z",
+            "updated_at": "2019-11-12T21:34:21.029Z",
+            "actor": {
+                "username": "r0n",
+                "cleared": false,
+                "verified": false,
+                "url": "/r0n",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "badca7",
+                "url": "/badca7"
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 6292379,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Wonderful. Thanks for the update.",
+            "automated_response": false,
+            "created_at": "2019-11-12T22:13:36.205Z",
+            "updated_at": "2019-11-12T22:13:36.205Z",
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 16234408,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi, can we please disclose this? Please redact `139.59.90.143` if possible.",
+            "automated_response": false,
+            "created_at": "2022-04-11T09:37:07.610Z",
+            "updated_at": "2022-04-11T09:37:07.610Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "badca7",
+                "cleared": false,
+                "verified": false,
+                "url": "/badca7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c8r1TwpGjyfCcXs9vLfLormF/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        },
+        {
+            "id": 16651223,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-11T09:37:15.095Z",
+            "updated_at": "2022-05-11T09:37:15.095Z",
+            "actor": {
+                "url": "/priceline",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/059/ebb250a0326046ab0360a7b35be8cb3f1fe46a2b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Priceline"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "priceline"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,588 @@
+{
+    "id": 1582160,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTgyMTYw",
+    "url": "https://hackerone.com/reports/1582160",
+    "title": "Bypass for Domain-level redirects (Unvalidated Redirects and Forwar)",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2022-05-26T13:04:20.971Z",
+    "submitted_at": "2022-05-26T13:04:21.160Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "thypon",
+        "url": "/thypon",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 264,
+        "url": "https://hackerone.com/gitlab",
+        "handle": "gitlab",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "GitLab",
+            "twitter_handle": "gitlab",
+            "website": "https://about.gitlab.com",
+            "about": "A single application for the entire software development lifecycle."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-06-22T22:57:33.323Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-06-22T22:57:33.256Z",
+    "team_member_agreed_on_going_public_at": "2022-06-22T22:45:09.973Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "### Summary\n\n{F1745460}\n\nWhile testing for the ability to define custom redirects in Gitlab Pages,\nI discovered I was able to define `Domain-level redirects` which are explicitly disabled in the documentation.\nAt a first glance, the validation step seems to disable any link not starting with `/`,\nIt has however to be noted that distinct domain redirects can be defined even with starting slash/backslash.\nFor example, all these three examples will redirect to another domain:\n\n- `//anotherdomain.com/...`\n- `/\\anotherdomain.com/...`\n- `\\\\anotherdomain.com\\...`\n\nAll these previous domains are equivalent to writing `https?://anotherdomain.com/...`\n\nAn attacker may define vanity URLs hosted on GitLab targeting phishing websites.\n\n### Steps to reproduce\n\nIn order to reproduce this vulnerability follow these steps:\n\n1. Generate a new pages project (eg. anyone from https://gitlab.com/pages ).\n      You can create a new project forking https://gitlab.com/pages/jekyll\n2. Enable CI/CD pipeline\n3. Enable pages support in Settings\n4. Add a `_redirects` file and include that file in the output through the `_config.yml` include directive\n5. Add a redirect such as `/jekyll-test/test3.html /\\desktop.pompel.me\\test2.html 301```\n6. Wait for the CI to complete the deploy\n7. Navigate to the defined redirect\n8. Verify that the redirect is reaching an external website\n\n### Impact\n\nAn attacker may define vanity URLs hosted on GitLab targeting phishing websites.\n\n### Examples\n\nhttps://gitlab.com/miwaxe/jekyll-test/-/blob/master/_redirects\n\n```\n/jekyll-test/antani1.html /projectname/antani2.html 302\n/jekyll-test/test1.html \\\\projectname\\@desktop.pompel.me/test2.html 302\n/jekyll-test/test3.html /\\desktop.pompel.me\\test2.html 301\n```\n\n### What is the current *bug* behavior?\n\nCheck the attached demo video {F1745467}\n\n### What is the expected *correct* behavior?\n\nThe redirects should not happen to external domains. \nThis is pointed out in the documentation https://docs.gitlab.com/ee/user/project/pages/redirects.html and is explicitly forbidden.\n\n### Relevant logs and/or screenshots\n\nCheck the attached screenshot {F1745460}\n\n## Impact\n\nAn attacker may define vanity URLs hosted on GitLab targeting phishing websites.",
+    "weakness": {
+        "id": 53,
+        "name": "Open Redirect"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1745460,
+            "file_name": "screenshot_2022-05-25_at_16.07.32.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/52gqjg20u81uebic0rn3cuq17i7u?response-content-disposition=attachment%3B%20filename%3D%22screenshot_2022-05-25_at_16.07.32.png%22%3B%20filename%2A%3DUTF-8%27%27screenshot_2022-05-25_at_16.07.32.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070158Z&X-Amz-Expires=2594&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ab36b749550a45166cbc791e727e64948b1af64bff4a12a7278b6617f88e9284",
+            "file_size": 205714,
+            "type": "image/png"
+        },
+        {
+            "id": 1745467,
+            "file_name": "CleanShot_2022-05-25_at_16.20.33.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/t3dzgf1hi0mwdsllf3aosh1vqams?response-content-disposition=attachment%3B%20filename%3D%22CleanShot_2022-05-25_at_16.20.33.mp4%22%3B%20filename%2A%3DUTF-8%27%27CleanShot_2022-05-25_at_16.20.33.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070158Z&X-Amz-Expires=2594&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=aeb3e7ec38265cfb1cf24b7afd72129fcdfeaf670206d8725a8afdbf253a4e46",
+            "file_size": 58879095,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "quickjohn",
+        "zy9ard3",
+        "shivammusic",
+        "alhumbaty",
+        "jianhao",
+        "cbox108"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 4.1,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 55901,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://gitlab.com/gitlab-org/gitlab-pages",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16873996,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @thypon,\n\nThank you for your submission! Unfortunately, this particular issue you reported is explicitly out of scope as outlined in the [Policy Page](https://hackerone.com/):  \n\n> - Social engineering, phishing, or other fraud including but not limited to: internationalized domain name (IDN) homograph attacks, Right-to-left (RTL) Ambiguity, RTL Override (RTLO), SPF and DKIM issues, HTML content injection, Tabnabbing\n \nYour effort is nonetheless appreciated and we wish that you'll continue to research and submit any future security issues you find. \n\nBest Regards,\n@iced_t",
+            "automated_response": false,
+            "created_at": "2022-05-26T16:45:41.313Z",
+            "updated_at": "2022-05-26T16:45:41.313Z",
+            "actor": {
+                "username": "h1_analyst_ivan",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_ivan",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9iakmoijd1a8b53uspkpoeo6m5rl/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 16874022,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I strongly disagree. Phishing is just a way to exploit the attack vector.\nThe issue is an unvalidated redirect that was not out-of-scope.\n\nDo you have any problem with an immediate public disclosure since you don't consider it a bug?",
+            "automated_response": false,
+            "created_at": "2022-05-26T16:48:49.556Z",
+            "updated_at": "2022-05-26T16:48:49.556Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 16961732,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Public disclosure will occur 90 days after the initial vulnerability report, regardless of when the bug is fixed. Technical details (initial report plus any additional work) are published on Day 90.\nA 14-day grace period* is allowed.\nEarlier disclosure with mutual agreement.\n\nThe disclosure will be handled on my personal Twitter account https://twitter.com/njoyneer",
+            "automated_response": false,
+            "created_at": "2022-06-01T17:59:52.494Z",
+            "updated_at": "2022-06-01T17:59:52.494Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 16975632,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "Hey @thypon,\n\nI am looking further into this.\n\nThank you!\n\n@iced_t",
+            "automated_response": false,
+            "created_at": "2022-06-02T21:38:11.543Z",
+            "updated_at": "2022-06-02T21:38:11.543Z",
+            "actor": {
+                "username": "h1_analyst_ivan",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_ivan",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9iakmoijd1a8b53uspkpoeo6m5rl/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 16975638,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @thypon - I'm discussing this submission internally with the GitLab team. You will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2022-06-02T21:38:55.820Z",
+            "updated_at": "2022-06-02T21:38:55.820Z",
+            "actor": {
+                "username": "h1_analyst_ivan",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_ivan",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9iakmoijd1a8b53uspkpoeo6m5rl/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17095713,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @iced_t and @thypon,\n\nOpen Redirects are valid issues for our program. I apologise that our policy confused the HackerOne Triage Team. For example https://hackerone.com/reports/1506126 is another open redirect we're triaging (@iced_t will be able to access but not you sorry @thypon), and we fixed an Open Redirect in [the February release](https://about.gitlab.com/releases/2022/02/03/security-release-gitlab-14-7-1-released/#open-redirect-vulnerability-in-jira-integration). @thypon searching previous reports and published CVEs can be a good way of validating whether we treat reports as in scope.\n\n@thypon I'll take a look at this report and keep you updated. I agree that if this is closed as Informative or N/A etc then it can be public immediately - that's already the policy - but until then any disclosure outside of our policy is not permitted, even if our time to resolve takes longer than your stated 90 day window.\n\nCheers,\nNick Malcolm\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2022-06-13T01:44:29.647Z",
+            "updated_at": "2022-06-13T01:44:29.647Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17096042,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "- `PR:L` - a developer account is required to configure GitLab Pages\n- `S:C` - the vulnerable component is Pages, the impacted component is the victim's browser\n- `I:L` - the browser responds in a potentially unexpected way\n\nLearn more about how we create and peer review CVSS scores at https://about.gitlab.com/handbook/engineering/security/security-engineering-and-research/application-security/runbooks/hackerone-process.html",
+            "automated_response": false,
+            "created_at": "2022-06-13T04:06:05.819Z",
+            "updated_at": "2022-06-13T04:06:05.819Z",
+            "additional_data": {
+                "old_severity": "Medium (6.5)",
+                "new_severity": "Medium (4.1)",
+                "old_severity_id": 1516816,
+                "new_severity_id": 1538636
+            },
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17096102,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hey @thypon,\n\nThe examples `//anotherdomain.com/...` `\\\\anotherdomain.com/...` don't work for me; can you make your project public so I can see what I might be getting wrong?\n\nHere's what I configured: https://gitlab.com/nmtestsite/nmtestsite.gitlab.io/-/blob/main/public/_redirects\nAvailable at https://nmtestsite.gitlab.io/\n\nI validated that `/\\` works to perform a redirect. However I can achieve the same thing with html like the following\n\n```\n<head>\n    <meta http-equiv=\"refresh\" content=\"0; url=http://example.com/htmlbasedredirect\" />\n</head>\n```\n\nThat makes me wonder why we're stating that domain-based redirects aren't supported. We also might be differentiating between \"supported\" and \"forbidden\". Since it's on `gitlab.io` and not `gitlab.com`, I'm not sure I see a great deal of impact in this report. An attacker might as well create their own static site on any platform. But the documentation does state domain-based redirects are unsupported, as you say.\n\nIf you could give an update on those other two types of redirect URLs that'd be great. In the meantime I'll take this to the responsible engineering team for their feedback. This will be tracked at https://gitlab.com/gitlab-org/gitlab/-/issues/365114.\n\nCheers,\nNick Malcolm\nGitLab Security Team\n",
+            "automated_response": false,
+            "created_at": "2022-06-13T04:19:33.521Z",
+            "updated_at": "2022-06-13T04:20:25.445Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17104671,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "@nmalcolm_gitlab @iced_t, thanks for helping triage this issue :)\n\nI opened up an example repository.\nHere the examples:\n\n- https://gitlab.com/miwaxe/jekyll-test/-/blob/master/_redirects the redirects file associated with the open redirect\n- https://miwaxe.gitlab.io/jekyll-test/_redirects the published redirects checker with the first and third link being considered as valid but pointing to an external website\n- https://miwaxe.gitlab.io/jekyll-test/test3.html is an example of PoC redirecting to an external website\n\n> any disclosure outside of our policy is not permitted, even if our time to resolve takes longer than your stated 90 day window.\n\n@nmalcolm_gitlab I'm 100% open to collaborating and helping triage/fix this fast, and I understand the underlying complication of managing an entire SDLC process comprehensive of a public bug bounty program. **In that regard, I'm confident we will be able to hit the 90-days target, but I will be happy to postpone if it will pose any risk to Gitlab users.**\n\n*I'm, however, curious how/when your policy may be binding in my regard. I'm not a lawyer, so you may know better than me on this topic.*",
+            "automated_response": false,
+            "created_at": "2022-06-13T13:20:53.668Z",
+            "updated_at": "2022-06-13T13:20:53.668Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17109929,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks for opening your repo @thypon - can you confirm that only test3 (`/\\`) works, and that the other two PoCs from your initial report (`//` and `\\\\`) do not work? \n\n> For example, all these three examples will redirect to another domain:\n> - `//anotherdomain.com/...`\n> - `/\\anotherdomain.com/...`\n> - `\\\\anotherdomain.com\\...`\n\n> I'm, however, curious how/when your policy may be binding in my regard. I'm not a lawyer, so you may know better than me on this topic.\n\nI also am not a lawyer 😅 It's not that we can legally force you to follow our policy, rather that only people who agree to follow our policy are eligible to participate and potentially receive rewards. HackerOne themselves may also choose to take action, as finders [agree to follow Program Policy](https://www.hackerone.com/terms/finder) and [the HackerOne code of conduct](https://www.hackerone.com/policies/code-of-conduct) has a number of items around disclosure and professional behaviour.\n\nOur SLO for medium severity issues is 90 days, so I agree we should be good. See https://about.gitlab.com/handbook/engineering/security/#severity-and-priority-labels-on-security-issues\n\nI'll keep you updated on how the team plan to manage this report. I'll set this as triaged but hold off providing a partial bounty until the team inform me whether this is a valid security issue, a documentation update, or something else.\n\nCheers,\nNick Malcolm\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2022-06-13T22:35:50.956Z",
+            "updated_at": "2022-06-13T22:35:50.956Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17114533,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> can you confirm that only test3 (/\\) works, and that the other two PoCs from your initial report (// and \\\\) do not work?\n\nYup, the description was generically introducing how and why the `/\\` bypass is working. The video PoC and the reproduction steps were indeed always exploiting the `/\\` case.",
+            "automated_response": false,
+            "created_at": "2022-06-14T06:56:16.776Z",
+            "updated_at": "2022-06-14T06:56:16.776Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17216665,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "ETA for fix:\n\nHi @thypon,\n\nThe issue you reported is currently scheduled to be fixed by 2022-07-31.\n\nThank you again for contacting us!\n\nBest regards,\nGitLab Security Team\n",
+            "automated_response": true,
+            "created_at": "2022-06-21T04:04:12.783Z",
+            "updated_at": "2022-06-21T04:04:12.783Z",
+            "actor": {
+                "username": "gitlab-securitybot",
+                "cleared": false,
+                "verified": false,
+                "url": "/gitlab-securitybot",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17217370,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there,\n\nThanks for the update!\n@nmalcolm_gitlab, has the team decided whether this is a valid security issue, a documentation update, or anything else, yet?\n\nThanks again!",
+            "automated_response": false,
+            "created_at": "2022-06-21T06:42:45.666Z",
+            "updated_at": "2022-06-21T06:42:45.666Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17229007,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @thypon,\n\nThe team have determined that this behaviour is something to be looked in to, but is not a security bug. I have made the GitLab issue public as a result, and you can follow along there if you're interested!\n\nhttps://gitlab.com/gitlab-org/gitlab/-/issues/365114#note_1000044763\n\nThanks so much for bringing this to our attention, and we look forward to your next report.\n\nCheers,\nNick Malcolm\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2022-06-22T00:45:20.242Z",
+            "updated_at": "2022-06-22T00:45:20.242Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17229015,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Oh - and feel free to request disclosure of this H1 report if you want. And a reminder for future reports: if you want to be eligible to participate in our bounty program and/or potentially receive awards, you need to abide by our Program Policy and HackerOne's various policies.\n\nCheers,\nNick Malcolm\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2022-06-22T00:49:45.636Z",
+            "updated_at": "2022-06-22T00:49:45.636Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17239623,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Indeed, thanks for fixing the issue :). Can we have public visibility for this report?",
+            "automated_response": false,
+            "created_at": "2022-06-22T08:47:47.716Z",
+            "updated_at": "2022-06-22T08:47:47.716Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17251839,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-22T22:45:09.996Z",
+            "updated_at": "2022-06-22T22:45:09.996Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17251864,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-22T22:57:33.281Z",
+            "updated_at": "2022-06-22T22:57:33.281Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 17251865,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-22T22:57:33.371Z",
+            "updated_at": "2022-06-22T22:57:33.371Z",
+            "actor": {
+                "username": "thypon",
+                "cleared": false,
+                "verified": false,
+                "url": "/thypon",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

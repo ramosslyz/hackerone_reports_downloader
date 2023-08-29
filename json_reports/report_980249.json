@@ -1,0 +1,300 @@
+{
+    "id": 980249,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85ODAyNDk=",
+    "url": "https://hackerone.com/reports/980249",
+    "title": "Net::SMTP with tls allows forged certificates as long as the hostname matches",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2020-09-11T18:05:31.315Z",
+    "submitted_at": "2020-09-11T18:05:31.353Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "hanno",
+        "url": "/hanno",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/020/918/74da560ef66bf8cc239e219843444b441a7dfac6_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-01-25T01:48:01.803Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-11-10T13:21:13.135Z",
+    "team_member_agreed_on_going_public_at": "2021-01-25T01:48:01.725Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I'd like to report a very odd behavior I observed in the\nNet::SMTP\nmodule, part of Ruby's standard library.\n\nIt seems when performing a TLS connection the code checks the certificate hostname, but not the certificate signature or issuer. This of course makes little sense, as an attacker can create a self-signed (or signed by whatever fake CA) certificate with a matching hostname.\n\nTo test:\n\n* Create a test certificate for a random test hostname (e.g. smtp.example):\n```\nopenssl req -new -newkey rsa:2048 -days 9999 -nodes -x509 -keyout server.key -out server.crt -batch -subj '/CN=smtp.example/'\n```\n* Run a TLS server with that certificate. the error we're looking after happens before any SMTP activity, so it doesn't really matter if it's a \"real\" SMTP server, we can use an openssl test server for this:\n```\nopenssl s_server -accept 465 -cert smtp.pem -key smtp.pem\n```\n* Now redirect smtp.example and another hostname (let's use smtp2.example) to localhost via /etc/hosts:\n```\n127.0.0.1\tsmtp.example\n127.0.0.1\tsmtp2.example\n```\n* Now try to connect to it with Net::SMTP and tls enabled:\n```\nrequire 'net/smtp'\nsmtp = Net::SMTP.new(\"smtp.example\", 465)\nsmtp.enable_tls\nsmtp.start\n```\n\nThis will succeed (and then hang as the server does not answer to the SMTP commands).\n\nTry the same with smtp2.example, it will complain like this:\n```\n/usr/lib64/ruby/2.7.0/openssl/ssl.rb:395:in `post_connection_check':\nhostname \"smtp2.example\" does not match the server certificate (OpenSSL::SSL::SSLError)\n```\nI also tested this with starttls, the behavior is the same.\n\nThe documentation of Net::SMTP does not say anything about certificate validation. Though I think it's a reasonable assumption that if I use tls that it is secure by default.\n\nThere may be some arguing about this, as Net::SMTP can both be used for authenticated SMTP / submission SMTP and for unauthenticated SMTP, which is usually used for relaying. In the latter case certificates are usually not tested. Thus there should probably a parameter to disable certificate validation.\n\nIn any case: I think the current behavior is clearly a bug and a security risk.\n\n## Impact\n\nMan in the middle attacker can intercept TLS SMTP connections with a forged certificate.",
+    "weakness": {
+        "id": 28,
+        "name": "Improper Certificate Validation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 3,
+    "voters": [
+        "voidmain",
+        "elz2204",
+        "arvmaz"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 28212,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/ruby/ruby",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9361335,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-29T07:09:07.399Z",
+            "updated_at": "2020-09-29T07:09:07.399Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQROJOVPFL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071408Z&X-Amz-Expires=557&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICX1S0D5SMLgiPvORN3zlmfrns9JKWQtk9MJRlhvMezvAiBgvduMK4N7dmjhKtiUrWWz%2FZla7zbdJCx3awGzpOAQJCq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMJam9CAjZs%2BrPkOATKo4FmJDN1QP9pB7B6iysNUIy6IJm%2F5Iu3eJ6lWQpZd0Bt1FZ%2BUdE75e4vj6GC0bf0CJDLkSAQ%2BZ7wXp%2FwbSMmzsPi4FuOhQ1PLpaFZwlV4gElpEWOXET1wLrXbqAL2V5FjsYerq9MPcopd2FOwSPYSBALuChL95kyCcstcfooGRs8PXvN6wwJNsRruoHl8ELQJEGarQhwWdZQpeQSvfsV7UOFY2VPNaPJ3o%2FSqJ866CLcC%2Bhbd%2BjGVlw4ILuqTle8GsHEOy5AMocJVwNAHxEjf2zzw15SPauTREH4%2B22YgZGosHhUAnu2SBcKLhbgj%2BIzmMy0uW8URNWyDXfMoyVk0LLP0%2FjgcH13ofYX6AHR%2F7peN2CK%2Fn8gWxbbtrCZgPMQlD9xFb5OXGEEUKiwlGy1idwtLvLmFPbzOovFe5hH0mAAogieKIcOMEPhT%2Bdod2yFpRNj%2BsWTxUmgT6u8u5uaCyq7hFq7ULsnKKXZKrLoYyQf8%2BHB3aS4NAgGe3R3MUpS7oj3svJWR4wac8nq6fgnaTxZ0RPLPuE6geZdnAD9p1aJTqYeHg5JejneJRFTipYbM6Sg4iZRWxfRSfJFO1PrXmqjAgb3p1NjDze6c92habcqaFfsSudxVuDeznV9QSlv6llj%2FAjdP2CoLcY9LJ42diuSd9thHAnK3TljcXthPB%2BtmCLVnW1O5eVgDu8qaAqba%2F2ADS2v%2FX%2FKCBR1GpfVs3e%2FpolIN5GnT%2B0pYRrb2D4zElFxXpnzlg8EqFLF0UZpH1%2Ba4WxhYp%2BABorCY6ELWhlw%2F24Gu%2BQP%2BjZMQ%2F02Whug2IUtq9QlBOtr5feU7uTm9NZuqP29hN3ZuA9QYAwLE3Ijc1rlwBHGe5MHdKN5Bd8MOeEtacGOrIBtQ8cqFhL3rEF9SDm%2Fw4OJF1sENqxKGsWyBAKU7QHyAk2n184bFV9jYPkTA0mlBqPlMZY2Vp0QqgON0aX6TNI17PhgkEmDxFcLjL10rUwaEB1oE7zRvXxkXdy39TzX%2FTVPm%2F0riwvaurvK%2FaQyOZkDqT58UvOEhY7KTlnCRO79bm2w%2BhzKPTPpIFv79vf7Hhby5%2BXACCYiySew4JINYPai8T5nuCiGm9CzTD1zSINnP6S8Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0b7a0712635620694c12aaf9245fc377f0465d6947cc429da94b86ef46e66704"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 9538949,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update?",
+            "automated_response": false,
+            "created_at": "2020-10-16T08:43:46.054Z",
+            "updated_at": "2020-10-16T08:43:46.054Z",
+            "actor": {
+                "username": "hanno",
+                "cleared": false,
+                "verified": false,
+                "url": "/hanno",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/918/74da560ef66bf8cc239e219843444b441a7dfac6_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 9765530,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-09T10:22:32.052Z",
+            "updated_at": "2020-11-09T10:22:32.052Z",
+            "actor": {
+                "username": "tmtms",
+                "cleared": false,
+                "verified": false,
+                "url": "/tmtms",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 9766271,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thank you for the report, and sorry for a late response.\n\nBecause Tmtms-san, who is the maintainer of net-smtp, is not a member of this tracker, he couldn't check this ticket.\nToday, I asked him to review the report, and he said that he has fixed the issues independently to your report:\n\n* https://github.com/ruby/net-smtp/pull/6: TLS should not check the host name by default\n* https://github.com/ruby/net-smtp/pull/12: INCOMPATIBLE CHANGE: Verify the server's certificate by default\n\nHe thinks that this is not a vulnerability issue because certificate validation was not a spec, and thus, he merged the changes via public pull requests. He plans to publish a new release in near future. So, I'd like to close this issue as \"informative\".\n\nAgain, we appreciate your reporting this issue, and sorry to have kept you waiting.",
+            "automated_response": false,
+            "created_at": "2020-11-09T11:12:41.161Z",
+            "updated_at": "2020-11-09T11:12:41.161Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 9778858,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-10T13:21:13.160Z",
+            "updated_at": "2020-11-10T13:21:13.160Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hanno",
+                "cleared": false,
+                "verified": false,
+                "url": "/hanno",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/918/74da560ef66bf8cc239e219843444b441a7dfac6_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 10449185,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can we disclose this? I believe everything in this report can and should be public information.",
+            "automated_response": false,
+            "created_at": "2021-01-22T12:48:33.304Z",
+            "updated_at": "2021-01-22T12:48:33.304Z",
+            "actor": {
+                "username": "hanno",
+                "cleared": false,
+                "verified": false,
+                "url": "/hanno",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/918/74da560ef66bf8cc239e219843444b441a7dfac6_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 10466722,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-25T01:48:01.743Z",
+            "updated_at": "2021-01-25T01:48:01.743Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQROJOVPFL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071408Z&X-Amz-Expires=557&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICX1S0D5SMLgiPvORN3zlmfrns9JKWQtk9MJRlhvMezvAiBgvduMK4N7dmjhKtiUrWWz%2FZla7zbdJCx3awGzpOAQJCq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMJam9CAjZs%2BrPkOATKo4FmJDN1QP9pB7B6iysNUIy6IJm%2F5Iu3eJ6lWQpZd0Bt1FZ%2BUdE75e4vj6GC0bf0CJDLkSAQ%2BZ7wXp%2FwbSMmzsPi4FuOhQ1PLpaFZwlV4gElpEWOXET1wLrXbqAL2V5FjsYerq9MPcopd2FOwSPYSBALuChL95kyCcstcfooGRs8PXvN6wwJNsRruoHl8ELQJEGarQhwWdZQpeQSvfsV7UOFY2VPNaPJ3o%2FSqJ866CLcC%2Bhbd%2BjGVlw4ILuqTle8GsHEOy5AMocJVwNAHxEjf2zzw15SPauTREH4%2B22YgZGosHhUAnu2SBcKLhbgj%2BIzmMy0uW8URNWyDXfMoyVk0LLP0%2FjgcH13ofYX6AHR%2F7peN2CK%2Fn8gWxbbtrCZgPMQlD9xFb5OXGEEUKiwlGy1idwtLvLmFPbzOovFe5hH0mAAogieKIcOMEPhT%2Bdod2yFpRNj%2BsWTxUmgT6u8u5uaCyq7hFq7ULsnKKXZKrLoYyQf8%2BHB3aS4NAgGe3R3MUpS7oj3svJWR4wac8nq6fgnaTxZ0RPLPuE6geZdnAD9p1aJTqYeHg5JejneJRFTipYbM6Sg4iZRWxfRSfJFO1PrXmqjAgb3p1NjDze6c92habcqaFfsSudxVuDeznV9QSlv6llj%2FAjdP2CoLcY9LJ42diuSd9thHAnK3TljcXthPB%2BtmCLVnW1O5eVgDu8qaAqba%2F2ADS2v%2FX%2FKCBR1GpfVs3e%2FpolIN5GnT%2B0pYRrb2D4zElFxXpnzlg8EqFLF0UZpH1%2Ba4WxhYp%2BABorCY6ELWhlw%2F24Gu%2BQP%2BjZMQ%2F02Whug2IUtq9QlBOtr5feU7uTm9NZuqP29hN3ZuA9QYAwLE3Ijc1rlwBHGe5MHdKN5Bd8MOeEtacGOrIBtQ8cqFhL3rEF9SDm%2Fw4OJF1sENqxKGsWyBAKU7QHyAk2n184bFV9jYPkTA0mlBqPlMZY2Vp0QqgON0aX6TNI17PhgkEmDxFcLjL10rUwaEB1oE7zRvXxkXdy39TzX%2FTVPm%2F0riwvaurvK%2FaQyOZkDqT58UvOEhY7KTlnCRO79bm2w%2BhzKPTPpIFv79vf7Hhby5%2BXACCYiySew4JINYPai8T5nuCiGm9CzTD1zSINnP6S8Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0b7a0712635620694c12aaf9245fc377f0465d6947cc429da94b86ef46e66704"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 10466723,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-25T01:48:01.824Z",
+            "updated_at": "2021-01-25T01:48:01.824Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQROJOVPFL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071408Z&X-Amz-Expires=557&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICX1S0D5SMLgiPvORN3zlmfrns9JKWQtk9MJRlhvMezvAiBgvduMK4N7dmjhKtiUrWWz%2FZla7zbdJCx3awGzpOAQJCq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMJam9CAjZs%2BrPkOATKo4FmJDN1QP9pB7B6iysNUIy6IJm%2F5Iu3eJ6lWQpZd0Bt1FZ%2BUdE75e4vj6GC0bf0CJDLkSAQ%2BZ7wXp%2FwbSMmzsPi4FuOhQ1PLpaFZwlV4gElpEWOXET1wLrXbqAL2V5FjsYerq9MPcopd2FOwSPYSBALuChL95kyCcstcfooGRs8PXvN6wwJNsRruoHl8ELQJEGarQhwWdZQpeQSvfsV7UOFY2VPNaPJ3o%2FSqJ866CLcC%2Bhbd%2BjGVlw4ILuqTle8GsHEOy5AMocJVwNAHxEjf2zzw15SPauTREH4%2B22YgZGosHhUAnu2SBcKLhbgj%2BIzmMy0uW8URNWyDXfMoyVk0LLP0%2FjgcH13ofYX6AHR%2F7peN2CK%2Fn8gWxbbtrCZgPMQlD9xFb5OXGEEUKiwlGy1idwtLvLmFPbzOovFe5hH0mAAogieKIcOMEPhT%2Bdod2yFpRNj%2BsWTxUmgT6u8u5uaCyq7hFq7ULsnKKXZKrLoYyQf8%2BHB3aS4NAgGe3R3MUpS7oj3svJWR4wac8nq6fgnaTxZ0RPLPuE6geZdnAD9p1aJTqYeHg5JejneJRFTipYbM6Sg4iZRWxfRSfJFO1PrXmqjAgb3p1NjDze6c92habcqaFfsSudxVuDeznV9QSlv6llj%2FAjdP2CoLcY9LJ42diuSd9thHAnK3TljcXthPB%2BtmCLVnW1O5eVgDu8qaAqba%2F2ADS2v%2FX%2FKCBR1GpfVs3e%2FpolIN5GnT%2B0pYRrb2D4zElFxXpnzlg8EqFLF0UZpH1%2Ba4WxhYp%2BABorCY6ELWhlw%2F24Gu%2BQP%2BjZMQ%2F02Whug2IUtq9QlBOtr5feU7uTm9NZuqP29hN3ZuA9QYAwLE3Ijc1rlwBHGe5MHdKN5Bd8MOeEtacGOrIBtQ8cqFhL3rEF9SDm%2Fw4OJF1sENqxKGsWyBAKU7QHyAk2n184bFV9jYPkTA0mlBqPlMZY2Vp0QqgON0aX6TNI17PhgkEmDxFcLjL10rUwaEB1oE7zRvXxkXdy39TzX%2FTVPm%2F0riwvaurvK%2FaQyOZkDqT58UvOEhY7KTlnCRO79bm2w%2BhzKPTPpIFv79vf7Hhby5%2BXACCYiySew4JINYPai8T5nuCiGm9CzTD1zSINnP6S8Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0b7a0712635620694c12aaf9245fc377f0465d6947cc429da94b86ef46e66704"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

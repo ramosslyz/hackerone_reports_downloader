@@ -1,0 +1,404 @@
+{
+    "id": 945122,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NDUxMjI=",
+    "url": "https://hackerone.com/reports/945122",
+    "title": "Arbitrary file creation via symlink attack on syncagentsrv (Acronis Sync Agent Service)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2020-07-28T13:49:59.664Z",
+    "submitted_at": "2020-07-28T13:49:59.664Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "adr",
+        "url": "/adr",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tz82pUkLYHa2wb4pGnrdCbRb/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13428,
+        "url": "https://hackerone.com/acronis",
+        "handle": "acronis",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Acronis",
+            "twitter_handle": "Acronis",
+            "website": "https://www.acronis.com",
+            "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-03-16T09:45:40.740Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-02-19T11:27:55.881Z",
+    "team_member_agreed_on_going_public_at": "2021-03-16T09:45:40.557Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Issue class description\nArbitrary file creation is a vulnerability that allows attacker to create file in arbitrary location within filesystem. This includes protected directories, such as C:\\Windows, C:\\windows\\system32 and \"C:\\Program Files\". If in addition, attacker has control over the file content, it is possible to create DLL file which will be loaded by known operating system components and will result in Privilege Elevation to Local System (the highest level of privileges on local Windows system).\n\nThere are many known paths for this attacks, e.g. every desktop version of Windows will periodically run \"schedule\" service. The service will try to load non-existing library named WptsExtensions.dll. If attacker manages to plant custom version of this library, the code will be executed with highest privileges and can be used to add new administrative user or start reverse shell. The issue can be force by triggering system reboot as well. More details can be found here: https://itm4n.github.io/windows-dll-hijacking-clarified/\n\nTo perform this attack, typically we need privileged process that blindly follows symlinks (reparse points), without verifying destination. NTFS symlinks require extra privileges, but attacker can use other kind of symlinks: directory junctions mixed with object directory symlinks. The ready to use solution is hosted on Google's Project Zero's github: https://github.com/googleprojectzero/symboliclink-testing-tools\n\nCreateSymlink.exe binary used in this attack originates from this source and can be downloaded to reproduce the attack.\n\n# Affected software\nFollowing True Image installer was used:\n{F926995}\n\nThe vulnerable service is syncagentsrv (\"C:\\Program Files (x86)\\Common Files\\Acronis\\SyncAgent\\syncagentsrv.exe\")\n\nWhen service is running, it logs information into C:\\ProgramData\\Acronis\\SyncAgent\\logs\\syncagent.log file. The file is not exclusively opened, nor protected, and can be deleted at any time. The C:\\ProgramData\\Acronis\\SyncAgent\\logs\\ directory remains empty, thus can be transformed into directoy junction and symlink.\n\nOnce new entry is added to the log, the write operation will follow the symlink and write into arbitrary location. Attacker also controls the name of resulting file. The resulting file grants full control to EVERYONE, hence it is trivial to replace its content with custom code. \n\n{F927005}\n\nThe attack has been confirmed on my local system (when proper libraries were targeted) and I was able to elevate privileges.\n\n# Steps to reproduce\n1. Delete C:\\ProgramData\\Acronis\\SyncAgent\\logs\\syncagent.log file. Make sure that directory is now empty.\n2. Use following command to create symlink: `CreateSymlink.exe C:\\ProgramData\\Acronis\\SyncAgent\\logs\\syncagent.log C:\\Windows\\system32\\WptsExtensions.dll`\n3. Wait for data to be written into the log or force it by triggering system reboot. After the reboot verify successful file creation.\n4. Replace new file content (C:\\Windows\\system32\\WptsExtensions.dll) with custom DLL functionality - e.g. adding administrative user or spawning remote shell connection.\n5. Reboot again to trigger Windows Scheduler loading new dll.\n\n## Impact\n\nLow privileged user can overwrite any file in the system (this could lead to DoS) or create arbitrary files anywhere on the system. By creating arbitrary DLL, then replacing its content with custom code, user can elevate privileges up to Local System (the highest Windows privilege).",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 926995,
+            "file_name": "TrueImage.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/pT547inJoTbSHjmHf5ADeDgZ?response-content-disposition=attachment%3B%20filename%3D%22TrueImage.png%22%3B%20filename%2A%3DUTF-8%27%27TrueImage.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071243Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=eb3f319a75e980dc5dbee2546f59b221bb4187d7b046c652b76cd88d7c5ab7f7",
+            "file_size": 14987,
+            "type": "image/png"
+        },
+        {
+            "id": 927005,
+            "file_name": "dll.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/wJSfS2QSrqgu2MWG1hDXWFBi?response-content-disposition=attachment%3B%20filename%3D%22dll.png%22%3B%20filename%2A%3DUTF-8%27%27dll.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071243Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ca8f9e93be427b19b12d561b17557f222a7799235ac30788732b566e41537b62",
+            "file_size": 108398,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-03-21T11:27:55.953Z",
+    "allow_singular_disclosure_after": -76967087.08573839,
+    "singular_disclosure_allowed": true,
+    "vote_count": 37,
+    "voters": [
+        "mr-medi",
+        "foobar7",
+        "tess",
+        "ali",
+        "f_m",
+        "h4x0r_dz",
+        "demonia",
+        "0xwise",
+        "sa1tama0",
+        "securityforever",
+        "and 27 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.7,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 50772,
+        "asset_type": "DOWNLOADABLE_EXECUTABLES",
+        "asset_identifier": "Acronis Cyber Protect Home Office (formerly Acronis True Image)",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8796769,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, @adr. Thanks for your report!\nWe will review it and come back to you asap",
+            "automated_response": false,
+            "created_at": "2020-07-29T16:24:49.853Z",
+            "updated_at": "2020-07-29T16:25:01.616Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8818837,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-31T20:25:52.984Z",
+            "updated_at": "2020-07-31T20:25:52.984Z",
+            "additional_data": {
+                "old_severity": "Critical (9.3)",
+                "new_severity": "High (8.7)",
+                "old_severity_id": 802551,
+                "new_severity_id": 806663
+            },
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8818844,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for reporting issue to the Acronis bug bounty program! Your report passed initial review. \nWe will be back to you soon.",
+            "automated_response": false,
+            "created_at": "2020-07-31T20:27:37.914Z",
+            "updated_at": "2020-07-31T20:27:37.914Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8937069,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for participating in Acronis bug bounty program! Bounty is transferred to your account.\nHappy bug hunting and we are waiting for new reports from you.",
+            "automated_response": false,
+            "created_at": "2020-08-14T11:23:28.087Z",
+            "updated_at": "2020-08-14T11:23:28.087Z",
+            "actor": {
+                "url": "/acronis",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Acronis"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "acronis",
+            "collaborator": {
+                "username": "adr",
+                "url": "/adr"
+            }
+        },
+        {
+            "id": 8946496,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-15T16:25:56.336Z",
+            "updated_at": "2020-08-15T16:25:56.336Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 959480
+            },
+            "actor": {
+                "username": "vanitas",
+                "cleared": false,
+                "verified": false,
+                "url": "/vanitas",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 9095913,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-01T07:06:20.236Z",
+            "updated_at": "2020-09-01T07:06:20.236Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 971573
+            },
+            "actor": {
+                "username": "mmg",
+                "cleared": false,
+                "verified": false,
+                "url": "/mmg",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/222/119/30b5386d5cc0fd351927b57fa02a7cf7c81a7a2b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 10711040,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for catching this bug!\n\nWe have fixed it, please confirm that you are no longer able to reproduce the issue.\n",
+            "automated_response": false,
+            "created_at": "2021-02-18T16:04:34.480Z",
+            "updated_at": "2021-02-18T16:04:34.480Z",
+            "actor": {
+                "username": "security-bot",
+                "cleared": false,
+                "verified": false,
+                "url": "/security-bot",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8j8hgg8lahteormio6374m2zn4on/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "adr",
+                "url": "/adr"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 10718550,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-19T11:27:55.911Z",
+            "updated_at": "2021-02-19T11:27:55.911Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "adr",
+                "cleared": false,
+                "verified": false,
+                "url": "/adr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tz82pUkLYHa2wb4pGnrdCbRb/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11008105,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-16T09:45:40.595Z",
+            "updated_at": "2021-03-16T09:45:40.595Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11008106,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-16T09:45:40.801Z",
+            "updated_at": "2021-03-16T09:45:40.801Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

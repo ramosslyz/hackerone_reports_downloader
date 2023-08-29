@@ -1,0 +1,517 @@
+{
+    "id": 1858495,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODU4NDk1",
+    "url": "https://hackerone.com/reports/1858495",
+    "title": "Reflected XSS on Admin Login Page",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2023-02-02T00:46:32.506Z",
+    "submitted_at": "2023-02-02T00:46:32.631Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nicochess",
+        "url": "/nicochess",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/bo32tt8n0m9t65wjfrgpvs7izvxd/aa4fba8b49288654d918d7820e89ef04910c0e160b8403d008e45431c2a266c2"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 45660,
+        "url": "https://hackerone.com/td-bank",
+        "handle": "td-bank",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/Ks3SgcZUJvc7Gyq8zWSSK3x7/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/Ks3SgcZUJvc7Gyq8zWSSK3x7/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "TD Bank",
+            "twitter_handle": "",
+            "website": "https://www.td.com/",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2023-03-19T21:52:47.364Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-02-17T21:52:42.695Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "When you try to access private pages on the domain https://td.intelliresponse.com/a6 you are redirected to a login page, which has reflected values in the DOM from the URL on the parameter 'win'. Once there is no proper handle for the data reflected, it turns out into a vulnerable path on the application that could be used to perform a Cross Site Scripting attack.\n\n## Proof of Concept\nAccess the current URL and the alert with your cookie will pop up on the screen: https://td.intelliresponse.com/a6/shared/popupLogin.jsp?win=%22%3E%3Cscript%3Ealert(document.cookie)%3C/script%3E\n\n## Steps To Reproduce:\n\n  1. Access the endpoint https://td.intelliresponse.com/a6\n  2. Now redirected to the login page, see the win parameter on the URL and modify with some payload starting with **\">**, and add some text or script in front.\n  3. See on your screen the payload completed reflected. \n\n## Supporting Material/References:\n{F2149294}\n\n## Recommendation/Remediation/Fix:\nMitigations for XSS typically involve sanitizing data input (to make sure input does not contain any code), escaping all output (to make sure data is not presented as code), and re-structuring applications so code is loaded from well-defined endpoints.\n\n## Impact\n\nAn attacker could craft a payload to extract user admin credentials or steal his session and could perform several damages to the application by abusing the admin privilege, reading private data, or even taking over users accounts.",
+    "weakness": {
+        "id": 61,
+        "name": "Cross-site Scripting (XSS) - Reflected"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 2149294,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6ikclnfv7ux14ryzw0brjue1eaw1?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6a69b4d7c07f2f53439aabb85bf29e916e86eacec561e7eb266ecbee263836f6",
+            "file_size": 36276,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2023-03-19T21:52:42.874Z",
+    "allow_singular_disclosure_after": -14029449.529796524,
+    "singular_disclosure_allowed": true,
+    "vote_count": 11,
+    "voters": [
+        "nicochess",
+        "hamada94",
+        "zy9ard3",
+        "bl4de",
+        "shubham_srt",
+        "exception",
+        "jofer",
+        "pr1v8",
+        "pofb",
+        "revk",
+        "and 1 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 4.7,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 20206428,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @nicochess,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@h1_analyst_grace",
+            "automated_response": false,
+            "created_at": "2023-02-02T05:00:15.662Z",
+            "updated_at": "2023-02-02T05:00:15.662Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20206433,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @nicochess- Could you provide details on how this domain is related to TD Bank?\n\nBest,\n@h1_analyst_grace",
+            "automated_response": false,
+            "created_at": "2023-02-02T05:00:49.418Z",
+            "updated_at": "2023-02-02T05:00:49.418Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20212886,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hey @h1_analyst_grace!\nWhen you are using the main website \"https://td.com\" there is the search functionality, let's suppose you search for \"bank\".\n{F2150018}\nThey redirect you to another page/domain (https://td.intelliresponse.com/cbaw/index.jsp) that the organization owns to give you information about what you searched with Artificial Intelligence (277 AI).\nThe main concern it's that by accessing the admin page, you are able to have access to data provided by the company.",
+            "automated_response": false,
+            "created_at": "2023-02-02T10:32:24.165Z",
+            "updated_at": "2023-02-02T10:32:24.165Z",
+            "actor": {
+                "username": "nicochess",
+                "cleared": false,
+                "verified": false,
+                "url": "/nicochess",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bo32tt8n0m9t65wjfrgpvs7izvxd/b128ffa1658e6eef6c9a7f34a95a0c1abf13970d3d7fc662a5e0772faeabcd87"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2150018,
+                    "filename": "image.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/faovq8q506juj51d96vxconixdkm?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cb3ea2ed4bebffb0d8e1e7692ea45730d42779c680cc003a74623a264777a80d"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20213838,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @nicochess,\n\nThanks for providing additional information!\n\nThe reported asset is not in the scope of the program. Hence, I have sent a note to the TD Bank Team to check whether they are interested in receiving reports for this asset.\n\nI will get back to you as soon as I hear back from them. Please bear with us in the meantime.\n\nThank you for your patience.\n\nBest,\n@h1_analyst_grace",
+            "automated_response": false,
+            "created_at": "2023-02-02T12:09:32.643Z",
+            "updated_at": "2023-02-02T12:09:32.643Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20215195,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @h1_analyst_grace!\nYou could reach out for anything if needed, I will keep waiting for news.\nI only sent the report because the scope section made me understand that everything that is under the control of TD Bank, it's an asset in scope.\n{F2150291}\n\nAnyway, I really appreciate the effort in contacting them!\n",
+            "automated_response": false,
+            "created_at": "2023-02-02T12:19:23.219Z",
+            "updated_at": "2023-02-02T12:20:23.843Z",
+            "actor": {
+                "username": "nicochess",
+                "cleared": false,
+                "verified": false,
+                "url": "/nicochess",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bo32tt8n0m9t65wjfrgpvs7izvxd/b128ffa1658e6eef6c9a7f34a95a0c1abf13970d3d7fc662a5e0772faeabcd87"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2150291,
+                    "filename": "image.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gapm67dda5j63hkt31x5egqsaz7m?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=50be098b1583582879d09ba94ef1527502d33a35bf3ce0919248f2d220764ac4"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20227629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2023-02-03T05:29:14.940Z",
+            "updated_at": "2023-02-03T05:29:14.940Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Medium (4.7)",
+                "old_severity_id": 1846077,
+                "new_severity_id": 1848709
+            },
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20227632,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @nicochess,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nThanks,\n@h1_analyst_grace",
+            "automated_response": false,
+            "created_at": "2023-02-03T05:29:17.337Z",
+            "updated_at": "2023-02-03T05:29:17.337Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20235014,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @nicochess,\n\nThank you for your report! We have reached out to the appropriate team and will be working with them to get this issue addressed. We wish you all the best in your ongoing research.\n\nThanks,\n@ihax",
+            "automated_response": false,
+            "created_at": "2023-02-03T14:13:56.051Z",
+            "updated_at": "2023-02-03T14:13:56.051Z",
+            "actor": {
+                "username": "ihax",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihax",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20235115,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ihax!\nI am happy to contribute to the security of your system and highly appreciate the thanks.",
+            "automated_response": false,
+            "created_at": "2023-02-03T14:23:52.712Z",
+            "updated_at": "2023-02-03T14:23:52.712Z",
+            "actor": {
+                "username": "nicochess",
+                "cleared": false,
+                "verified": false,
+                "url": "/nicochess",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bo32tt8n0m9t65wjfrgpvs7izvxd/b128ffa1658e6eef6c9a7f34a95a0c1abf13970d3d7fc662a5e0772faeabcd87"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20445990,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugRetesting",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-02-16T19:01:59.444Z",
+            "updated_at": "2023-02-16T19:02:00.009Z",
+            "actor": {
+                "username": "i_am_starched",
+                "cleared": false,
+                "verified": false,
+                "url": "/i_am_starched",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20450384,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::UserCompletedRetest",
+            "message": "==This seems fixed==\n\nNavigating to `https://td.intelliresponse.com/a6/shared/popupLogin.jsp?win=%22%3E%3Cscript%3Ealert(document.domain)%3C/script%3E` no longer triggers the XSS\n\n{F2179327}",
+            "automated_response": false,
+            "created_at": "2023-02-17T05:36:50.899Z",
+            "updated_at": "2023-02-17T05:36:50.899Z",
+            "actor": {
+                "username": "h1_analyst_grace",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_grace",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/r2xlydcui5w3ttamd7hq3kclygla/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22wave2.jpg%22%3B%20filename%2A%3DUTF-8%27%27wave2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a520c340f91137e3a350c44f97b022eeac434ef4313ace79708662612e67bc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2179327,
+                    "filename": "Retest.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/hg11855f2j0b2pjedevks8f7ups5?response-content-disposition=attachment%3B%20filename%3D%22Retest.png%22%3B%20filename%2A%3DUTF-8%27%27Retest.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065652Z&X-Amz-Expires=340&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=68ab08c29b5d16ee9f859456b15692359601c3a2579b84df35d1198b8ffcbd3b"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20460077,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportRetestApproved",
+            "message": "Thanks to all",
+            "automated_response": false,
+            "created_at": "2023-02-17T17:24:11.300Z",
+            "updated_at": "2023-02-17T17:24:11.300Z",
+            "actor": {
+                "url": "/td-bank",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Ks3SgcZUJvc7Gyq8zWSSK3x7/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "profile": {
+                    "name": "TD Bank"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20460078,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-02-17T17:24:11.465Z",
+            "updated_at": "2023-02-17T17:24:11.465Z",
+            "actor": {
+                "username": "i_am_starched",
+                "cleared": false,
+                "verified": false,
+                "url": "/i_am_starched",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "nicochess",
+                "url": "/nicochess"
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20462020,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose this one?",
+            "automated_response": false,
+            "created_at": "2023-02-17T21:52:42.737Z",
+            "updated_at": "2023-02-17T21:52:42.737Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nicochess",
+                "cleared": false,
+                "verified": false,
+                "url": "/nicochess",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bo32tt8n0m9t65wjfrgpvs7izvxd/b128ffa1658e6eef6c9a7f34a95a0c1abf13970d3d7fc662a5e0772faeabcd87"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        },
+        {
+            "id": 20878423,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-19T21:52:47.450Z",
+            "updated_at": "2023-03-19T21:52:47.450Z",
+            "actor": {
+                "url": "/td-bank",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Ks3SgcZUJvc7Gyq8zWSSK3x7/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "profile": {
+                    "name": "TD Bank"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "td-bank"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

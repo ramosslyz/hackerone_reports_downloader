@@ -1,0 +1,348 @@
+{
+    "id": 690010,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTAwMTA=",
+    "url": "https://hackerone.com/reports/690010",
+    "title": "OS Command Injection on Jison [all-parser-ports]",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2019-09-07T05:36:16.351Z",
+    "submitted_at": "2019-09-07T05:36:16.351Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "0x48piraj",
+        "url": "/0x48piraj",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/enjZfKWpT1EjeUw1mMxbXjW7/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2020-8178"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-05-28T10:39:50.786Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2020-04-28T10:39:48.723Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I would like to report **OS Command Injection** vulnerability on [Jison](https://www.npmjs.com/package/jison) in parser ports. *(CSharp, PHP)*\n\nIt allows arbitrary OS shell command execution through a crafted command-line argument.\n\n# Basic Information\n\n**Module:** ***jison***\n**Version:** `0.4.18`\n**NPM Project Page:** `https://www.npmjs.com/package/jison`\n\n## Module Description\n\n##### An API for creating parsers in JavaScript\n\n> Jison generates bottom-up parsers in JavaScript. Its API is similar to Bison's, hence the name. It supports many of Bison's major features, plus some of its own. If you are new to parser generators such as Bison, and Context-free Grammars in general, a good introduction is found in the Bison manual. If you already know Bison, Jison should be easy to pickup.\n> Briefly, Jison takes a JSON encoded grammar or Bison style grammar and outputs a JavaScript file capable of parsing the language described by that grammar. You can then use the generated script to parse inputs and accept, reject, or perform actions based on the input.\n\n## Module Stats\n\n##### Downloads in the last week: (https://api.npmjs.org/downloads/point/last-week/jison)\n\n```\ndownloads : 138857\nstart : 2019-08-31\nend : 2019-09-06\npackage : jison\n```\n\n##### Downloads in the last month: (https://api.npmjs.org/downloads/point/last-month/jison)\n\n```\ndownloads : 678197\nstart : 2019-08-08\nend : 2019-09-06\npackage : jison\n```\n> Stats by npm-stat: https://npm-stat.com/charts.html?package=jison\n\n# Vulnerability\n\n**Jison** has parsing/lexing template to php, C# which don't sanitize `process.argv` (command line arguments), before passing it to `child_process.exec()`, hence allowing arbitrary shell command injection.\n\nThe vulnerable code is in `/ports/csharp/Jison/Jison/csharp.js` at [csharp.js#L19](https://github.com/zaach/jison/blob/bcf986e180359aa2404b1b73ecbfef1df4c6b011/ports/csharp/Jison/Jison/csharp.js#L19)\n\n```\nconsole.log(\"Executing: \" + \"jison \" + process.argv[2]);\n\nexec(\"jison \" + process.argv[2], function (error) {\n    if (error) {\n        console.log(error);\n        return;\n    }\n```\n\n## Steps To Reproduce:\n1. Installing Jison command-line tool via `npm install jison -g`\n2. Obtaining *Jison* parsing templates : `git clone https://github.com/zaach/jison`\n3. `cd jison/ports/csharp/Jison/Jison/`\n4. Payload : `node csharp.js \"echo''>pwned\"`\n5. Check if the attack was successful or not (dummy payload was executed or not): `ls -la`\n\nSimilarly, `/ports/php/php.js` is vulnerable too as it contains the same blob ([php.js#L19](https://github.com/zaach/jison/blob/bcf986e180359aa2404b1b73ecbfef1df4c6b011/ports/php/php.js#L19)). `\"\"` was added just to isolate the payload.\n\n## Patch\n\nSanitizing the input. Using `execFile` (this method signatures force developers to separate the command and its arguments)\n\n## Supporting Material/References:\n\n- Windows 10 1803 (OS Build 17134.950)\n- **NodeJS Version:** v10.16.3\n- **NPM Version:** 6.9.0 \n\n# Wrap up\n\n- I contacted the maintainer to let them know: N \n- I opened an issue in the related repository: N\n\n## Impact\n\nArbitrary OS command execution.",
+    "weakness": {
+        "id": 59,
+        "name": "OS Command Injection"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 576968,
+            "file_name": "jison-osi.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Y3g55me2ZuFvb12SUtXQ6Ea6?response-content-disposition=attachment%3B%20filename%3D%22jison-osi.png%22%3B%20filename%2A%3DUTF-8%27%27jison-osi.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072215Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f34c373364c7f71a424946630445cabbe717cc75f4dbabe9401ab7285e9099d2",
+            "file_size": 41322,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-05-28T10:39:48.941Z",
+    "allow_singular_disclosure_after": -102631346.8416182,
+    "singular_disclosure_allowed": true,
+    "vote_count": 13,
+    "voters": [
+        "brahim_boufakri01",
+        "ali",
+        "mik317",
+        "h2x0",
+        "mjunaidzafar",
+        "0x48piraj",
+        "mwanamume",
+        "actarus",
+        "malone5923",
+        "jane_mae22",
+        "and 3 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 49407,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "jison",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5752948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @0x48piraj,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nRegards,\n@bassguitar ",
+            "automated_response": false,
+            "created_at": "2019-09-07T09:46:24.310Z",
+            "updated_at": "2019-09-07T09:46:24.310Z",
+            "actor": {
+                "username": "h1_analyst_layla",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_layla",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/xx9fc0e3lc64e3fe90710sz5i27h/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 5806566,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "That sounds great, thanks for the response!!",
+            "automated_response": false,
+            "created_at": "2019-09-14T12:26:40.036Z",
+            "updated_at": "2019-09-14T12:26:40.036Z",
+            "actor": {
+                "username": "0x48piraj",
+                "cleared": false,
+                "verified": false,
+                "url": "/0x48piraj",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/enjZfKWpT1EjeUw1mMxbXjW7/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 6476412,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates?",
+            "automated_response": false,
+            "created_at": "2019-12-05T20:14:13.703Z",
+            "updated_at": "2019-12-05T20:14:13.703Z",
+            "actor": {
+                "username": "0x48piraj",
+                "cleared": false,
+                "verified": false,
+                "url": "/0x48piraj",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/enjZfKWpT1EjeUw1mMxbXjW7/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 7185407,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "~6 months, updates?",
+            "automated_response": false,
+            "created_at": "2020-02-29T23:59:09.463Z",
+            "updated_at": "2020-02-29T23:59:09.463Z",
+            "actor": {
+                "username": "0x48piraj",
+                "cleared": false,
+                "verified": false,
+                "url": "/0x48piraj",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/enjZfKWpT1EjeUw1mMxbXjW7/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 7243705,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sorry about the late @0x48piraj, I now pinged the internal team again and will get back to you as soon as there's more to share.\n\nRegards,\n@nasr0x01",
+            "automated_response": false,
+            "created_at": "2020-03-06T14:12:51.589Z",
+            "updated_at": "2020-03-06T14:12:51.589Z",
+            "actor": {
+                "username": "nasr0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/nasr0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/386/674/ec2e2c825a554851c42c122ffd61aa8f18b08174_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 7822518,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-04-28T10:39:30.202Z",
+            "updated_at": "2020-04-28T10:39:30.202Z",
+            "actor": {
+                "username": "marcinhoppe",
+                "cleared": false,
+                "verified": false,
+                "url": "/marcinhoppe",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "0x48piraj",
+                "url": "/0x48piraj"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 7822525,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-04-28T10:39:48.799Z",
+            "updated_at": "2020-04-28T10:39:48.799Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "marcinhoppe",
+                "cleared": false,
+                "verified": false,
+                "url": "/marcinhoppe",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8129682,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-28T10:39:50.808Z",
+            "updated_at": "2020-05-28T10:39:50.808Z",
+            "actor": {
+                "url": "/nodejs-ecosystem",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Node.js third-party modules"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8328404,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-06-18T08:03:05.541Z",
+            "updated_at": "2020-06-18T08:03:05.541Z",
+            "actor": {
+                "username": "marcinhoppe",
+                "cleared": false,
+                "verified": false,
+                "url": "/marcinhoppe",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "None",
+            "new_scope": "jison",
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

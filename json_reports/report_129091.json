@@ -1,0 +1,307 @@
+{
+    "id": 129091,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjkwOTE=",
+    "url": "https://hackerone.com/reports/129091",
+    "title": "CPU utilization 99% on visiting wordpress site url & open redirect found",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-04-07T19:41:31.604Z",
+    "submitted_at": "2016-04-07T19:41:31.604Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "csanuragjain",
+        "url": "/csanuragjain",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 111,
+        "url": "https://hackerone.com/automattic",
+        "handle": "automattic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Automattic",
+            "twitter_handle": "",
+            "website": "https://automattic.com",
+            "about": "WordPress.com, VaultPress, Akismet, Gravatar, WooCommerce, Polldaddy, Tumblr and more!"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-07-23T10:30:48.394Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-06-23T10:30:36.154Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Working POC for making CPU 99% for wordpress user**\n+ Login to wordpress account\n+ Visit any of the below url's which are sent by attacker to victim (since these are wordpress url so victim will accept & open)\n1.https://wordpress.com/post/20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n2.https://wordpress.com/design/1000000000000000000000\n3.https://wordpress.com/pages/anurag.wordpress.com/-10000000000000000000000000000000000000000000000\n+ Check your CPU usage in task manager. It would go to 99% as shown in attached.\n+ This happens since these pages continues to send unlimited requests to https://pixel.wp.com/g.gif?v=wpcom-no-pv&x_newdash_pageviews=route&t=0.1642450245826501\n+ Unlimited request are send since I think the variable holding the Post id cannot hold a value as long as 20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 which throws an exception.\n+ **Problem:** User CPU goes 99% causing the browser to go very very slow & unresponsive. Negative impact on customer.\n\n**Working POC for open redirect**\n+ Access wordpress using url https://wordpress.com/wp-login.php?redirect_to=https%3A%2F%2Fgoogle.com%2Fsearch?q=myFakeSite&reauth=1\n+ After login you will be redirected to https://www.google.co.in/search?q=myFakeSite&gws_rd=cr&ei=WLYGV8fUHIq8uATj56uIBA which is incorrect. Wordpress should not allow redirecting to external websites like google,yahoo.\n+ **Problem:** In future if there is any bug in these external site then this open redirect from wordpress could cause harm to users.",
+    "weakness": {
+        "id": 53,
+        "name": "Open Redirect"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 83893,
+            "file_name": "wordpress.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/083/893/3af67c05d96f48ad18769e158b8e22306441189d/wordpress.png?response-content-disposition=attachment%3B%20filename%3D%22wordpress.png%22%3B%20filename%2A%3DUTF-8%27%27wordpress.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c35d3b1f14972fcbded621a0e6ca960a735bad54194dc856e94a7c91c69bb2f0",
+            "file_size": 263631,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-07-23T10:30:36.205Z",
+    "allow_singular_disclosure_after": -192490247.1577506,
+    "singular_disclosure_allowed": true,
+    "vote_count": 3,
+    "voters": [
+        "eveeez",
+        "zerotoone",
+        "japz"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 895441,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi. Thanks for the report. We are going to take a look. The redirect issue is a known problem and was already reported in another ticket.",
+            "automated_response": false,
+            "created_at": "2016-04-08T07:08:23.921Z",
+            "updated_at": "2016-04-08T07:09:48.608Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 898869,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi. We've deployed a patch which should fix the first problem you mention -- https://github.com/Automattic/wp-calypso/pull/4614. Are you still able to reproduce this issue?",
+            "automated_response": false,
+            "created_at": "2016-04-11T08:41:26.116Z",
+            "updated_at": "2016-04-11T08:41:26.116Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 898941,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "That's a quick Fix! Issue is not reproducible anymore.\n\nAlso, was curious to know whether any bounty and CVE will be awarded to it?\n\nRegards,\nAnurag",
+            "automated_response": false,
+            "created_at": "2016-04-11T09:32:34.866Z",
+            "updated_at": "2016-04-11T09:32:34.866Z",
+            "actor": {
+                "username": "csanuragjain",
+                "cleared": true,
+                "verified": true,
+                "url": "/csanuragjain",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 900900,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-04-12T07:30:12.188Z",
+            "updated_at": "2016-04-12T07:30:12.188Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "csanuragjain",
+                "url": "/csanuragjain"
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 900901,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-04-12T07:30:52.647Z",
+            "updated_at": "2016-04-12T07:30:52.647Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "automattic",
+            "collaborator": {
+                "username": "csanuragjain",
+                "url": "/csanuragjain"
+            }
+        },
+        {
+            "id": 900915,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the bounty :)\nIs the issue eligible for CVE?",
+            "automated_response": false,
+            "created_at": "2016-04-12T07:48:51.859Z",
+            "updated_at": "2016-04-12T07:48:51.859Z",
+            "actor": {
+                "username": "csanuragjain",
+                "cleared": true,
+                "verified": true,
+                "url": "/csanuragjain",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 1776267,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-23T10:30:36.180Z",
+            "updated_at": "2017-06-23T10:30:36.180Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "csanuragjain",
+                "cleared": true,
+                "verified": true,
+                "url": "/csanuragjain",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 1860615,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-07-23T10:30:48.445Z",
+            "updated_at": "2017-07-23T10:30:48.445Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

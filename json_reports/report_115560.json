@@ -1,0 +1,278 @@
+{
+    "id": 115560,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTU1NjA=",
+    "url": "https://hackerone.com/reports/115560",
+    "title": "Two XSS vulns in widget parameters (all_collections.php and o2.php)",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-02-09T16:17:29.588Z",
+    "submitted_at": "2016-02-09T16:17:29.588Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "pr0tagon1st",
+        "url": "/pr0tagon1st",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/123/9e3397fc4128a6ea0579adedf2a30f47f54ad11a_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 2943,
+        "url": "https://hackerone.com/zomato",
+        "handle": "zomato",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Zomato",
+            "twitter_handle": "Zomato",
+            "website": "https://www.zomato.com",
+            "about": "The fastest way to search for great places to eat at and order from around you. Serving 24 countries worldwide."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-08-02T03:50:50.352Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-08-01T10:27:52.222Z",
+    "team_member_agreed_on_going_public_at": "2016-08-02T03:50:49.994Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I have found two additional possibilities of XSS attacks via the widget API endpoints: `https://www.zomato.com/widgets/all_collections.php` and `https://www.zomato.com/widgets/o2.php`\n\n`https://www.zomato.com/widgets/all_collections.php` has a vulnerable `city_id` parameter that does not filter html or javascript:\n\nhttps://www.zomato.com/widgets/all_collections.php?city_id=%22%3E%3Cimg%20src=http://goo.gl/JPx2sV%3E%3Cscript%3Ealert%28document.domain%29;%3C/script%3E%3Ca%20href=&language_id=alert%281%29&theme=red&csrf_token=bcac41f373322e378a299618228ad23b\n\nThe `https://www.zomato.com/widgets/o2.php` endpoint has a vulnerable `language_id` parameter, which does not filter html or js:\n\nhttps://www.zomato.com/widgets/o2.php?theme=redar&sort=popularityo&csrf_token=bcac41f373322e378a299618228ad23b&language_id=%22}%27%29;alert%28document.domain%29;console.log%28%27\n\nThese URLs can be placed in <iframe> elements in an attacker-controlled website and any Zomato users visiting that site are open to executing arbitrary javascript in the zomato.com origin, which opens them to CSRF attacks and others. \n\nI have tested the other parameters and have found them to be sanitized.\n\nThese two parameters should be sanitized. \n\nCheers!",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 72775,
+            "file_name": "zomato_poc2.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/072/775/46062aba80ed556fa57a23214c8239233a4c8b6a/zomato_poc2.jpg?response-content-disposition=attachment%3B%20filename%3D%22zomato_poc2.jpg%22%3B%20filename%2A%3DUTF-8%27%27zomato_poc2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081240Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e1d39dafdbf0a44d36e5c5573855dfec610020289011dae529c09a566880cc3a",
+            "file_size": 151489,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2016-08-31T10:27:52.408Z",
+    "allow_singular_disclosure_after": -220657488.0357502,
+    "singular_disclosure_allowed": true,
+    "vote_count": 1,
+    "voters": [
+        "dyabla"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 818987,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, any news on this vulnerability? I checked - it's still there alright. Thanks!",
+            "automated_response": false,
+            "created_at": "2016-03-01T16:02:50.828Z",
+            "updated_at": "2016-03-01T16:02:50.828Z",
+            "actor": {
+                "username": "pr0tagon1st",
+                "cleared": false,
+                "verified": false,
+                "url": "/pr0tagon1st",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/033/123/9e3397fc4128a6ea0579adedf2a30f47f54ad11a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 826581,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-03-07T09:19:24.853Z",
+            "updated_at": "2016-03-07T09:19:24.853Z",
+            "actor": {
+                "username": "chicken-tikka",
+                "cleared": false,
+                "verified": false,
+                "url": "/chicken-tikka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/059/568/cdbb30fd8932f00a06868a737ab5bdc5c57e5f00_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 986798,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for keeping @Zomato safe.",
+            "automated_response": false,
+            "created_at": "2016-05-27T08:45:18.600Z",
+            "updated_at": "2016-05-27T08:45:18.600Z",
+            "actor": {
+                "username": "chicken-tikka",
+                "cleared": false,
+                "verified": false,
+                "url": "/chicken-tikka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/059/568/cdbb30fd8932f00a06868a737ab5bdc5c57e5f00_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "pr0tagon1st",
+                "url": "/pr0tagon1st"
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 1099336,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hey, could we disclose this now? :)",
+            "automated_response": false,
+            "created_at": "2016-08-01T10:27:52.335Z",
+            "updated_at": "2016-08-01T10:27:52.335Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "pr0tagon1st",
+                "cleared": false,
+                "verified": false,
+                "url": "/pr0tagon1st",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/033/123/9e3397fc4128a6ea0579adedf2a30f47f54ad11a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 1101403,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-08-02T03:50:50.197Z",
+            "updated_at": "2016-08-02T03:50:50.197Z",
+            "actor": {
+                "username": "chicken-tikka",
+                "cleared": false,
+                "verified": false,
+                "url": "/chicken-tikka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/059/568/cdbb30fd8932f00a06868a737ab5bdc5c57e5f00_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 1101404,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-08-02T03:50:50.430Z",
+            "updated_at": "2016-08-02T03:50:50.430Z",
+            "actor": {
+                "username": "chicken-tikka",
+                "cleared": false,
+                "verified": false,
+                "url": "/chicken-tikka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/059/568/cdbb30fd8932f00a06868a737ab5bdc5c57e5f00_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 5206808,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-06-27T14:51:25.378Z",
+            "updated_at": "2019-06-27T14:51:25.378Z",
+            "actor": {
+                "url": "/zomato",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Zomato"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

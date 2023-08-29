@@ -1,0 +1,388 @@
+{
+    "id": 966949,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NjY5NDk=",
+    "url": "https://hackerone.com/reports/966949",
+    "title": "IDOR in locid parameter allowing to view others accounts Profile Locations ",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2020-08-25T19:14:49.712Z",
+    "submitted_at": "2020-08-25T19:14:49.772Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "cocoh__23",
+        "url": "/cocoh__23",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-09-02T19:26:35.197Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-09-01T13:36:24.420Z",
+    "team_member_agreed_on_going_public_at": "2020-09-02T19:26:35.083Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The application transmits in many occasions the **locid** parameter via URL, which means that this parameter may be being logged in plan text in the Apache server access.log, if not in others also. The fact that this happens, makes this parameter vulnerable not only to be read from this log file, but also be seen in the screen of any persons computer (Image. 1). \nI have identified that if any user gets or can reach the value of **locid** (for example via the scenarios above mentioned), he can use this value, to access others accounts profile locations. The fact why this happens is that there is not any server side control in place, which validates that the locations which is being requested from user A, is indeed from user B.  Here we see that if well the value of locid is a random hash, this security by obscurity does not provide any additional security, if the server is not controlling who access which information, and if the value of locid can be leaked via different vectors.\n\nIn order to validate the both things I mention here, the following steps are:\n\n1- Login to https://www.yelp.com/\n2- Go to https://www.yelp.com/profile_location\n3- Click the Edit button and intercept the request that is made in Burp (you will see its a GET /profile_location/add_or_edit?nonce=<nonce>&locid=<locid>)\n4- Replace the value of **locid** with any of these valid locids from my account (**wPhD_XkXv2z4Njqekn-sfg**,**yqLLfgos2xWB-Y9miJ8YcQ**,**pC5mbrTyFbCEaMHt4S4hqg**,**ZpA_GvjxD-06V_ElZfK7Uw**)\n5- You will see my profile locations.\n\n## Impact\n\nThis attack can be used to disclose personal information of Yelp users, attempting against the confidentiality of the application. If well this is low as it presents a pre-condicion which is not hard but also not easy, this should not be the only preventive measure, as this is considered security by obscurity, as you are trusting that because a hash is hard to crack, no one will be able to guess it, but as mentioned in the descripction, bruteforcing many times is the last resource as there are many other options. Furthermore, the fact that tue locid is being transfered in the URL, which means this value is possibly being logged, internal Yelp users could even take advantage of a vulnerability like this. I know it is not the case, but it does not provide confidence to the users. \nMoreover, the hash can be bruteforced as yelp does not have any preventive measures against it (Image2), which means that the pre-condition is even easier to achieve.",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 963235,
+            "file_name": "Image_1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/coRBnwQF3X2jzb5joSZWZX1t?response-content-disposition=attachment%3B%20filename%3D%22Image_1.png%22%3B%20filename%2A%3DUTF-8%27%27Image_1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071919Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=17ff4699a2a4bdf41340573bcd5406778c3aa1dcb94ebefe7cea41f66ccb24ff",
+            "file_size": 508155,
+            "type": "image/png"
+        },
+        {
+            "id": 963241,
+            "file_name": "Image_2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/g1BhMYuK1z5nTYj54JDMNy4P?response-content-disposition=attachment%3B%20filename%3D%22Image_2.png%22%3B%20filename%2A%3DUTF-8%27%27Image_2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071919Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f1bb7cbcca6bdd7b1dd09b80e98f27735943f02d5b66a84dad11ead26a532c99",
+            "file_size": 390869,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 1,
+    "voters": [
+        "ali"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 43913,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.yelp.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9039554,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\n\nThanks for submitting your report to us! Please expect a response within a week.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2020-08-25T22:53:35.352Z",
+            "updated_at": "2020-08-25T22:53:35.352Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9049788,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @cocoh__23,\n\nThis endpoint gives some arbitrary location, and does not identify the user the location belongs to. Given this, we think the privacy implications are minimal.",
+            "automated_response": false,
+            "created_at": "2020-08-26T23:13:55.536Z",
+            "updated_at": "2020-08-26T23:13:55.536Z",
+            "actor": {
+                "username": "calvinli",
+                "cleared": false,
+                "verified": false,
+                "url": "/calvinli",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9049789,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-26T23:14:09.065Z",
+            "updated_at": "2020-08-26T23:14:09.065Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9050401,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @calvinili. I would please need to know why this is not elegible for bounty. The vulnerability I am reporting is not an **Out of Scope** vulnerability and it is exposing users private data. The data to which a user gets access exploting this IDOR (which is a security issue as there should be a server side control in place) is private information, because as it is seen in the Image I attach, this are **my** saved locations which means I should be the only one to have access to this locations.\nI please ask you to review your decision as I strongly consider there should be a fix here, fixing the IDOR and validating if a user is requesting his or others data (as it should be done with every endpoint).\nThank you.",
+            "automated_response": false,
+            "created_at": "2020-08-27T02:51:53.741Z",
+            "updated_at": "2020-08-27T02:51:53.741Z",
+            "actor": {
+                "username": "cocoh__23",
+                "cleared": false,
+                "verified": false,
+                "url": "/cocoh__23",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9050409,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Bare in mind that I did not classify this report with a high CVS Score. I am considering everything variable and stating that if well it does not have a critical impact, it is indeed a security issue.",
+            "automated_response": false,
+            "created_at": "2020-08-27T02:54:25.060Z",
+            "updated_at": "2020-08-27T02:54:25.060Z",
+            "actor": {
+                "username": "cocoh__23",
+                "cleared": false,
+                "verified": false,
+                "url": "/cocoh__23",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 965230,
+                    "filename": "Screen_Shot_2020-08-26_at_23.49.17.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/mpQo8gLcAaY17iyTQAgAD63L?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2020-08-26_at_23.49.17.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2020-08-26_at_23.49.17.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071919Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8680f20aa4768c56cd17f92723320c589e8aceb526417a5623797d692d5c9c6f"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9066222,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @calvinli , were you able to discuss this a little bit more?\n\nThank you!!",
+            "automated_response": false,
+            "created_at": "2020-08-28T14:27:54.233Z",
+            "updated_at": "2020-08-28T14:27:54.233Z",
+            "actor": {
+                "username": "cocoh__23",
+                "cleared": false,
+                "verified": false,
+                "url": "/cocoh__23",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9090217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello, any updates on this???",
+            "automated_response": false,
+            "created_at": "2020-08-31T16:54:23.512Z",
+            "updated_at": "2020-08-31T16:54:23.512Z",
+            "actor": {
+                "username": "cocoh__23",
+                "cleared": false,
+                "verified": false,
+                "url": "/cocoh__23",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9099986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "If this does not need a fix and it is okay to see others users data, I am requesting disclosure.\nThanks!",
+            "automated_response": false,
+            "created_at": "2020-09-01T13:36:24.444Z",
+            "updated_at": "2020-09-01T13:36:24.444Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "cocoh__23",
+                "cleared": false,
+                "verified": false,
+                "url": "/cocoh__23",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/y5ZNUiuJZdTSZDsNTPc9wCvs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9113618,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-02T19:26:35.125Z",
+            "updated_at": "2020-09-02T19:26:35.125Z",
+            "actor": {
+                "username": "aaronloo",
+                "cleared": false,
+                "verified": false,
+                "url": "/aaronloo",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 9113619,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-02T19:26:35.232Z",
+            "updated_at": "2020-09-02T19:26:35.232Z",
+            "actor": {
+                "username": "aaronloo",
+                "cleared": false,
+                "verified": false,
+                "url": "/aaronloo",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 24287,
+            "category": "team",
+            "content": "@cocoh__23 reported that they could modify the `locid` parameter in https://yelp.com/profile_location/add_or_edit endpoint to disclose an arbitrary location stored in the database. \n\nHowever, since this does not disclose which user the revealed location is associated with, Yelp has decided that this does not correspond to a security vulnerability -- in a similar way that a random address generator is not a security threat.",
+            "user": {
+                "id": 105043,
+                "username": "aaronloo",
+                "name": "Aaron Loo",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2016-08-29T20:54:28.410Z",
+                "url": "https://hackerone.com/aaronloo",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

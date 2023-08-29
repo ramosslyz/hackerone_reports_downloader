@@ -1,0 +1,780 @@
+{
+    "id": 588239,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81ODgyMzk=",
+    "url": "https://hackerone.com/reports/588239",
+    "title": "Detect Tor Browser's language",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "none",
+    "readable_substate": "Resolved",
+    "created_at": "2019-05-23T01:21:29.119Z",
+    "submitted_at": "2019-05-23T01:21:29.119Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ryotak",
+        "url": "/ryotak",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1800,
+        "url": "https://hackerone.com/torproject",
+        "handle": "torproject",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Tor",
+            "twitter_handle": "torproject",
+            "website": "https://www.torproject.org/",
+            "about": "Anonymity Online"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2019-13075"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-05-29T09:58:51.005Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-05-28T11:32:34.785Z",
+    "team_member_agreed_on_going_public_at": "2019-05-29T09:58:50.926Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "#Summary\nSome error pages uses Tor Browser's language based text, and iframe can steal it.\n\n#Details\nSince the language of Tor Browser is used for the title of the link tag on 404 error page, an attacker can obtain the language of Tor Browser even if the user has set privacy.spoof_english to 2.\nI attached a PoC and a video for this.\n\nIf the server returns empty response, Tor Browser will show this page in iframe:\n```html\n<html class=\"mozwebext\">\n    <head>\n        <link rel=\"alternate stylesheet\" type=\"text/css\" href=\"resource://content-accessible/plaintext.css\" title=\"Wrap Long Lines\">\n    </head>\n    <body>\n        <pre></pre>\n    </body>\n</html>\n```\n\nbut if user uses Japanese (This is example, it can be used in other languages) version of Tor Browser, it'll show this page:\n```html\n<html class=\"mozwebext\">\n    <head>\n        <link rel=\"alternate stylesheet\" type=\"text/css\" href=\"resource://content-accessible/plaintext.css\" title=\"長い行を折り返す\">\n    </head>\n    <body>\n        <pre></pre>\n    </body>\n</html>\n```\n\nso parent window can steal it:\n``` \ntitle=\"長い行を折り返す\"\n```\n\nMaybe there are similar vulnerability in other error page.\n\n## Impact\n\nAttacker can steal language of Tor Browser even if the user has set privacy.spoof_english to 2.",
+    "weakness": {
+        "id": 46,
+        "name": "Privacy Violation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 494902,
+            "file_name": "PoC-binary.jar",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/902/a639ec0a8db2e3bb469a07152d66eb5163b97adc/PoC-binary.jar?response-content-disposition=attachment%3B%20filename%3D%22PoC-binary.jar%22%3B%20filename%2A%3DUTF-8%27%27PoC-binary.jar&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073306Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6b841dada32554bdd728c0580bd5b297ecc0bbcd2be16da26554b3993149b00d",
+            "file_size": 4764,
+            "type": "application/zip"
+        },
+        {
+            "id": 494903,
+            "file_name": "PoC-src.zip",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/903/4e82ade584e391375223815b6cc1bef18b408dc6/PoC-src.zip?response-content-disposition=attachment%3B%20filename%3D%22PoC-src.zip%22%3B%20filename%2A%3DUTF-8%27%27PoC-src.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073306Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4970a7b868de2fd63d473e18e53653752b137cb9f0d10f1499a912b7f0610f35",
+            "file_size": 2783,
+            "type": "application/zip"
+        },
+        {
+            "id": 494910,
+            "file_name": "PoC.mov",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/910/ac604ea125a3c522773811465ea0cb6a275ee85c/PoC.mov?response-content-disposition=attachment%3B%20filename%3D%22PoC.mov%22%3B%20filename%2A%3DUTF-8%27%27PoC.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073306Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d2d965d42785e8e84210cf47f408b5be7649be6680b6d9844c94765bd6fc04e7",
+            "file_size": 37354309,
+            "type": "video/quicktime"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-06-27T11:32:34.848Z",
+    "allow_singular_disclosure_after": -131659231.60045218,
+    "singular_disclosure_allowed": true,
+    "vote_count": 10,
+    "voters": [
+        "base_64",
+        "dhakal_ananda",
+        "ronr",
+        "its_afolic",
+        "cryptographer",
+        "odraude",
+        "slickhackmin",
+        "gayatrijoshi",
+        "sacman08",
+        "demonslayer300"
+    ],
+    "severity": {
+        "rating": "none",
+        "score": 0.0,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "none"
+        }
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4906287,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "PoC-binary.jar binds port 8000. When accessed there, it determines if the Tor Browser is in English. This is a simple example, but in practice it can accurately read the language used by the user.\n\nIf this is valid security issue, I want t-shirt as reward.",
+            "automated_response": false,
+            "created_at": "2019-05-23T01:23:48.124Z",
+            "updated_at": "2019-05-23T01:23:48.124Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4906394,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If you don't want to run PoC server locally, you can use my test server:\nhttp://51.38.74.11:8000",
+            "automated_response": false,
+            "created_at": "2019-05-23T02:38:26.161Z",
+            "updated_at": "2019-05-23T02:38:26.161Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4906529,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I was wrong in \"details\". it caused by a link tag that added by Tor Browser in zero-length page.\nHttp status code won't affect this vulnerability.",
+            "automated_response": false,
+            "created_at": "2019-05-23T03:39:47.484Z",
+            "updated_at": "2019-05-23T03:39:47.484Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920311,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ryotak,\n\nThank you for your submission. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nKind regards,\n@orangeband ",
+            "automated_response": false,
+            "created_at": "2019-05-24T20:30:46.260Z",
+            "updated_at": "2019-05-24T20:30:46.260Z",
+            "actor": {
+                "username": "orangeband",
+                "cleared": false,
+                "verified": false,
+                "url": "/orangeband",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/390/540/b55c564a8a6f8099d28ea9afa41d197ad0031fc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920392,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @ryotak \n\nI saw in your PoC video that you are only able to specify english and non-english as the proof of concept. Are you able to determine that actual language from non english versions?\n\nAlso, is there a way to change the languages on the browser or is it based on the initial installation? \n\nThanks,\n@orangeband ",
+            "automated_response": false,
+            "created_at": "2019-05-24T20:58:49.438Z",
+            "updated_at": "2019-05-24T20:58:49.438Z",
+            "actor": {
+                "username": "orangeband",
+                "cleared": false,
+                "verified": false,
+                "url": "/orangeband",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/390/540/b55c564a8a6f8099d28ea9afa41d197ad0031fc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920431,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hello @orangeband \n\nThank you for your reply, unfortunately I don't know how to change Tor Browser's language. and I searched up this on google, but seems there is no way to change language without re-install.\n\nI'll download all language version of Tor Browser,and will rewrite my PoC.\n\nMaybe this will take half of day, so please wait... (Downloading Tor Browser from my country is very slow)",
+            "automated_response": false,
+            "created_at": "2019-05-24T21:10:52.616Z",
+            "updated_at": "2019-05-24T21:19:50.449Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920496,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "@ryotak \nIf you are able to determine a way that distinguishes what language of Tor you are using, this will be a valid finding. However, only knowing english from non-english would not be enough for accepting. I'll await your new information. If you are unable to figure something out, I invite you to self-close this report.\n\nThank you,\n@orangeband ",
+            "automated_response": false,
+            "created_at": "2019-05-24T21:29:08.450Z",
+            "updated_at": "2019-05-24T21:29:08.450Z",
+            "actor": {
+                "username": "orangeband",
+                "cleared": false,
+                "verified": false,
+                "url": "/orangeband",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/390/540/b55c564a8a6f8099d28ea9afa41d197ad0031fc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920503,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hello @orangeband\n\nThank you for your reply. \nAs I said before, this vulnerability can steal language of Tor Browser accurately.\nShould I continue download a lot of Tor Browsers?",
+            "automated_response": false,
+            "created_at": "2019-05-24T21:31:48.890Z",
+            "updated_at": "2019-05-24T21:31:48.890Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920637,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @orangeband \n\nI downloaded half of Tor Browsers, but this is not efficient. so I changed my PoC and recorded video (attached below).\nYou'll notice difference between Japanese,English and Spanish version of Tor Browser.",
+            "automated_response": false,
+            "created_at": "2019-05-24T22:02:22.470Z",
+            "updated_at": "2019-05-24T22:02:34.878Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 496320,
+                    "filename": "PoC.mov",
+                    "type": "video/quicktime",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/496/320/c0971c9fcf8cd8875047575e51dc210f25354e82/PoC.mov?response-content-disposition=attachment%3B%20filename%3D%22PoC.mov%22%3B%20filename%2A%3DUTF-8%27%27PoC.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073306Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f169cabcb40fdec451639721132d4a70674f57eef1d4da604e2ad5a5730fd051"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920712,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hey @ryotak \n\nCan you show me where you downloaded the different versions? When I tried downloading different stable versions, the EXEs were non existent and when I reinstall, any time I would pick a different language, it would still default to english on my end. The PoC video was enough for me to see what you were doing, I just need to validate on my end.\n\nThanks,\n@orangeband ",
+            "automated_response": false,
+            "created_at": "2019-05-24T22:33:32.404Z",
+            "updated_at": "2019-05-24T22:33:32.404Z",
+            "actor": {
+                "username": "orangeband",
+                "cleared": false,
+                "verified": false,
+                "url": "/orangeband",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/390/540/b55c564a8a6f8099d28ea9afa41d197ad0031fc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4920715,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hello @orangeband \n\nThank you for your reply,\nHere is link for download different language version of Tor Browser: https://www.torproject.org/download/languages/",
+            "automated_response": false,
+            "created_at": "2019-05-24T22:35:26.835Z",
+            "updated_at": "2019-05-24T22:37:21.557Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4929461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-27T08:14:25.853Z",
+            "updated_at": "2019-05-27T08:14:25.853Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 590729
+            },
+            "actor": {
+                "username": "z3t",
+                "cleared": true,
+                "verified": true,
+                "url": "/z3t",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/875/f509a2a60ca4f406a7194137e1f5df0ea52cc0c9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4929466,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @ryotak,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nRegards,\n@rubikcube ",
+            "automated_response": false,
+            "created_at": "2019-05-27T08:14:46.645Z",
+            "updated_at": "2019-05-27T08:14:46.645Z",
+            "actor": {
+                "username": "rubikcube",
+                "cleared": false,
+                "verified": false,
+                "url": "/rubikcube",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/112/037/07ab876d3c8a79046085764c245ca1793dcf1d57_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4929469,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-27T08:15:08.169Z",
+            "updated_at": "2019-05-27T08:15:08.169Z",
+            "additional_data": {
+                "old_severity": "Low",
+                "new_severity": "None (0.0)",
+                "old_severity_id": 399842,
+                "new_severity_id": 402756
+            },
+            "actor": {
+                "username": "rubikcube",
+                "cleared": false,
+                "verified": false,
+                "url": "/rubikcube",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/112/037/07ab876d3c8a79046085764c245ca1793dcf1d57_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4938009,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for the report. I've opened https://trac.torproject.org/projects/tor/ticket/30657 to get this onto our development radar (alas, we have a bunch of high prio bugs and I am not sure when we'll get to it). Anyway, I am closing this report and mark it as resolved to get you your bounty.",
+            "automated_response": false,
+            "created_at": "2019-05-28T07:10:04.925Z",
+            "updated_at": "2019-05-28T07:10:04.925Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "ryotak",
+                "url": "/ryotak"
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4938194,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @geko\n\nThank you for your reply!\nI'm glad with getting reward from Tor Project, but as I said before I want t-shirt as reward (```If this is valid security issue, I want t-shirt as reward.```)\nI'm t-shirt collector, so I want Tor Project's t-shirt too.\nCan I get Tor Project's t-shirt?",
+            "automated_response": false,
+            "created_at": "2019-05-28T08:07:34.306Z",
+            "updated_at": "2019-05-28T08:12:45.237Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4938232,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Oh, indeed, I missed that, sorry. Sure, a t-shirt should not be a problem. Drop me an email to gk[@]torproject[.]org (without the brackets) and I'll get you in contact with the right people to figure out the shipping address, size etc.",
+            "automated_response": false,
+            "created_at": "2019-05-28T08:14:38.848Z",
+            "updated_at": "2019-05-28T08:14:38.848Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4938268,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @geko\nThank you for your reply!\nI sent an email to your address. and I have a question.\nShould I return $100 bounty?\nIf so, can you tell me how to return this bounty?(Sorry, I don't know how to return bounty)",
+            "automated_response": false,
+            "created_at": "2019-05-28T08:21:26.063Z",
+            "updated_at": "2019-05-28T08:21:26.063Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4939498,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::SwagAwarded",
+            "message": "No worries, that's sorted out. We reverted your payment and getting swag to you instead. Sorry for the trouble.",
+            "automated_response": false,
+            "created_at": "2019-05-28T09:41:02.339Z",
+            "updated_at": "2019-05-28T09:41:02.339Z",
+            "actor": {
+                "url": "/torproject",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Tor"
+                }
+            },
+            "reporter": {
+                "username": "ryotak",
+                "url": "/ryotak"
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4939941,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your help!\nI'm happy with getting Tor Project's t-shirt.\nAnyway, can we disclosuse this report as it already published at trac.torproject.org?",
+            "automated_response": false,
+            "created_at": "2019-05-28T10:19:24.632Z",
+            "updated_at": "2019-05-28T10:19:24.632Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4940242,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-28T11:32:34.810Z",
+            "updated_at": "2019-05-28T11:32:34.810Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4947946,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-29T09:58:50.952Z",
+            "updated_at": "2019-05-29T09:58:50.952Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 4947947,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-05-29T09:58:51.020Z",
+            "updated_at": "2019-05-29T09:58:51.020Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 5225972,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "[CVE-2019-13075](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-13075) was assigned.",
+            "automated_response": false,
+            "created_at": "2019-06-30T21:28:18.798Z",
+            "updated_at": "2019-06-30T21:28:18.798Z",
+            "actor": {
+                "username": "ryotak",
+                "cleared": false,
+                "verified": false,
+                "url": "/ryotak",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Nb79aqy3v6SyMh8rwZZh43cu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 5276939,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-08T19:01:07.370Z",
+            "updated_at": "2019-07-08T19:01:07.370Z",
+            "cve_ids": [
+                "CVE-2019-13075"
+            ],
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 6312037,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-11-15T07:44:06.443Z",
+            "updated_at": "2019-11-15T07:44:06.443Z",
+            "actor": {
+                "url": "/torproject",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Tor"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

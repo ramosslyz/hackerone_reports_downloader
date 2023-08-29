@@ -1,0 +1,340 @@
+{
+    "id": 44217,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NDIxNw==",
+    "url": "https://hackerone.com/reports/44217",
+    "title": "Application XSS filter function Bypass may allow Multiple stored XSS",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2015-01-18T10:18:23.387Z",
+    "submitted_at": "2015-01-18T10:18:23.387Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "securityidiots",
+        "url": "/securityidiots",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 56,
+        "url": "https://hackerone.com/vimeo",
+        "handle": "vimeo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Vimeo",
+            "twitter_handle": "vimeo",
+            "website": "https://vimeo.com",
+            "about": "Make life worth watching"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2015-06-28T15:50:24.029Z",
+    "bug_reporter_agreed_on_going_public_at": "2015-05-29T15:50:03.272Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\r\n\r\nAs i analysed the application behavior and the security structure, i found out that the application is using \"Greedy XSS Regex filter\" against XSS and removes any the whole string from '<' to '>'. So i tried some basic bypass which allowed me to insert tags and other characters into the string.\r\n\r\nHere is the the payload:\r\n<%0crameset%20src=''> \r\n\r\nNow if we see the whole application is using same filter against XSS which makes this bypass to be universally working on nearly all the input fields, which means we can say an attacker can successfully bypass and enter XSS payload in database but when the string prints in the frontend there is another filter, which encode all html entities before printing.\r\n\r\nNice but now enough as many of the inputs could in the below condition will end up with a successful XSS exploitation.\r\n1. Input under javascript.\r\n2. Any string not properly encoded before printing.\r\n3. JSON output with HTML headers.\r\n\r\nI have already reported some issues in vimeo where input injected directly into javascript and do not need any html characters, another issue of JSON output with HTML headers. \r\n\r\nBelow you can see both reports:\r\nhttps://hackerone.com/reports/43934\r\nhttps://hackerone.com/reports/44215\r\n\r\nIn the first screenshot you can see profile update request where i updates my profile and injected those HTML characters, in second screenshot you can see it injected in the response as stored XSS.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 27291,
+            "file_name": "1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/027/291/7903324a132a49983c17a10bf5f1839dcea86cdc/1.png?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3cf62c0b65e5e962c808213a7c89fb726359e6561a153b687f6d11cf0b8cd1a9",
+            "file_size": 56986,
+            "type": "image/png"
+        },
+        {
+            "id": 27292,
+            "file_name": "2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/027/292/21a28db1a5002c0f15c809764c5b39a7d4202c21/2.png?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2c8ab1a68a2f020f524b7f5121fa669ad34cfce9a208be7fb5f0584c96cfebb6",
+            "file_size": 65879,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2015-06-28T15:50:04.097Z",
+    "allow_singular_disclosure_after": -257789900.7192817,
+    "singular_disclosure_allowed": true,
+    "vote_count": 6,
+    "voters": [
+        "eveeez",
+        "mpz",
+        "vulnh0lic",
+        "japz",
+        "spetr0x",
+        "shahmeer-amir"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 330542,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "@securityidiots, can you provide reproduction steps for arbitrary XSS (instead of the frameset)? I've tried your example and it appears that it's being properly encoded at least on my profile page settings. ",
+            "automated_response": false,
+            "created_at": "2015-02-11T23:01:56.000Z",
+            "updated_at": "2015-02-11T23:01:56.000Z",
+            "actor": {
+                "username": "mandatory",
+                "cleared": false,
+                "verified": false,
+                "url": "/mandatory",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 332391,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Its already patched",
+            "automated_response": false,
+            "created_at": "2015-02-14T21:59:07.083Z",
+            "updated_at": "2015-02-14T21:59:07.083Z",
+            "actor": {
+                "username": "securityidiots",
+                "cleared": false,
+                "verified": false,
+                "url": "/securityidiots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 340473,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Looks like this was patched by a separate fix.",
+            "automated_response": false,
+            "created_at": "2015-02-26T03:53:44.213Z",
+            "updated_at": "2015-02-26T03:53:44.213Z",
+            "actor": {
+                "username": "andrewp",
+                "cleared": false,
+                "verified": false,
+                "url": "/andrewp",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/966/b9d700976d0952781d36b6dbd46cb36c8ec59da9_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "securityidiots",
+                "url": "/securityidiots"
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 393942,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Looks Like Vimeo Resolved 3 Bugs Long Back , None Deserves For a Bounty? ",
+            "automated_response": false,
+            "created_at": "2015-04-29T12:01:57.836Z",
+            "updated_at": "2015-04-29T12:01:57.836Z",
+            "actor": {
+                "username": "securityidiots",
+                "cleared": false,
+                "verified": false,
+                "url": "/securityidiots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 396009,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\n@naren @andrewp Vimeo have resolved the bugs and still atfer a long wait i havent received any bounty. please let me know the reason for such a long delay.\n\nhttps://hackerone.com/reports/44157\nhttps://hackerone.com/reports/44217\nhttps://hackerone.com/reports/44239\n",
+            "automated_response": false,
+            "created_at": "2015-05-01T11:03:37.790Z",
+            "updated_at": "2015-05-01T11:03:37.790Z",
+            "actor": {
+                "username": "securityidiots",
+                "cleared": false,
+                "verified": false,
+                "url": "/securityidiots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 431476,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@andrewp hello sleeping beauty!! time to wake up",
+            "automated_response": false,
+            "created_at": "2015-05-29T07:40:57.412Z",
+            "updated_at": "2015-05-29T07:40:57.412Z",
+            "actor": {
+                "username": "securityidiots",
+                "cleared": false,
+                "verified": false,
+                "url": "/securityidiots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 432213,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-05-29T15:50:03.315Z",
+            "updated_at": "2015-05-29T15:50:03.315Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "securityidiots",
+                "cleared": false,
+                "verified": false,
+                "url": "/securityidiots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/651/6b855209ff953c324d792a42e83f85b355e296cb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 494536,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-06-28T15:50:24.151Z",
+            "updated_at": "2015-06-28T15:50:24.151Z",
+            "actor": {
+                "url": "/vimeo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vimeo"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 1430295,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-19T15:10:54.433Z",
+            "updated_at": "2017-01-19T15:10:54.433Z",
+            "actor": {
+                "url": "/vimeo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vimeo"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "vimeo",
+            "collaborator": {
+                "username": "securityidiots",
+                "url": "/securityidiots"
+            }
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

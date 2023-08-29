@@ -1,0 +1,420 @@
+{
+    "id": 474656,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzQ2NTY=",
+    "url": "https://hackerone.com/reports/474656",
+    "title": "Cross-site Scripting (XSS) on HackerOne careers page",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2019-01-04T13:49:31.861Z",
+    "submitted_at": "2019-01-04T13:49:31.861Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nguyenlv7",
+        "url": "/nguyenlv7",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/128/163/b1b8a0b050c57445967d7aba4e2476e9f5b145ec_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-02-17T23:18:46.382Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-01-18T23:18:44.638Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Dear HackerOne team,\n**Summary:**\nI found DOM XSS at endpoint `https://www.hackerone.com/careers`, but can not bypass CSP. It's work on IE and Edge.\n\n### Steps To Reproduce\n- JS file is \"Masonry js file\", vulnerability code:\n\n```javascript\n//Checking for potential Lever source or origin parameters\nvar pageUrl = window.location.href;\nvar leverParameter = '';\nvar trackingPrefix = '?lever-'\n\nif( pageUrl.indexOf(trackingPrefix) >= 0){\n  // Found Lever parameter\n  var pageUrlSplit = pageUrl.split(trackingPrefix);\n  leverParameter = '?lever-'+pageUrlSplit[1];\n}\n```\n```javascript\n var link = posting.hostedUrl+leverParameter;\n    \n    \tjQuery('#jobs-container .jobs-list').append(\n      '<div class=\"job '+teamCleanString+' '+locationCleanString.replace(',', '')+' '+commitmentCleanString+'\">' +\n        '<a class=\"job-title\" href=\"'+link+'\"\">'+title+'</a>' +\n        '<p class=\"tags\"><span>'+team+'</span><span>'+location+'</span><span>'+commitment+'</span></p>' +\n        '<p class=\"description\">'+shortDescription+'</p>' +\n        '<a class=\"btn\" href=\"'+link+'\">Learn more</a>' +\n      '</div>'  \n    \n      );\n```\n-  `link` variable is append by jquery.\n- POC: `https://www.hackerone.com/careers?lever-#aaa\"><script src=\"https://app-sj17.marketo.com/index.php/form/getForm?callback=alert\"></script>`\n\n### Optional: Your Environment (Browser version, Device, etc)\n\n * IE, Edge (because url is encoded on firefox and chrome)\n\n### Optional: Supporting Material/References (Screenshots)\n {F400895}\n{F400896}\n\n## Impact\n\n* XSS but can not bypass CSP\n* inject html code",
+    "bounty_amount": "500.0",
+    "formatted_bounty": "$500",
+    "weakness": {
+        "id": 63,
+        "name": "Cross-site Scripting (XSS) - DOM"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 400895,
+            "file_name": "dom_xss_h1.JPG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/400/895/25206fb7e11126f94db68ed8158fcc1140205597/dom_xss_h1.JPG?response-content-disposition=attachment%3B%20filename%3D%22dom_xss_h1.JPG%22%3B%20filename%2A%3DUTF-8%27%27dom_xss_h1.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073433Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=e6e661682c6af265f57b6a5da6e01025e8fd3389e9628002ef4e1708b1be75e0",
+            "file_size": 75271,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 400896,
+            "file_name": "inject_html.JPG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/400/896/c706a3252cdd92bae41cb0c06383e82c6799cae4/inject_html.JPG?response-content-disposition=attachment%3B%20filename%3D%22inject_html.JPG%22%3B%20filename%2A%3DUTF-8%27%27inject_html.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073433Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=3e4405c744b4c18c7fdf4e73c08acf9091ef277aa5fa5c37ea1b8820a5a8353e",
+            "file_size": 98627,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-02-17T23:18:44.786Z",
+    "allow_singular_disclosure_after": -142848948.48129347,
+    "singular_disclosure_allowed": true,
+    "vote_count": 224,
+    "voters": [
+        "13c50k4",
+        "delimitry",
+        "kaje11",
+        "smither",
+        "mcmahoniel",
+        "sw33tlie",
+        "base_64",
+        "muon4",
+        "hunter",
+        "sigsegv_banana",
+        "and 214 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "score": 2.4,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 6,
+        "asset_type": "URL",
+        "asset_identifier": "www.hackerone.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3924853,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-04T13:51:05.934Z",
+            "updated_at": "2019-01-04T13:51:05.934Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "Low (2.4)",
+                "old_severity_id": 274796,
+                "new_severity_id": 274797
+            },
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 3924854,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportVulnerabilityTypesUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-04T13:51:14.242Z",
+            "updated_at": "2019-01-04T13:51:14.242Z",
+            "additional_data": {
+                "added_weaknesses": [
+                    {
+                        "id": 63,
+                        "name": "Cross-site Scripting (XSS) - DOM"
+                    }
+                ],
+                "removed_weaknesses": []
+            },
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 3924858,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-04T13:51:46.430Z",
+            "updated_at": "2019-01-04T13:51:46.430Z",
+            "additional_data": {
+                "old_title": "Cross-site Scripting (XSS) - DOM",
+                "new_title": "Cross-site Scripting (XSS) on HackerOne careers page"
+            },
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 3924863,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @khoiasd - thanks for your report! We have successfully reproduced the behavior you described and are currently working on a fix. We'll keep you posted throughout the process. Thanks for submitting!",
+            "automated_response": false,
+            "created_at": "2019-01-04T13:52:15.604Z",
+            "updated_at": "2019-01-04T13:52:15.604Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 3962497,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-11T19:05:48.273Z",
+            "updated_at": "2019-01-11T19:05:48.273Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 475399
+            },
+            "actor": {
+                "username": "mesbah3",
+                "cleared": false,
+                "verified": false,
+                "url": "/mesbah3",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 3962736,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-11T19:50:44.747Z",
+            "updated_at": "2019-01-11T19:50:44.747Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 477603
+            },
+            "actor": {
+                "username": "khalidhissen",
+                "cleared": false,
+                "verified": false,
+                "url": "/khalidhissen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 4001453,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @khoiasd - We've released the fix. Can you please verify?",
+            "automated_response": false,
+            "created_at": "2019-01-18T18:07:02.247Z",
+            "updated_at": "2019-01-18T18:07:02.247Z",
+            "actor": {
+                "username": "pei",
+                "cleared": false,
+                "verified": false,
+                "url": "/pei",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/939/2d83322336a492279dc84d8f92f280c2d54fcb5b_original.png/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "nguyenlv7",
+                "url": "/nguyenlv7"
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 4001502,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for the report! \n\nBefore we disclose though, we'd like to coordinate with lever to fix the root cause. We will keep you updated once we've made progress. ",
+            "automated_response": false,
+            "created_at": "2019-01-18T18:10:38.826Z",
+            "updated_at": "2019-01-18T18:10:38.826Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "bounty_amount": "500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "security",
+            "collaborator": {
+                "username": "nguyenlv7",
+                "url": "/nguyenlv7"
+            }
+        },
+        {
+            "id": 4003008,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @pei,\nI confirm this issue was fixed. Thanks for bounty.",
+            "automated_response": false,
+            "created_at": "2019-01-18T23:18:44.682Z",
+            "updated_at": "2019-01-18T23:18:44.682Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nguyenlv7",
+                "cleared": false,
+                "verified": false,
+                "url": "/nguyenlv7",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/128/163/b1b8a0b050c57445967d7aba4e2476e9f5b145ec_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 4165578,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-02-17T23:18:46.407Z",
+            "updated_at": "2019-02-17T23:18:46.407Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

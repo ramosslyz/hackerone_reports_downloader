@@ -1,0 +1,224 @@
+{
+    "id": 942481,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NDI0ODE=",
+    "url": "https://hackerone.com/reports/942481",
+    "title": "Wordpress Users Disclosure (/wp-json/wp/v2/users/) on data.gov",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2020-07-25T15:48:16.952Z",
+    "submitted_at": "2020-07-25T15:48:16.952Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nagli",
+        "url": "/nagli",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/63bsef59zlkgf1vs7fy1u49ihd2a/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 50592,
+        "url": "https://hackerone.com/gsa_bbp",
+        "handle": "gsa_bbp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "GSA Bounty",
+            "twitter_handle": null,
+            "website": "http://gsa.gov",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-07-28T00:12:56.419Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-07-26T07:19:30.230Z",
+    "team_member_agreed_on_going_public_at": "2020-07-28T00:12:56.328Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nHello TTS Bug bounty team!\n\nI have found data.gov  User/admin usernames disclosed.\nUsing REST API, we can see all the WordPress users/author with some of their information.\n\n## Steps To Reproduce:\n\n  You can find the information disclosure by going to (data.gov/wp-json/wp/v2/users/)\n\nSupporting Video:\n{F922807}\n\nResponse:\n```javascript\n[{\"id\":600633,\"name\":\"Aaron Borden\",\"url\":\"\",\"description\":\"\",\"link\":\"https:\\/\\/www.data.gov\\/author\\/aaron-bordengsa-gov\\/\",\"slug\":\"aaron-bordengsa-gov\",\"avatar_urls\":etc....\n```\n## Fix:\nUse this code will hide the users list and give 404 as the result, while rest of the api calls keep running as they were.\n```javascript\nadd_filter( 'rest_endpoints', function( $endpoints ){\n    if ( isset( $endpoints['/wp/v2/users'] ) ) {\n        unset( $endpoints['/wp/v2/users'] );\n    }\n    if ( isset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] ) ) {\n        unset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] );\n    }\n    return $endpoints;\n});\n```\n## Similar reports:\n(https://hackerone.com/reports/356047)\n(https://hackerone.com/reports/370777)\n(https://hackerone.com/reports/772744)\n\nThank you very much.\n\n## Impact\n\nMalicious counterpart could collect the usernames disclosed (and the admin user) and be focused throughout BF attack (as the usernames are now known), making it less harder to penetrate the data.gov systems.",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 922807,
+            "file_name": "data.gov.mov",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ASnZEHFn3s6qGhr8i6uHFjUP?response-content-disposition=attachment%3B%20filename%3D%22data.gov.mov%22%3B%20filename%2A%3DUTF-8%27%27data.gov.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072042Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=63ec0af7036ad0a4e492f2bbc252d4c4d3b45db3918a405718d503cd34f2decb",
+            "file_size": 42461314,
+            "type": "video/quicktime"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 13,
+    "voters": [
+        "nagli",
+        "bibekshah",
+        "xnutronex",
+        "0nlymohammed",
+        "rashedul_css",
+        "atpugsec",
+        "bugpaina",
+        "karsec983",
+        "sharmw",
+        "hackzmank",
+        "and 3 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 81473,
+        "asset_type": "URL",
+        "asset_identifier": "www.data.gov",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8755647,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @nagli,\n\nWordPress author usernames are public by default and are not considered sensitive information. Your effort is nonetheless appreciated and we wish that you'll continue to research and submit any future security issues you find.\n\n> https://make.wordpress.org/core/handbook/testing/reporting-security-vulnerabilities/#why-are-disclosures-of-usernames-or-user-ids-not-a-security-issue\n\nBest regards,\n@bugseeker",
+            "automated_response": false,
+            "created_at": "2020-07-26T07:07:57.514Z",
+            "updated_at": "2020-07-26T07:07:57.514Z",
+            "actor": {
+                "username": "bugseeker",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugseeker",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/MQSo6h7swJUBC1NdjKCT4ZYe/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gsa_bbp"
+        },
+        {
+            "id": 8755676,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Requesting disclosure so fellow hackers wont report similar findings.\nThank you.",
+            "automated_response": false,
+            "created_at": "2020-07-26T07:19:30.264Z",
+            "updated_at": "2020-07-26T07:19:30.264Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nagli",
+                "cleared": true,
+                "verified": true,
+                "url": "/nagli",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/63bsef59zlkgf1vs7fy1u49ihd2a/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gsa_bbp"
+        },
+        {
+            "id": 8773101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-28T00:12:56.347Z",
+            "updated_at": "2020-07-28T00:12:56.347Z",
+            "actor": {
+                "username": "gsa_adborden",
+                "cleared": false,
+                "verified": false,
+                "url": "/gsa_adborden",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gsa_bbp"
+        },
+        {
+            "id": 8773102,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-28T00:12:56.442Z",
+            "updated_at": "2020-07-28T00:12:56.442Z",
+            "actor": {
+                "username": "gsa_adborden",
+                "cleared": false,
+                "verified": false,
+                "url": "/gsa_adborden",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gsa_bbp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

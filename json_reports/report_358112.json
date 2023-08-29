@@ -1,0 +1,464 @@
+{
+    "id": 358112,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNTgxMTI=",
+    "url": "https://hackerone.com/reports/358112",
+    "title": "[buttle] Path traversal in mid-buttle module allows to read any file in the server.",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "critical",
+    "readable_substate": "Resolved",
+    "created_at": "2018-05-27T14:40:36.614Z",
+    "submitted_at": "2018-05-27T14:40:36.614Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "n0n4me",
+        "url": "/n0n4me",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2018-3766"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2018-06-27T05:21:29.208Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-06-27T05:21:29.077Z",
+    "team_member_agreed_on_going_public_at": "2018-06-27T05:20:02.570Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello Node.js third-party modules\n\nI would like to report path traversal in buttle module\nIt allows me to read any file in the server if i know the path.\n\n# Module\n\n**module name:** buttle\n**version:** 0.2.0\n**npm page:** `https://www.npmjs.com/package/buttle`\n\n## Module Description\n\nSimple static file (+ markdown) server.\n\n## Module Stats\n\n[21] downloads in the last week\n\n# Vulnerability\n\n## Vulnerability Description\n\nmodule mid-buttle.js uses regex to check the url containing the string \".markdown\". I think, the right check of the author wants, is string \".markdown\" located the end of the url. But he forgot the $ in the regex. That is the first vulnerability. The second is he does not check for path traversal (../). \n\n```\n var url = req.url;\n    if(/\\.md$/i.test(url) || /\\.markdown/i.test(url)) {\n      fs.exists(j(dir, url), function(exists) {\n        if(exists) {\n          fs.readFile(j(dir, url), {encoding: 'utf8'}, function(err, data) {\n            if(err) { return res.end(err.message); }\n            res.end(wrapInHtml(md(data)));\n          });\n        } else {\n          next();\n        }\n      });\n    } else {\n      next();\n}\n```\nLink in github: https://github.com/jtrussell/buttle/blob/master/lib/mid-buttle.js#L16\n## Steps To Reproduce:\n\ninstall buttle\n```\n$ npm install -g buttle\n```\nstart buttle\n```\n$ buttle ./\n```\nstart the burpsuite. Enter the url contain string \".markdown\" and ../ to traverse to the file you want.\n{F302395}\n## Patch\n\nI recommend that:\n1. Should filter \"..\" in url before using that for reading file. (check path traversal)\n2. correct the specific string in the url for your check. (check logic bug)\n\n## Supporting Material/References:\n\n- Kali linux 4.15.0\n- v8.11.2\n- 6.1.0\n- Burpsuite community\n\n# Wrap up\n\n- I contacted the maintainer to let them know: N\n- I opened an issue in the related repository: N\n\n## Impact\n\nThe malicious user can use this vulnerability to read some file containing credential, ssh key files, source code ...",
+    "weakness": {
+        "id": 19,
+        "name": "Path Traversal"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 302395,
+            "file_name": "1.__Buttle__PoC-Path_traversal.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/395/3ad7690d776110c6fe28d920eea6d00da333d88b/1.__Buttle__PoC-Path_traversal.png?response-content-disposition=attachment%3B%20filename%3D%221.__Buttle__PoC-Path_traversal.png%22%3B%20filename%2A%3DUTF-8%27%271.__Buttle__PoC-Path_traversal.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073938Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e6a0c80c0347651290ca2fcfa770a9c2cfe841cc9cba41361f61e9806286abab",
+            "file_size": 140636,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2018-07-27T05:20:02.691Z",
+    "allow_singular_disclosure_after": -160625976.2751012,
+    "singular_disclosure_allowed": true,
+    "vote_count": 11,
+    "voters": [
+        "mashoud1122",
+        "bl4de",
+        "apapedulimu",
+        "savitar0x01",
+        "geeknik",
+        "truwa",
+        "japz",
+        "cryptographer",
+        "wragg-s",
+        "rshrikrishna",
+        "and 1 more..."
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 10.0,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 8249,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "buttle",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2803554,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I found another bug is information disclosure in the module \"mid-php.js\". When you execute a exist file php append '/' the server will reveal the absolute path to that file.\n\n{F302396}\n\nlink in github: https://github.com/jtrussell/buttle/blob/master/lib/mid-php.js#L26\n\n\n",
+            "automated_response": false,
+            "created_at": "2018-05-27T14:48:28.338Z",
+            "updated_at": "2018-05-27T14:48:28.338Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 302396,
+                    "filename": "2.__Buttle__PoC_-_Information_disclosure.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/396/f9f5cdcf812197dbc36cde332039c08c725ccdca/2.__Buttle__PoC_-_Information_disclosure.png?response-content-disposition=attachment%3B%20filename%3D%222.__Buttle__PoC_-_Information_disclosure.png%22%3B%20filename%2A%3DUTF-8%27%272.__Buttle__PoC_-_Information_disclosure.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073939Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=70313fb48238a6235573cf1bcdf31a596085c15c1a391c9ceb2da1f4ed8a4aab"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2893946,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-16T12:57:14.155Z",
+            "updated_at": "2018-06-16T12:57:14.155Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2893956,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @n0n4me,\n\nThanks for reporting this issue.\n\nI was able to reproduce and confirm the issue as you described and will triage this report as vulnerability.\nI will invite the package maintainer to this issue.\n",
+            "automated_response": false,
+            "created_at": "2018-06-16T13:01:24.238Z",
+            "updated_at": "2018-06-16T13:01:24.238Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2894170,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks.",
+            "automated_response": false,
+            "created_at": "2018-06-16T15:26:31.353Z",
+            "updated_at": "2018-06-16T15:26:31.353Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2938039,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-26T20:27:49.560Z",
+            "updated_at": "2018-06-26T20:27:49.560Z",
+            "additional_data": {
+                "old_severity": "High",
+                "new_severity": "Critical (10.0)",
+                "old_severity_id": 160021,
+                "new_severity_id": 173243
+            },
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2938048,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@n0n4me I will disclose it as the author isn't responsive and we had have already other reports with the same problem.",
+            "automated_response": false,
+            "created_at": "2018-06-26T20:31:23.638Z",
+            "updated_at": "2018-06-26T20:31:23.638Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2938873,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Will I have a CVE ?",
+            "automated_response": false,
+            "created_at": "2018-06-27T01:57:10.606Z",
+            "updated_at": "2018-06-27T01:57:10.606Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939075,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes of course, I'm going to request it now and disclose the report.",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:11:28.003Z",
+            "updated_at": "2018-06-27T05:11:28.003Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939079,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you.",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:13:48.850Z",
+            "updated_at": "2018-06-27T05:13:48.850Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939087,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:19:53.049Z",
+            "updated_at": "2018-06-27T05:19:53.049Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "n0n4me",
+                "url": "/n0n4me"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939088,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:20:02.603Z",
+            "updated_at": "2018-06-27T05:20:02.603Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939091,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:21:29.116Z",
+            "updated_at": "2018-06-27T05:21:29.116Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2939092,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-27T05:21:29.245Z",
+            "updated_at": "2018-06-27T05:21:29.245Z",
+            "actor": {
+                "username": "n0n4me",
+                "cleared": false,
+                "verified": false,
+                "url": "/n0n4me",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/144/764/a3bb052bcdd3066df57629dca299648b74664b41_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

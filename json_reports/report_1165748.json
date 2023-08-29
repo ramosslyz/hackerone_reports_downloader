@@ -1,0 +1,339 @@
+{
+    "id": 1165748,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTY1NzQ4",
+    "url": "https://hackerone.com/reports/1165748",
+    "title": "'net/ftp': Uncontrolled Resource Consumption (Memory/CPU)",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2021-04-15T15:12:23.034Z",
+    "submitted_at": "2021-04-15T15:12:23.098Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sighook",
+        "url": "/sighook",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-04-21T06:16:15.867Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-04-21T05:57:22.992Z",
+    "team_member_agreed_on_going_public_at": "2021-04-21T06:16:15.759Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Current  `TIME_PARSER` implementation allows attackers to cause a denial of service (memory consumption) via a large integer value for the `fractions` property.\n\nThe problem code:\n```ruby\n    TIME_PARSER = ->(value, local = false) {\n      unless /\\A(?<year>\\d{4})(?<month>\\d{2})(?<day>\\d{2})\n            (?<hour>\\d{2})(?<min>\\d{2})(?<sec>\\d{2})\n            (?:\\.(?<fractions>\\d+))?/x =~ value\n        raise FTPProtoError, \"invalid time-val: #{value}\"\n      end\n      usec = fractions.to_i * 10 ** (6 - fractions.to_s.size)\n      Time.public_send(local ? :local : :utc, year, month, day, hour, min, sec, usec)\n    }\n```\n\n# PoC\n\nFor example, a ran a malicious server that returns `\"213 20371231000000.\".(\"9\"x999999999).\"\\r\\n\"`  for commands that use `TIME_PARSER`  (`mlst`, `mlsd`, `mdtm`, etc).  Also, such a response can be spoofed if the attacker is on the same network as the victim.\n\nHere is the result of running of the process for an hour and a half:\n```\n  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND  \n18644 me        20   0   27.9g  12.3g     64 D 100.0  84.0  89:17.45 ruby\n```\nThe process kept the CPU load around 90-100% all the time, and slowly but surely, devour all the available memory.\n\n## Impact\n\nDenial of Service.",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 8,
+    "voters": [
+        "foobar7",
+        "0nlymohammed",
+        "xaleraf4ra",
+        "captain404",
+        "meispi",
+        "adass",
+        "ekgaribadmi",
+        "0x013370"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 5.9,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 28212,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/ruby/ruby",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11404537,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your report. @shugo , what do you think?",
+            "automated_response": false,
+            "created_at": "2021-04-15T15:42:47.176Z",
+            "updated_at": "2021-04-15T15:42:47.176Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11408341,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report.\n\nnet/ftp is a client library, so I'd like to handle DoS as a non-security issue.",
+            "automated_response": false,
+            "created_at": "2021-04-16T00:16:21.151Z",
+            "updated_at": "2021-04-16T00:16:21.151Z",
+            "actor": {
+                "username": "shugo",
+                "cleared": false,
+                "verified": false,
+                "url": "/shugo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/076/177/c63f990ae1ef62a77c2ff1e5b2db5e4dd3db2557_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11409274,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-16T04:53:22.521Z",
+            "updated_at": "2021-04-16T04:53:22.521Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071128Z&X-Amz-Expires=648&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a85cb3226f0a99bf8c502a94beeab4a1332545d7d45fe7a6f68a7bc6114fa7d2"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11423874,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This report was discussed in the previous developers' meeting, and we agreed that we handle this as a non-security issue. I think @shugo will fix the issue later. Thank you for your information.",
+            "automated_response": false,
+            "created_at": "2021-04-17T08:37:51.118Z",
+            "updated_at": "2021-04-17T08:37:51.118Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11436379,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I respect your decision, and I will not try to challenge it. I just want to note that it doesn't coincide with the practice:\n\n- CVE-2013-1752\n- CVE-2018-1060\n- CVE-2020-8492\n- ... and so on ...",
+            "automated_response": false,
+            "created_at": "2021-04-19T10:33:47.880Z",
+            "updated_at": "2021-04-19T10:33:47.880Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11459016,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks for your understanding and the additional information.\nI've fixed it in <https://github.com/ruby/net-ftp/commit/a93af636f8ef50f22084c96647542c99d79f00f7>.",
+            "automated_response": false,
+            "created_at": "2021-04-21T01:01:41.639Z",
+            "updated_at": "2021-04-21T01:01:41.639Z",
+            "actor": {
+                "username": "shugo",
+                "cleared": false,
+                "verified": false,
+                "url": "/shugo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/076/177/c63f990ae1ef62a77c2ff1e5b2db5e4dd3db2557_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11460641,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Let's disclose it.",
+            "automated_response": false,
+            "created_at": "2021-04-21T05:57:23.022Z",
+            "updated_at": "2021-04-21T05:57:23.022Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11460740,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-21T06:16:15.794Z",
+            "updated_at": "2021-04-21T06:16:15.794Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071128Z&X-Amz-Expires=648&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a85cb3226f0a99bf8c502a94beeab4a1332545d7d45fe7a6f68a7bc6114fa7d2"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11460741,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-21T06:16:16.142Z",
+            "updated_at": "2021-04-21T06:16:16.142Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071128Z&X-Amz-Expires=648&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a85cb3226f0a99bf8c502a94beeab4a1332545d7d45fe7a6f68a7bc6114fa7d2"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

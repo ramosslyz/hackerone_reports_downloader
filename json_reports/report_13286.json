@@ -1,0 +1,217 @@
+{
+    "id": 13286,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzI4Ng==",
+    "url": "https://hackerone.com/reports/13286",
+    "title": "Host Header Injection - irccloud.com",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2014-05-25T10:41:44.901Z",
+    "submitted_at": "2014-05-25T10:41:44.901Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ethicalhacker",
+        "url": "/ethicalhacker",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 140,
+        "url": "https://hackerone.com/irccloud",
+        "handle": "irccloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "IRCCloud",
+            "twitter_handle": "irccloud",
+            "website": "https://www.irccloud.com",
+            "about": "Group chat for teams, friends, and communities. IRCCloud is an IRC client with a future. Stay connected, chat from anywhere, and never miss a message."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2014-07-08T10:00:33.687Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2014-05-27T11:14:22.038Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Host Header Injection Attack - irccloud.com\r\n\r\nAn attacker can manipulate the Host header as seen by the web application and cause the application to behave in unexpected ways.\r\n\r\nVery often multiple websites are hosted on the same IP address. This is where the Host Header comes in. This header specifies which website should process the HTTP request. The web server uses the value of this header to dispatch the request to the specified website. Each website hosted on the same IP address is called a virtual host.\r\n\r\nBut what happens if we specify an invalid Host Header? If Apache receives an unrecognized Host Header, it passes it to the first virtual host defined in httpd.conf. Therefore, it's possible to send requests with arbitrary Host Headers to the first virtual host. \r\n\r\nAnother way to pass arbitrary Host headers is to use the X-Forwarded-Host Header. In some configurations this header will rewrite the value of the Host header. Therefore it's possible to make a request like:\r\n\r\n#PoC Request -\r\nGET / HTTP/1.1\r\nHost: google.com\r\nHost: www.irccloud.com\r\nProxy-Connection: keep-alive\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nUser-Agent: Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36\r\nAccept-Encoding: gzip,deflate,sdch\r\nAccept-Language: en-US,en;q=0.8\r\n\r\n\r\n#PoC Response -\r\nHTTP/1.1 301 Moved Permanently\r\nContent-length: 0\r\nLocation: https://google.com/\r\nConnection: close\r\n\r\n\r\n#PoC Payload -\r\nHost: google.com\r\nHost: anymalicioussite.com\r\n\r\n\r\n#PoC pcap -\r\nEnclosed\r\n\r\n\r\n#PoC Screenshot -\r\nEnclosed \r\n\r\n\r\nPlease verify and fix the same.\r\n",
+    "bounty_amount": "100.0",
+    "formatted_bounty": "$100",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 9684,
+            "file_name": "irccloud-host-header.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/009/684/42f62027d69a5b3aa912ba2dd366fd98a92734a1/irccloud-host-header.jpg?response-content-disposition=attachment%3B%20filename%3D%22irccloud-host-header.jpg%22%3B%20filename%2A%3DUTF-8%27%27irccloud-host-header.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T082135Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8f7d8f857cdee6ad28645c567c4c3707027d57b6d289ee48788eac605b8c481e",
+            "file_size": 51833,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2014-06-26T11:14:03.927Z",
+    "allow_singular_disclosure_after": -289516051.74011993,
+    "singular_disclosure_allowed": true,
+    "vote_count": 3,
+    "voters": [
+        "d3f4u17",
+        "zyadazaid",
+        "cybernewbie"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 58220,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for the report. This issue is related to our fix for #7357 and should now be resolved.",
+            "automated_response": false,
+            "created_at": "2014-05-27T11:14:03.956Z",
+            "updated_at": "2014-05-27T11:14:03.956Z",
+            "actor": {
+                "username": "jwheare",
+                "cleared": false,
+                "verified": false,
+                "url": "/jwheare",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/778/b500b506bad385a82e5e0da28a0214d263822656_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "ethicalhacker",
+                "url": "/ethicalhacker"
+            },
+            "genius_execution_id": null,
+            "team_handle": "irccloud"
+        },
+        {
+            "id": 58221,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2014-05-27T11:14:08.927Z",
+            "updated_at": "2014-05-27T11:14:08.927Z",
+            "actor": {
+                "url": "/irccloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "IRCCloud"
+                }
+            },
+            "bounty_amount": "100.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "irccloud",
+            "collaborator": {
+                "username": "ethicalhacker",
+                "url": "/ethicalhacker"
+            }
+        },
+        {
+            "id": 58222,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2014-05-27T11:14:22.055Z",
+            "updated_at": "2014-05-27T11:14:22.055Z",
+            "actor": {
+                "username": "jwheare",
+                "cleared": false,
+                "verified": false,
+                "url": "/jwheare",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/778/b500b506bad385a82e5e0da28a0214d263822656_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "irccloud"
+        },
+        {
+            "id": 85931,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2014-07-08T10:00:33.698Z",
+            "updated_at": "2014-07-08T10:00:33.698Z",
+            "actor": {
+                "url": "/irccloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "IRCCloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "irccloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

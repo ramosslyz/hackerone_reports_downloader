@@ -1,0 +1,556 @@
+{
+    "id": 1581454,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTgxNDU0",
+    "url": "https://hackerone.com/reports/1581454",
+    "title": "2 Cache Poisoning Attack Methods Affect Core Functionality www.exodus.com",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "high",
+    "readable_substate": "Informative",
+    "created_at": "2022-05-25T22:45:22.427Z",
+    "submitted_at": "2022-05-25T22:45:22.485Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "setiawan_",
+        "url": "/setiawan_",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 43825,
+        "url": "https://hackerone.com/exodus",
+        "handle": "exodus",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/n9j0oi2k8dn2q6m1arphuvea6kj1/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/n9j0oi2k8dn2q6m1arphuvea6kj1/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Exodus",
+            "twitter_handle": "",
+            "website": "https://www.exodus.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-06-06T11:31:15.445Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-06-06T11:30:54.006Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nwww.exodus.com hosts static js and css files on Server: cloudflare . Which is cached by cloudflare and passed to all other users accessing the source. I was able to impact the core functionality by using a custom HTTP. Here are 2 details of the Bug.\n\n## Steps To Reproduce:\n\n**1. 501 Not Implemented**\n\nAt https://www.exodus.com/, I was able to impact core functionality by using an invalid custom HTTP header to replace the JavaScript file from https://www.exodus.com/webpack-runtime-d5cfa86b8e358efc5db3-v2.js with message '501 Not Implemented'.\n\n```\nERROR /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\n```\n```\nCRASH /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\n```\n\nResponse :\n```\nHTTP/1.1 501 Not Implemented\nDate: Wed, 25 May 2022 22:07:00 GMT\nContent-Length: 0\nConnection: keep-alive\nExpect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\nStrict-Transport-Security: max-age=15552000; includeSubDomains; preload\nSet-Cookie: __cfruid=5132a5357442dd861d107824c86a39a95057bcaf-1653516420; path=/; domain=.exodus.com; HttpOnly; Secure; SameSite=None\nServer: cloudflare\nCF-RAY: 711194da3f3fa131-SIN\n```\n( HTTP ) My custom CRASH & ERROR to fulfill a request does not work or is not found on the server this server establishes communication between the client and the server to be interrupted . Note that the CF-RAY value changes every time we send a request. CF-RAY is a hash value that encodes information about the data center and requests.\n\n**2. Cache poisoning triggers Firewall Exodus**\n\nWhen you poison a .js / .css file with additional 2 headers namely : x-rewrite-url & x-original-url it will trigger the exodus firewall rule.\n\nGET request:\n```\nGET /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\nx-rewrite-url: /root\n```\n```\nGET /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\nx-original-url: /root\n```\nPay attention to the GET request. It looks different if you open the response in a browser, it will make a POST. Logically, if the POST, DELETE or PURGE methods are not allowed it will issue a response POST is not a valid request method ( 500 Internal Server Error ) However with 2 additional headers x-rewrite-url & x-original-url it actually makes a POST request to the internal system, interesting is not it? :\n```\nPOST /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\n```\nResponse :\n```\nHTTP/1.1 403 Forbidden\nServer: cloudflare\nCF-RAY: 7111ab2b8cd191c6-SIN\n\n<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\n    <title>Exodus - Firewall Triggered</title>\n```\n\n## Supporting Material/References:\n- F1744429: Crash501NotImplemented.png\n- F1744430: FirewallTriggeredWithCachePoison.png\n- F1744431: PostRequestTriggeredFirewall.png\n\n==Note: I've added in the User-Agent header to help with problem tracking. https://hackerone.com/bismillahfortuner?type=user\nUser-Agent: h1-<bismillahfortuner>==\n\n## Impact\n\nwww.exodus.com hosts static js and css files on Server: cloudflare . Which is cached by cloudflare and passed to all other users accessing the source. I was able to impact the core functionality by using a custom HTTP. And I can trigger exodus firewall rules using cache poisoning",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1744429,
+            "file_name": "Crash501NotImplemented.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9idzvenmju5ehhw4r74j4s4ppb8j?response-content-disposition=attachment%3B%20filename%3D%22Crash501NotImplemented.png%22%3B%20filename%2A%3DUTF-8%27%27Crash501NotImplemented.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c4b57df59d2c09771b32d01be792a2ebf0aa76feffdd00d00c89fef45e9ca04e",
+            "file_size": 87601,
+            "type": "image/png"
+        },
+        {
+            "id": 1744430,
+            "file_name": "FirewallTriggeredWithCachePoison.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/r9wowec5jgyawkeo7k3rmpzwzi9c?response-content-disposition=attachment%3B%20filename%3D%22FirewallTriggeredWithCachePoison.png%22%3B%20filename%2A%3DUTF-8%27%27FirewallTriggeredWithCachePoison.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0fcd87d2fc6f0ecdf3791a6f8c867f22bc3ccb1b62499c90cdae3e6db5cf6ef7",
+            "file_size": 125120,
+            "type": "image/png"
+        },
+        {
+            "id": 1744431,
+            "file_name": "PostRequestTriggeredFirewall.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/3idlfxztv9fu38b9t726lxyghxzc?response-content-disposition=attachment%3B%20filename%3D%22PostRequestTriggeredFirewall.png%22%3B%20filename%2A%3DUTF-8%27%27PostRequestTriggeredFirewall.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c90d2adb6ba7a8e8f4553aed248d1df2c36cd399b25d2951c0bddbd0ea2fe89e",
+            "file_size": 194037,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 5,
+    "voters": [
+        "adhamsadaqah",
+        "shivammusic",
+        "happykira0x1",
+        "rithvikreddy",
+        "cyb3rsl0th"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 61965,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.exodus.com",
+        "max_severity": "high"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16863193,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @bismillahfortuner ,\n\nThank you for the report. I have gone through requests and responses and they do not show valid POC for cache poisoning. \n\n- `501 Not Implemented` I don't see how this is relevant to the POC. If it was indeed vulnerable, GET/ request to same endpoint should show same error message which is not the case.\n- I don't see headers `x-rewrite-url: /root` & `x-original-url: /root` are making any changes to response.\n\n- `403 Forbidden` error is not associated with anything shown in the report. It is either due to POST request or User-Agent blockage at Cloud Flare. \n\nHappy Hacking,\n@jensec",
+            "automated_response": false,
+            "created_at": "2022-05-25T22:52:43.353Z",
+            "updated_at": "2022-05-25T22:52:43.353Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16863434,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> 501 Not Implemented I don't see how this is relevant to the POC. If it was indeed vulnerable, GET/ request to the same endpoint should show the same error message which is not the case.\n\nHi 501 Not Implemented means that the server does not support the functionality required to fulfill the request. Usually in the case of poisoning the cache this is contained in the header\n\"Transfer-Encoding\" You can open it here for a similar report https://hackerone.com/reports/622122. In the report the researchers were able to poison paypal with invalid transfer encoding. But in this report especially www.exodus.com I can poison it with 2 methods, namely HTTP CRASH , ERROR ( This returns Cookie Value and returns response 501 Not Implemented ) & Transfer-Encoding: foo ( This will return response 501 Not Implemented but does not carry cookies ) means, I can conclude that the 2 requests below can poison Server (number 1) and Cloudflare (number 2)\n\n## 1. Request : \n\n```\nCRASH /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\nUser-Agent: h1-<bismillahfortuner>\n```\n\nResponse :\n\n```\nHTTP/1.1 501 Not Implemented\nDate: Wed, 25 May 2022 23:28:15 GMT\nContent-Length: 0\nConnection: keep-alive\nExpect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\nStrict-Transport-Security: max-age=15552000; includeSubDomains; preload\nSet-Cookie: __cfruid=74ae4764c47f28a6e9ba6debf2b8dea46e9f45d3-1653521295; path=/; domain=.exodus.com; HttpOnly; Secure; SameSite=None\nServer: cloudflare\nCF-RAY: 71120be35cba462b-SIN\n```\n\n## 2. Request : \n\n```\nGET /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\nTransfer-Encoding: foo\nUser-Agent: h1-<bismillahfortuner>\n```\n\nResponse :\n\n```\nHTTP/1.1 501 Not Implemented\nServer: cloudflare\nDate: Wed, 25 May 2022 23:30:16 GMT\nContent-Type: text/html\nContent-Length: 163\nConnection: close\nCF-RAY:-\n\n<html>\n<head><title>501 Not Implemented</title></head>\n<body>\n<center><h1>501 Not Implemented</h1></center>\n<hr><center>cloudflare</center>\n</body>\n</html>\n```\n\n> I don't see headers x-rewrite-url: /root & x-original-url: /root are making any changes to response.\n\n  You didn't look carefully enough to see the extra headers x-rewrite-url: /root & x-original-url: /root. If we pay attention to the 2 additional headers that give a 403 Forbidden response with the title Exodus - Firewall Triggered . However if you remove those 2 extra headers, it will return 200 OK. Then you notice again, in burpsuite please click action then click \"Show response in browser\" you will get the same image as F1744431: PostRequestTriggeredFirewall.png then you look at the header again. it will make a POST request not a GET. That's why the firewall is triggered by x-rewrite-url: /root & x-original-url: /root\n\nRequest :\n\n```\nGET /webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus HTTP/1.1\nHost: www.exodus.com\nx-rewrite-url: /root\nUser-Agent: h1-<bismillahfortuner>\n```\n\n> 403 Forbidden error is not associated with anything shown in the report. It is either due to POST request or User-Agent blockage at Cloud Flare.\n\nOf course related. 403 Forbidden interprets that the server has been poisoned with x-rewrite-url: /root& x-original-url: /root . Notice inside Burpsuite I made a request with GET . However when you open the browser it will make a POST request. interesting right? that's why the firewall is triggered.",
+            "automated_response": false,
+            "created_at": "2022-05-25T23:45:00.511Z",
+            "updated_at": "2022-05-25T23:45:00.511Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16863461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "HI, @jensec\n\nAdditional information : Bypass purge cache function www.exodus.com\n\nIn this image F 1744431 : PostRequest TriggeredFirewall.png it will return a 403 Forbidden error. But if we copy using Curl and change the POST method with PURGE . it will be active :) means I can bypass the entire cache inside www.exodus.com\n\n```\ncurl 'https://www.exodus.com/webpack-runtime-d5cfa86b8e358efc5db3-v2.js?cachebust=exodus' -X 'PURGE' -H 'User-Agent: User-Agent: h1-<bismillahfortuner>' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/x-www-form-urlencoded' -H 'Origin: http://burpsuite' -H 'Connection: keep-alive' -H 'Referer: http://burpsuite/' -H 'Cookies: __cfruid=46943a85a40b2b3c4bdaa8abb04aeda5e8e5c321-1653515691; _ga=GA1.2.1030472207.1653513759; _gid=GA1.2.1339251426.1653513759; ex_subscribe_session=1; ex_subscribe=1' -H 'Upgrade-Insecure-Requests: 1' -H 'Sec-Fetch-Dest: document' -H 'Sec-Fetch-Mode: navigate' -H 'Sec-Fetch-Site: cross-site' --data-raw 'RenderableItem=%2Fshow%2F3%2Fbykqv993b6qycz0odvvd2z1gk74rldzf'\n```\n\noh yeah, during testing. The User-Agent does not affect any changes. I entered the User-Agent value using my username according to the program rules https://hackerone.com/exodus",
+            "automated_response": false,
+            "created_at": "2022-05-25T23:53:27.278Z",
+            "updated_at": "2022-05-25T23:54:00.417Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16869525,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @bismillahfortuner ,\n\nThank you for the detailed response. You tried to show 3 different things in above report and comments- Using random HTTP methods to cause 501 error, Using `Transfer-Encoding` header to show similar 501 error and Adding extra headers `x-rewrite-url` that would case trigger 403 error. None of these proves a valid POC, Here is why:\n\n- When you use any random headers, it would show 501 error as intended. \n\n```\nEXODUS /9425-ebe88a4f337590f8a75a-v2.js?jensec=1 HTTP/2\nHost: www.exodus.com\nTe: trailers\n\n```\n\nThis would show 501 error but when I request:\n\n```\nGET /9425-ebe88a4f337590f8a75a-v2.js?jensec=1 HTTP/2\nHost: www.exodus.com\nTe: trailers\n\n```\n\nIt doesn't show 501 same error that means error is not cached.\n\n- When you use `Transfer-Encoding` header, it would show 501 error \n\n```\nGET /9425-ebe88a4f337590f8a75a-v2.js?jensec1=2 HTTP/2\nHost: www.exodus.com\nTransfer-Encoding: exodus\nTe: trailers\n\n```\n\nbut when I remove the header, it doesn't which means it doesn't cache the response:\n\n```\nGET /9425-ebe88a4f337590f8a75a-v2.js?jensec1=2 HTTP/2\nHost: www.exodus.com\nTe: trailers\n\n```\n\n- Regarding 403 trigger with header value `x-rewrite-url: /root` , 403 does not indicate anything related to you accessing anything internal. Such path at /root does not exists. You can try providing `x-rewrite-url: /blah-blah` and you will see same 403 error. it is because Cloud Flare firewall detects such headers and block them.\n\n\nWith these said, I don't see any vulnerability here. In ideal condition this thing to be vulnerability, when I open the JavaScript URL in browser it should show some errors instead of loading the JS content. Hope this all make sense, If you have any questions Please feel free to shoot.\n\nThank you,\n@jensec",
+            "automated_response": false,
+            "created_at": "2022-05-26T10:15:44.154Z",
+            "updated_at": "2022-05-26T10:15:44.154Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16876568,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jensec thanks for the response.\n\nI will explain in more detail to you. But first, I apologize if the language I use is not good.\n\n> When you use any random headers, it would show 501 error as intended.\n> When you use Transfer-Encoding header, it would show 501 error.\n\nI will explain using your full query.\nThe purpose of web cache poisoning is to send requests that cause malicious responses that are cached and served to other users.\nNow I ask myself, How and What is the proof if I have succeeded in poisoning all www.exodus.com users. If we detail view below request using custom header ( NO TRASFER-ENCODING) it will return error 501 carrying cookie, Is this a problem? OF COURSE! did it look in the response that the one receiving the error was the Cloudflare Server, yes the cloud server received the 501 error? and did you see the CF-Ray header: xxxxxxxX-SIN in the response, SIN shows the location of the cache closest to us, I am close to Singapore so the header in the response is always SIN. maybe there is different? However, If you use Additional headers ( \" Transfer-Encoding: foo \") it will get error 501 however it is blocked by cloudflare, not returning cf ray and cookies.\n\nConclusion :\n1. If I add a header (\"Transfer-Encoding: foo \") then Cloudlare will return a 501 response without cookies. This means that the Cloudflare Server does not support the functionality required to fulfill the request.\n\n2. If I remove the header(\"Transfer-Encoding:foo\") and add a custom header it will return 501 carrying cookies. This means that the Exodus Server supports this request and passes it on to Cloudflare.\n\n```\nEXODUS /9425-ebe88a4f337590f8a75a-v2.js@%0d%0aSet-Cookie:aaaaaaaaa=aaaaaaaaaaa?exodus=jensec HTTP/1.1\nHost: www.exodus.com\n```\n\n> it is because Cloud Flare firewall detects such headers and block them.\n\nPrecisely! CloudFlare's firewall detected a malicious x-original-url: /root header and blocked it. Now, I want you to note, In burpsuite make sure you use request(\"GET\") and add header(\"x-original-url: /root\") it will return 403 forbidden Firewall Triggered. However, if you see the response in the browser, the host www.exodus.com makes a request (\"POST\"), strange isn't it? is there a miscommunication between www.exodus.com & clodflare? why are requests (GET) forwarded to requests (POST)?\n\nConclusion :\n\n1. Inside Burpsuite. www.exodus.com make a request (GET)\n2. In the Browser. www.exodus.com make a request(POST)\n\nThank You.",
+            "automated_response": false,
+            "created_at": "2022-05-26T22:07:09.061Z",
+            "updated_at": "2022-05-26T22:07:09.061Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16876618,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @bismillahfortuner ,\n\nI am still unable to see any cache poisoning here. By all means, if you open the javascript via URL in browser `https://www.exodus.com/9425-ebe88a4f337590f8a75a-v2.js?cachebuster=xyz`and if it shows 501 or some other error, we would see that as a problem and valid POC for this attack because that means error is cached. \n\nI would say you take a closer look at my last comment and what I meant with each individual test cases. Also no need to apologise, I like the fact that we are digging deep in the attack vector.\n\nThanks,\n@jensec",
+            "automated_response": false,
+            "created_at": "2022-05-26T22:17:33.099Z",
+            "updated_at": "2022-05-26T22:19:13.883Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16876767,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @jensec ",
+            "automated_response": false,
+            "created_at": "2022-05-26T22:49:11.686Z",
+            "updated_at": "2022-05-26T22:49:11.686Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1746227,
+                    "filename": "Desain_tanpa_judul.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dx5dgnnwktzx1ibulck1gisfj4z3?response-content-disposition=attachment%3B%20filename%3D%22Desain_tanpa_judul.png%22%3B%20filename%2A%3DUTF-8%27%27Desain_tanpa_judul.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8fa8a9727bc3a58617d7c097e830c05a1d31d66fbd8cd969f0a32b231c6970cb"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16886371,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello exodus security team @jensec \n\nHi, how is it going? is the POC valid?\n\nThank You.",
+            "automated_response": false,
+            "created_at": "2022-05-27T13:45:15.543Z",
+            "updated_at": "2022-05-27T13:45:15.543Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16886529,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bismillahfortuner .\n\nThat should be a GET request in the browser not a POST request. It still doesn't prove the attack. I want to see a video where you reload it in the browser and it would still show 501 error in the browser screen it self. not in console.\n\n",
+            "automated_response": false,
+            "created_at": "2022-05-27T13:57:59.574Z",
+            "updated_at": "2022-05-27T13:57:59.574Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16890148,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, thanks for your response @jensec \n\n> That should be a GET request in the browser not a POST request. It still doesn't prove the attack. I want to see a video where you reload it in the browser and it would still show 501 error in the browser screen it self. not in console.\n\nHere's what's interesting.\n1. If you make a GET URL request with cachebuster using COPY URL it will indeed be forwarded to GET. Also note that Transferred comes from cache, which means that the request comes from cache.\n```\nGET /9425-ebe88a4f337590f8a75a-v2.js?cachebuster=xyz HTTP/1.1\nHost: www.exodus.com\n```\n2.\n- When you load the js file the GET uses the COPY URL along with the cachebuseter=xzy payload it comes from cache And this also successfully returns a GET. But if you delete the cachebuster. Transferred it changed to RACE / CACHE means the request is racing. The response is fetched from the server even though it is cached.\n\n- When you load a GET request and open it using the Show Response Browser ( via burpsuite ) it will make the request turn into a POST. that is, Transfer-Encoding: FOO which we injected in the header succeeded in converting the GET request into POST.\n```\nGET /9425-ebe88a4f337590f8a75a-v2.js?cachebuster=xyz HTTP/1.1\nHost: www.exodus.com\nTransfer-Encoding: FOO\n```\n3. When you display a response using a browser using Burpsuite, all GET requests in BurpSuite will be forwarded with a POST request in the browser. The request below returns 501 with cookies.\n```\nERROR /9425-ebe88a4f337590f8a75a-v2.js?cachebuster=xyz HTTP/1.1\nHost: www.exodus.com\n```\n\nThank You.",
+            "automated_response": false,
+            "created_at": "2022-05-27T18:38:17.466Z",
+            "updated_at": "2022-05-27T18:38:17.466Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1747176,
+                    "filename": "FullPOC.mp4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5h1tt94xy6s8suoz02ba6wwkyfbq?response-content-disposition=attachment%3B%20filename%3D%22FullPOC.mp4%22%3B%20filename%2A%3DUTF-8%27%27FullPOC.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fb785d7190cdbc687c0e67d8fbcd1435e1016b23846e1a7e602abbf68c044ef8"
+                },
+                {
+                    "id": 1747175,
+                    "filename": "WithCacheBuster.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/c86woa859r55zkm3npxsmurt2f2l?response-content-disposition=attachment%3B%20filename%3D%22WithCacheBuster.png%22%3B%20filename%2A%3DUTF-8%27%27WithCacheBuster.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f37b75df3c008c2c88db4e8356dc96f6545960ba1219e25687e0e907ec0debe5"
+                },
+                {
+                    "id": 1747174,
+                    "filename": "NoCacheBuster.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/kax2regkpb5gste4a20y0xntanhn?response-content-disposition=attachment%3B%20filename%3D%22NoCacheBuster.png%22%3B%20filename%2A%3DUTF-8%27%27NoCacheBuster.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=358b66524b8b67588b9acf536c67aa5896748ad719ac45e4e3625a024d5082bd"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16891601,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bismillahfortuner ,\n\nAs I explained, if you can open the affected URL directly in browser and it shows error, we would consider looking further into it. Using random HTTP method or TA header is indeed causing the 501 error but it is not being cached since the error is given by Cloud Flare and not the content CDN. \n\nOpening the response from Burp in browser can not be considered as a valid proof. You can not add headers or use random HTTP methods in victim browsers. Please look at https://hackerone.com/reports/1173153 this report about how to show a through POC. \n\nThank you,\n@jensec",
+            "automated_response": false,
+            "created_at": "2022-05-27T21:34:30.863Z",
+            "updated_at": "2022-05-27T21:34:30.863Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 16894361,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Web cache poisoning is a sophisticated technique in which attackers exploit the behavior of web servers and caches so that a malicious HTTP response is served to other users in this case I can't replicate it in the browser, but deep inside the server manages to receive the cache with additional headers. If that is your opinion, then I will close this report. Thank You.",
+            "automated_response": false,
+            "created_at": "2022-05-27T23:51:38.166Z",
+            "updated_at": "2022-05-27T23:51:38.166Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 17005992,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-06T10:28:27.777Z",
+            "updated_at": "2022-06-06T10:28:27.777Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 17006425,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CancelledDisclosureRequest",
+            "message": "Declining disclosure request as not sure how this would help community",
+            "automated_response": false,
+            "created_at": "2022-06-06T10:53:49.555Z",
+            "updated_at": "2022-06-06T10:53:49.555Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 17006440,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I would like to request to disclose to the public. This isn't a security issue, is it?",
+            "automated_response": false,
+            "created_at": "2022-06-06T10:55:59.392Z",
+            "updated_at": "2022-06-06T10:55:59.392Z",
+            "actor": {
+                "username": "setiawan_",
+                "cleared": false,
+                "verified": false,
+                "url": "/setiawan_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8e18gmd7fwln599u994g2lkc6t2v/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 17006956,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Alright, Lets disclose it. Again, thank you for the report and prompt communication. ",
+            "automated_response": false,
+            "created_at": "2022-06-06T11:30:54.037Z",
+            "updated_at": "2022-06-06T11:30:54.037Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        },
+        {
+            "id": 17006963,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-06T11:31:15.323Z",
+            "updated_at": "2022-06-06T11:31:15.323Z",
+            "actor": {
+                "username": "jensec",
+                "cleared": true,
+                "verified": true,
+                "url": "/jensec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3ajfd11rv5nnkyt6ihrrb9p03wem/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "exodus"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

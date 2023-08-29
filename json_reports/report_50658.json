@@ -1,0 +1,392 @@
+{
+    "id": 50658,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MDY1OA==",
+    "url": "https://hackerone.com/reports/50658",
+    "title": "Reflected File Download attack allows attacker to 'upload' executables to hackerone.com domain",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2015-03-09T10:20:23.347Z",
+    "submitted_at": "2015-03-09T10:20:23.347Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "rickypaipie",
+        "url": "/rickypaipie",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2015-04-16T10:21:21.121Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2015-03-17T10:21:15.569Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi hackerone team,\r\n\r\nI'm a friend of Peiying and am looking for a position at hackerone. While playing around with your product, I found a serious vulnerability in your application: it allows attackers to craft executables on the hackerone.com domain rather than the sandboxed one on S3.\r\n\r\n1. attacker reports a bug titled `hackerone\\\"||calc||`\r\n2. attacker can then direct victim to [https://hackerone.com/notifications.bat](https://hackerone.com/notifications.bat)\r\n3. when downloaded and executed, it will open calculator on victim's windows environment\r\n\r\nThe potentials of this vector is outlined in [Reflected File Download: A New Web Attack Vector](https://www.trustwave.com/Resources/SpiderLabs-Blog/Reflected-File-Download---A-New-Web-Attack-Vector/), which does not limit to executing commands on victim's machines.\r\n\r\nTo fix, since hackerone is a Rails deployment, at the rendering step of the notifications action:\r\n\r\ninstead of:\r\n\r\n`render json: notifications`\r\n\r\ndo:\r\n\r\n    respond_to do |format|\r\n        format.json do\r\n            render json: notifications\r\n        end\r\n    end\r\n\r\nso requests of non-json formats would return a 406 Not Acceptable. see [respond_to](http://apidock.com/rails/ActionController/MimeResponds/InstanceMethods/respond_to).\r\n\r\nLook forward to hearing back from you soon,\r\n\r\nRicky",
+    "weakness": {
+        "id": 58,
+        "name": "Command Injection - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 31223,
+            "file_name": "rfd.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/031/223/c0e8ad2bb3d94f1ae1051e18281df5ff1d2709c3/rfd.jpg?response-content-disposition=attachment%3B%20filename%3D%22rfd.jpg%22%3B%20filename%2A%3DUTF-8%27%27rfd.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d67fd1c9d16154761309a0168bcd1cdfbda0cd3178208e253b8d462b3954a501",
+            "file_size": 153754,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2015-04-16T10:21:16.599Z",
+    "allow_singular_disclosure_after": -264117519.10618737,
+    "singular_disclosure_allowed": true,
+    "vote_count": 1,
+    "voters": [
+        "dyabla"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 348940,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks @rickypaipie, we're looking into this.",
+            "automated_response": false,
+            "created_at": "2015-03-09T10:26:47.119Z",
+            "updated_at": "2015-03-09T10:26:47.119Z",
+            "actor": {
+                "username": "jens",
+                "cleared": false,
+                "verified": false,
+                "url": "/jens",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/053/9c23f98571002dd0db70919126ae92746a6af99a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 348943,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks, for your ~~application~~ report. We will investigate this issue.",
+            "automated_response": false,
+            "created_at": "2015-03-09T10:27:22.303Z",
+            "updated_at": "2015-03-09T10:27:22.303Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 348947,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "wow fast response. I hope I didn't wake you two up!",
+            "automated_response": false,
+            "created_at": "2015-03-09T10:34:41.428Z",
+            "updated_at": "2015-03-09T10:34:41.428Z",
+            "actor": {
+                "username": "rickypaipie",
+                "cleared": false,
+                "verified": false,
+                "url": "/rickypaipie",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 348950,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "`Time Zone: Europe/Amsterdam`",
+            "automated_response": false,
+            "created_at": "2015-03-09T10:42:51.802Z",
+            "updated_at": "2015-03-09T10:42:51.802Z",
+            "actor": {
+                "username": "wvdv",
+                "cleared": false,
+                "verified": false,
+                "url": "/wvdv",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/221/7503cfe93236733876c422fb69d8a9a81824802c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 351180,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "We've recently pushed a fix to production that should solve this behavior. Could you please verify that the behavior you described is changed for this endpoint?",
+            "automated_response": false,
+            "created_at": "2015-03-11T15:39:17.326Z",
+            "updated_at": "2015-03-11T15:39:17.326Z",
+            "actor": {
+                "username": "siebejan",
+                "cleared": false,
+                "verified": false,
+                "url": "/siebejan",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/995/8de18ac91b1da4a88b52c2c94d46fc0c3bb59fec_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "rickypaipie",
+                "url": "/rickypaipie"
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 353853,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It returns a 406 now with a .bat extension. This should prevent future RFD attacks",
+            "automated_response": false,
+            "created_at": "2015-03-13T16:00:00.500Z",
+            "updated_at": "2015-03-13T16:00:00.500Z",
+            "actor": {
+                "username": "rickypaipie",
+                "cleared": false,
+                "verified": false,
+                "url": "/rickypaipie",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 356650,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-03-17T10:21:05.255Z",
+            "updated_at": "2015-03-17T10:21:05.255Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 356651,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-03-17T10:21:15.607Z",
+            "updated_at": "2015-03-17T10:21:15.607Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mvgijssel",
+                "cleared": false,
+                "verified": false,
+                "url": "/mvgijssel",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/gb2uj2hl5ifqjswayjze2m51nwcg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89?response-content-disposition=inline%3B%20filename%3D%22T0254389F-WR4TEKGDC-b7d20a1e2b79-512.jpeg%22%3B%20filename%2A%3DUTF-8%27%27T0254389F-WR4TEKGDC-b7d20a1e2b79-512.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2dae828ebf6ba06df1a0fc6f51e4b95bbdfae2b82dc4ac8246fbda00ab561dc7"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 357195,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@rickypaipie Thanks again for your report and verifying the fix. We just wanted to follow-up that this isn't consider a viable security issue due to both the high barrier to entry (\"To affect a user, he/she must be in a team with the attacker\") and who our customers and clients are, so this won't be eligible for a bounty (only hall of fame).",
+            "automated_response": false,
+            "created_at": "2015-03-17T22:28:49.694Z",
+            "updated_at": "2015-03-17T22:28:49.694Z",
+            "actor": {
+                "username": "bencode",
+                "cleared": false,
+                "verified": false,
+                "url": "/bencode",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/117/ddaa1da4e004e1234c6857c42f9bfa8df85b5ccf_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 359833,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No problem. For a clarification. When an external party reports a new bug, does a notification item gets added? I couldn't test this scenario because I didn't have a live bounty program to test. That said, as soon as the bug was created, any activity including comments from other team members, would trigger the notification being generated and hence the payload being active. This would have allowed attackers to target any users who is part of an active bounty program.",
+            "automated_response": false,
+            "created_at": "2015-03-21T03:31:43.181Z",
+            "updated_at": "2015-03-21T03:31:43.181Z",
+            "actor": {
+                "username": "rickypaipie",
+                "cleared": false,
+                "verified": false,
+                "url": "/rickypaipie",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 381762,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-04-16T10:21:21.266Z",
+            "updated_at": "2015-04-16T10:21:21.266Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 382370,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sorry for the delayed response! Yes, you are correct that a bug report does generate a notification. An attacker could target a bounty program, but given that they still have to download and run the bat file this is still a high barrier issue.\n\nHappy hacking!",
+            "automated_response": false,
+            "created_at": "2015-04-16T18:58:14.024Z",
+            "updated_at": "2015-04-16T18:58:14.024Z",
+            "actor": {
+                "username": "bencode",
+                "cleared": false,
+                "verified": false,
+                "url": "/bencode",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/117/ddaa1da4e004e1234c6857c42f9bfa8df85b5ccf_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

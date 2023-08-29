@@ -1,0 +1,319 @@
+{
+    "id": 1630073,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjMwMDcz",
+    "url": "https://hackerone.com/reports/1630073",
+    "title": "Host Header Injection Attack - www.xnxx.com",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2022-07-07T15:14:22.418Z",
+    "submitted_at": "2022-07-07T15:14:22.479Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "1_princeofpersia",
+        "url": "/1_princeofpersia",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 50470,
+        "url": "https://hackerone.com/xvideos",
+        "handle": "xvideos",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/rw4sjbp7ak3bj5mifHtirndu/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/rw4sjbp7ak3bj5mifHtirndu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "XVIDEOS",
+            "twitter_handle": "",
+            "website": "https://www.xvideos.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-11-08T19:25:00.170Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-07-08T10:15:13.752Z",
+    "team_member_agreed_on_going_public_at": "2022-11-08T19:25:00.008Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Host Header Injection Attack - www.xnxx.com\n\nAn attacker can manipulate the Host header as seen by the web application and cause the application to behave in unexpected ways. \n\nVery often multiple websites are hosted on the same IP address. This is where the Host Header comes in. This header specifies which website should process the HTTP request. The web server uses the value of this header to dispatch the request to the specified website. Each website hosted on the same IP address is called a virtual host.\n\nBut what happens if we specify an invalid Host Header? If Apache receives an unrecognized Host Header, it passes it to the first virtual host defined in httpd.conf. Therefore, it's possible to send requests with arbitrary Host Headers to the first virtual host. \n\nAnother way to pass arbitrary Host headers is to use the X-Forwarded-Host Header. In some configurations this header will rewrite the value of the Host header. Therefore it's possible to make a request like:\n\n#PoC Request -\nGET / HTTP/1.1\nHost: www.evil.com\nCookie: session_token=c679b2593ccbf131UluWiMWIZlNaClkTnBeFmtGoF9LW8CUvgTcRJ1QifNB9WBZD4tANB3m2QsO2qNx79pUK-m7tk2fRFm_ejHw_hEL2Hn1Milyoziqsi3GsBY7MbYOtDbwKmclffY4Yj0bsmbr7YHvmBNirDPcFfV59cscW9kqtCuYNhoigtklvNyJJulrkw1kjHwyZXeYF4t-MXTEP7GboN1B0JyVbEMsMaA%3D%3D; wpn_ad_cookie=0b43478923c27e53a385d969d9b4bca2\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://www.xnxx.com/\nUpgrade-Insecure-Requests: 1\nSec-Fetch-Dest: document\nSec-Fetch-Mode: navigate\nSec-Fetch-Site: same-origin\nSec-Fetch-User: ?1\nTe: trailers\nConnection: close\n\n#PoC Response -\nHTTP/1.1 301 Moved Permanently\nContent-length: 0\nLocation: http://www.evil.com/\nConnection: close\n\n#PoC Payload -\r\nHost: evil.com\n\nPlease verify and fix the same.\n\n## Impact\n\nTampering of Host header can lead to the following attacks:\nWeb Cache Poisoning-Manipulating caching systems into storing a page generated with a malicious Host and serving it to others and more.",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1812401,
+            "file_name": "poc9.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/p33x53tcq4unq0u7gibiegp86hpf?response-content-disposition=attachment%3B%20filename%3D%22poc9.png%22%3B%20filename%2A%3DUTF-8%27%27poc9.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065918Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c6148c37e0b5fa4dcf76ecc58c9f8f7d3d6ddeb4531243debbb372cb8c3f4734",
+            "file_size": 98796,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 8,
+    "voters": [
+        "sameersec",
+        "shivammusic",
+        "sey194",
+        "0x4hk",
+        "qwertyv94",
+        "devil22uefstw",
+        "xinfohuggerx",
+        "whoscls"
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 54940,
+        "asset_type": "URL",
+        "asset_identifier": "www.xnxx.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 17467523,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "No POC",
+            "automated_response": false,
+            "created_at": "2022-07-07T16:42:26.745Z",
+            "updated_at": "2022-07-07T16:42:26.745Z",
+            "actor": {
+                "username": "xvtech",
+                "cleared": false,
+                "verified": false,
+                "url": "/xvtech",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 17470664,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @xvtech \nAfter more investigation in different domains i found same vulnerability.\nHere is tha domains.\n1. https://gold.xnxx.com\n2. https://www.xvideos.red\n3. https://www.xvideos.com",
+            "automated_response": false,
+            "created_at": "2022-07-07T21:56:36.781Z",
+            "updated_at": "2022-07-07T21:56:36.781Z",
+            "actor": {
+                "username": "1_princeofpersia",
+                "cleared": false,
+                "verified": false,
+                "url": "/1_princeofpersia",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 17472375,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @xvtech \nAnd i give POC check the image and reopen the report plzz.\n",
+            "automated_response": false,
+            "created_at": "2022-07-08T03:40:38.596Z",
+            "updated_at": "2022-07-08T03:40:38.596Z",
+            "actor": {
+                "username": "1_princeofpersia",
+                "cleared": false,
+                "verified": false,
+                "url": "/1_princeofpersia",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 17478617,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-07-08T10:15:13.770Z",
+            "updated_at": "2022-07-08T10:15:13.770Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "1_princeofpersia",
+                "cleared": false,
+                "verified": false,
+                "url": "/1_princeofpersia",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 19141200,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-08T19:20:40.980Z",
+            "updated_at": "2022-11-08T19:20:40.980Z",
+            "additional_data": {
+                "old_severity": "High",
+                "new_severity": "None",
+                "old_severity_id": 1575667,
+                "new_severity_id": 1737321
+            },
+            "actor": {
+                "username": "xvtech",
+                "cleared": false,
+                "verified": false,
+                "url": "/xvtech",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 19141804,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-08T19:25:00.046Z",
+            "updated_at": "2022-11-08T19:25:00.046Z",
+            "actor": {
+                "username": "xvtech",
+                "cleared": false,
+                "verified": false,
+                "url": "/xvtech",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        },
+        {
+            "id": 19141805,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-08T19:25:00.245Z",
+            "updated_at": "2022-11-08T19:25:00.245Z",
+            "actor": {
+                "username": "xvtech",
+                "cleared": false,
+                "verified": false,
+                "url": "/xvtech",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "xvideos"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 216037,
+            "category": "team",
+            "content": "This is a recurrent report that is systematically rejected because it need to get access to the user computer / phone.\n\nThis is not a security issue at all.",
+            "user": {
+                "id": 1322961,
+                "username": "xvtech",
+                "name": "XVTech",
+                "bio": null,
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": null,
+                "created_at": "2020-09-15T10:11:15.591Z",
+                "url": "https://hackerone.com/xvtech",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+                    "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

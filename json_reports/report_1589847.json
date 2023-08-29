@@ -1,0 +1,322 @@
+{
+    "id": 1589847,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTg5ODQ3",
+    "url": "https://hackerone.com/reports/1589847",
+    "title": "Heap overflow via HTTP/2 PUSH_PROMISE",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "low",
+    "readable_substate": "N/A",
+    "created_at": "2022-06-02T15:29:52.702Z",
+    "submitted_at": "2022-06-02T15:29:52.770Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nyymi",
+        "url": "/nyymi",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-06-05T20:59:34.216Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-06-05T20:59:34.122Z",
+    "team_member_agreed_on_going_public_at": "2022-06-05T20:18:57.366Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nlibcurl HTTP/2 support processes incoming `PUSH_PROMISE` headers by storing them in an array. The code initially allocates storage for 10 headers and then keeps doubling the array size as needed: \n```\n      stream->push_headers_alloc *= 2;\n      headp = Curl_saferealloc(stream->push_headers,\n                               stream->push_headers_alloc * sizeof(char *));\n```\n(https://github.com/curl/curl/blob/07a9b89fedaec60bdbc254f23f66149b31d2f8da/lib/http2.c#L1053)\n\nOn 32-bit platforms after receiving 10 << 26 headers the the allocation size will overflow, resulting in too little memory being allocated (`(10 << 27) * sizeof(char *)` will be truncated to lower 32-bit resulting in 1 GB storage being allocated) for the array. Subsequently the pointers will be written to unallocated memory by `stream->push_headers[stream->push_headers_used++] = h;`\n\n## Steps To Reproduce:\n  1. Have HTTP2 server  that sends more than 1 << 26 `PUSH_PROMISE` headers\n  2. `curl https://targetsite`\n\nThe fix is to limit the amount of promise headers that are accepted and return error if too many are received.\n\n## Impact\n\nHeap overflow.\n\nThis issue is likely very hard to trigger as it requires a system where realloc for `(1 << 26) * sizeof(char *)` bytes is successful.  This is rather rare. In addition to be exploitable in other than denial of service capacity the attacker would need to find out some way  way to obtain code execution by the array overflow. This would  likely work by having some object get  allocated to the newly released heap memory and then get overwritten by this array pointer write. An example would be an object that has pointer to command to execute.\n\nAs such the practical impact of this vulnerability is low.",
+    "weakness": {
+        "id": 5,
+        "name": "Heap Overflow"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 2,
+    "voters": [
+        "rptl",
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16972413,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "https://github.com/curl/curl/blob/07a9b89fedaec60bdbc254f23f66149b31d2f8da/lib/vtls/sectransp.c#L2234 has a similar issue but due to the start value being 512 it will result in `cap` of 0 when the file size exceeds 2^31 and realloc thus returning 0.",
+            "automated_response": false,
+            "created_at": "2022-06-02T15:40:21.190Z",
+            "updated_at": "2022-06-02T15:46:46.676Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16975292,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your report!\n\nWe will take some time and investigate your reports and get back to you with details and possible follow-up questions as soon as we can!",
+            "automated_response": false,
+            "created_at": "2022-06-02T20:45:57.048Z",
+            "updated_at": "2022-06-02T20:45:57.048Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4OOHXJOZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=639&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGHYXxvbmFXk%2FBjm6I%2F8bvaPCWsMjsuuq3BYG8BLe9NWAiBlwCuHqMx6gMpWRV%2FciwphtO4SUVWaZgTGqT%2B7IfuI5iq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMDq3dfAyox2rxv5lrKo4FuYboGYEUkqxeYe0mZ29VdtSqDkb0xmecP6QUy6JVO5Jv2L4Amfo9630KA3FERom4GMGGg9mzvCcjWoF1KDC4ckmW3qeV9arQYhEod3%2BoBDrBuK1HbOLS05U1sKxc%2FxZ8u0pNftpF8bzIfNOcxSXnTeQ%2FlFwY8erLpIlrHSu84urQKEKj%2B%2FbCbyKO1TjqkVqoQWT5KDU480Bgav%2F2Bn%2BJ3LjUDbCmB7Ej89IcU%2B1trh9zasTow8QWwML50eVnV3E%2Ft6tK860IA52kXy9mP7oTobG8w2Mc%2BXGyF59GbsMJLgHLu0GADWb6COw4UH3OIjf9AYYNYh4qFWqd9z%2B%2Ffjp%2FhKhbRmo4BOGN9sASGpWzxs19pwwM4lh7wFqj%2FkPhgWWtJzxujbFDlI2pASstNIthC3TMHnTqardublXsa9Z5oBYRD2k6VeMpFvYa5qJ1Jlg0lHNiMys2Nx6iKbrOBoP8iOQC%2BlRa4Z6Y3OX2VstslvGYUKyM2p%2FHm6z0bQ9Sy7gCFn1T6sEuTkb9XAsf1QiHa%2FidPTajtG2DnZ8E5ikoIwlcJIQuWiUz87ICaCqzOHs2guuqSKRgFjxtOc0B3onBE9j4wKmmny0LfwGUujrXODfie7EJfVKHr9qMTpXsr95pJxtrLng1sKDD6mVXhGhlvuXV8pFST8FFWPDdGR95oceO3Syud%2BKJ9ExRocpZf6mPxFjzQESsu3C4z0MFmG52QlZXG%2BMA0TMLF4Q8GDj9rjMWEfPmqdMXh0AnnJuAvINQSMICjS7VTGFaZK1YjH%2BpEepYZfXJj4PYcLKYCqabj%2BwpK7E4%2FdF2YiOyl2H1uCUtWvF6nbo1UuGhbjCZQ8aqMi4Mysrb6ZEB%2FLax5A6RMJ%2F%2FtKcGOrIBrFlUV%2FBFVhteDPPjLJJmr0Ns%2FzxKrzuU7KBDVPfeTeWnCoo2pENAFPbnyJUYzYqklRa%2Bj8Dst4KPYWkNzFaJZ73bz9ZZUv4wEC13u34ao0u1k%2F1%2FV18TtUerYGYiDe8xNhezt7nlU0az1%2FsfMsQyJ%2FD48BOXfeJB0GEk1fh4jxeqh8sxFYTTKIKOFjJ6gok6H%2FOdmnwdmIFHf0XoVUFuUsq%2FrzglDKL%2B1OYA0lCGQExdxQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d0c22470ede0aeb2bf0e102b1a8049683fb3023085a931e99cf49c126728262e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16993578,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "So after having received 67 **million** headers om 32 bit system (and for each such header it would make at least one allocation), it could successfully allocate 2.68 GB, and then when the next header, header number 67108864 arrives, it will do a heap overflow.\n\nThis feels a little too theoretical to me. If those are the conditions that need to be met, I think we can say that this cannot actually trigger.",
+            "automated_response": false,
+            "created_at": "2022-06-04T15:24:56.943Z",
+            "updated_at": "2022-06-04T15:24:56.943Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4OOHXJOZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=639&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGHYXxvbmFXk%2FBjm6I%2F8bvaPCWsMjsuuq3BYG8BLe9NWAiBlwCuHqMx6gMpWRV%2FciwphtO4SUVWaZgTGqT%2B7IfuI5iq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMDq3dfAyox2rxv5lrKo4FuYboGYEUkqxeYe0mZ29VdtSqDkb0xmecP6QUy6JVO5Jv2L4Amfo9630KA3FERom4GMGGg9mzvCcjWoF1KDC4ckmW3qeV9arQYhEod3%2BoBDrBuK1HbOLS05U1sKxc%2FxZ8u0pNftpF8bzIfNOcxSXnTeQ%2FlFwY8erLpIlrHSu84urQKEKj%2B%2FbCbyKO1TjqkVqoQWT5KDU480Bgav%2F2Bn%2BJ3LjUDbCmB7Ej89IcU%2B1trh9zasTow8QWwML50eVnV3E%2Ft6tK860IA52kXy9mP7oTobG8w2Mc%2BXGyF59GbsMJLgHLu0GADWb6COw4UH3OIjf9AYYNYh4qFWqd9z%2B%2Ffjp%2FhKhbRmo4BOGN9sASGpWzxs19pwwM4lh7wFqj%2FkPhgWWtJzxujbFDlI2pASstNIthC3TMHnTqardublXsa9Z5oBYRD2k6VeMpFvYa5qJ1Jlg0lHNiMys2Nx6iKbrOBoP8iOQC%2BlRa4Z6Y3OX2VstslvGYUKyM2p%2FHm6z0bQ9Sy7gCFn1T6sEuTkb9XAsf1QiHa%2FidPTajtG2DnZ8E5ikoIwlcJIQuWiUz87ICaCqzOHs2guuqSKRgFjxtOc0B3onBE9j4wKmmny0LfwGUujrXODfie7EJfVKHr9qMTpXsr95pJxtrLng1sKDD6mVXhGhlvuXV8pFST8FFWPDdGR95oceO3Syud%2BKJ9ExRocpZf6mPxFjzQESsu3C4z0MFmG52QlZXG%2BMA0TMLF4Q8GDj9rjMWEfPmqdMXh0AnnJuAvINQSMICjS7VTGFaZK1YjH%2BpEepYZfXJj4PYcLKYCqabj%2BwpK7E4%2FdF2YiOyl2H1uCUtWvF6nbo1UuGhbjCZQ8aqMi4Mysrb6ZEB%2FLax5A6RMJ%2F%2FtKcGOrIBrFlUV%2FBFVhteDPPjLJJmr0Ns%2FzxKrzuU7KBDVPfeTeWnCoo2pENAFPbnyJUYzYqklRa%2Bj8Dst4KPYWkNzFaJZ73bz9ZZUv4wEC13u34ao0u1k%2F1%2FV18TtUerYGYiDe8xNhezt7nlU0az1%2FsfMsQyJ%2FD48BOXfeJB0GEk1fh4jxeqh8sxFYTTKIKOFjJ6gok6H%2FOdmnwdmIFHf0XoVUFuUsq%2FrzglDKL%2B1OYA0lCGQExdxQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d0c22470ede0aeb2bf0e102b1a8049683fb3023085a931e99cf49c126728262e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16994679,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree. Should be fixed of course, but it definitely isn't a major threat.",
+            "automated_response": false,
+            "created_at": "2022-06-04T20:42:19.166Z",
+            "updated_at": "2022-06-04T20:42:19.166Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16996915,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'd go one further and say that this cannot be exploited in practice, and therefore I would like to handle it has a normal bug and make the push function bail out much earlier rather than wait for out of memory.",
+            "automated_response": false,
+            "created_at": "2022-06-05T09:41:33.833Z",
+            "updated_at": "2022-06-05T09:41:33.833Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4OOHXJOZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=639&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGHYXxvbmFXk%2FBjm6I%2F8bvaPCWsMjsuuq3BYG8BLe9NWAiBlwCuHqMx6gMpWRV%2FciwphtO4SUVWaZgTGqT%2B7IfuI5iq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMDq3dfAyox2rxv5lrKo4FuYboGYEUkqxeYe0mZ29VdtSqDkb0xmecP6QUy6JVO5Jv2L4Amfo9630KA3FERom4GMGGg9mzvCcjWoF1KDC4ckmW3qeV9arQYhEod3%2BoBDrBuK1HbOLS05U1sKxc%2FxZ8u0pNftpF8bzIfNOcxSXnTeQ%2FlFwY8erLpIlrHSu84urQKEKj%2B%2FbCbyKO1TjqkVqoQWT5KDU480Bgav%2F2Bn%2BJ3LjUDbCmB7Ej89IcU%2B1trh9zasTow8QWwML50eVnV3E%2Ft6tK860IA52kXy9mP7oTobG8w2Mc%2BXGyF59GbsMJLgHLu0GADWb6COw4UH3OIjf9AYYNYh4qFWqd9z%2B%2Ffjp%2FhKhbRmo4BOGN9sASGpWzxs19pwwM4lh7wFqj%2FkPhgWWtJzxujbFDlI2pASstNIthC3TMHnTqardublXsa9Z5oBYRD2k6VeMpFvYa5qJ1Jlg0lHNiMys2Nx6iKbrOBoP8iOQC%2BlRa4Z6Y3OX2VstslvGYUKyM2p%2FHm6z0bQ9Sy7gCFn1T6sEuTkb9XAsf1QiHa%2FidPTajtG2DnZ8E5ikoIwlcJIQuWiUz87ICaCqzOHs2guuqSKRgFjxtOc0B3onBE9j4wKmmny0LfwGUujrXODfie7EJfVKHr9qMTpXsr95pJxtrLng1sKDD6mVXhGhlvuXV8pFST8FFWPDdGR95oceO3Syud%2BKJ9ExRocpZf6mPxFjzQESsu3C4z0MFmG52QlZXG%2BMA0TMLF4Q8GDj9rjMWEfPmqdMXh0AnnJuAvINQSMICjS7VTGFaZK1YjH%2BpEepYZfXJj4PYcLKYCqabj%2BwpK7E4%2FdF2YiOyl2H1uCUtWvF6nbo1UuGhbjCZQ8aqMi4Mysrb6ZEB%2FLax5A6RMJ%2F%2FtKcGOrIBrFlUV%2FBFVhteDPPjLJJmr0Ns%2FzxKrzuU7KBDVPfeTeWnCoo2pENAFPbnyJUYzYqklRa%2Bj8Dst4KPYWkNzFaJZ73bz9ZZUv4wEC13u34ao0u1k%2F1%2FV18TtUerYGYiDe8xNhezt7nlU0az1%2FsfMsQyJ%2FD48BOXfeJB0GEk1fh4jxeqh8sxFYTTKIKOFjJ6gok6H%2FOdmnwdmIFHf0XoVUFuUsq%2FrzglDKL%2B1OYA0lCGQExdxQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d0c22470ede0aeb2bf0e102b1a8049683fb3023085a931e99cf49c126728262e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16997757,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Not a vulnerability, can be fixed as a normal bug.",
+            "automated_response": false,
+            "created_at": "2022-06-05T10:46:18.302Z",
+            "updated_at": "2022-06-05T10:46:18.302Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 17000413,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-05T20:18:57.393Z",
+            "updated_at": "2022-06-05T20:18:57.393Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4OOHXJOZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=639&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGHYXxvbmFXk%2FBjm6I%2F8bvaPCWsMjsuuq3BYG8BLe9NWAiBlwCuHqMx6gMpWRV%2FciwphtO4SUVWaZgTGqT%2B7IfuI5iq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMDq3dfAyox2rxv5lrKo4FuYboGYEUkqxeYe0mZ29VdtSqDkb0xmecP6QUy6JVO5Jv2L4Amfo9630KA3FERom4GMGGg9mzvCcjWoF1KDC4ckmW3qeV9arQYhEod3%2BoBDrBuK1HbOLS05U1sKxc%2FxZ8u0pNftpF8bzIfNOcxSXnTeQ%2FlFwY8erLpIlrHSu84urQKEKj%2B%2FbCbyKO1TjqkVqoQWT5KDU480Bgav%2F2Bn%2BJ3LjUDbCmB7Ej89IcU%2B1trh9zasTow8QWwML50eVnV3E%2Ft6tK860IA52kXy9mP7oTobG8w2Mc%2BXGyF59GbsMJLgHLu0GADWb6COw4UH3OIjf9AYYNYh4qFWqd9z%2B%2Ffjp%2FhKhbRmo4BOGN9sASGpWzxs19pwwM4lh7wFqj%2FkPhgWWtJzxujbFDlI2pASstNIthC3TMHnTqardublXsa9Z5oBYRD2k6VeMpFvYa5qJ1Jlg0lHNiMys2Nx6iKbrOBoP8iOQC%2BlRa4Z6Y3OX2VstslvGYUKyM2p%2FHm6z0bQ9Sy7gCFn1T6sEuTkb9XAsf1QiHa%2FidPTajtG2DnZ8E5ikoIwlcJIQuWiUz87ICaCqzOHs2guuqSKRgFjxtOc0B3onBE9j4wKmmny0LfwGUujrXODfie7EJfVKHr9qMTpXsr95pJxtrLng1sKDD6mVXhGhlvuXV8pFST8FFWPDdGR95oceO3Syud%2BKJ9ExRocpZf6mPxFjzQESsu3C4z0MFmG52QlZXG%2BMA0TMLF4Q8GDj9rjMWEfPmqdMXh0AnnJuAvINQSMICjS7VTGFaZK1YjH%2BpEepYZfXJj4PYcLKYCqabj%2BwpK7E4%2FdF2YiOyl2H1uCUtWvF6nbo1UuGhbjCZQ8aqMi4Mysrb6ZEB%2FLax5A6RMJ%2F%2FtKcGOrIBrFlUV%2FBFVhteDPPjLJJmr0Ns%2FzxKrzuU7KBDVPfeTeWnCoo2pENAFPbnyJUYzYqklRa%2Bj8Dst4KPYWkNzFaJZ73bz9ZZUv4wEC13u34ao0u1k%2F1%2FV18TtUerYGYiDe8xNhezt7nlU0az1%2FsfMsQyJ%2FD48BOXfeJB0GEk1fh4jxeqh8sxFYTTKIKOFjJ6gok6H%2FOdmnwdmIFHf0XoVUFuUsq%2FrzglDKL%2B1OYA0lCGQExdxQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d0c22470ede0aeb2bf0e102b1a8049683fb3023085a931e99cf49c126728262e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 17000498,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-05T20:59:34.170Z",
+            "updated_at": "2022-06-05T20:59:34.170Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 17000499,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-05T20:59:34.265Z",
+            "updated_at": "2022-06-05T20:59:34.265Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

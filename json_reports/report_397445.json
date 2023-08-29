@@ -1,0 +1,479 @@
+{
+    "id": 397445,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTc0NDU=",
+    "url": "https://hackerone.com/reports/397445",
+    "title": "[express-cart] Customer and admin email enumeration through MongoDB injection",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2018-08-20T20:07:16.367Z",
+    "submitted_at": "2018-08-20T20:07:16.367Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "becojo",
+        "url": "/becojo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/098/231/63593e9c91c71360cff543bc29b1ceaabaddb3da_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2018-09-10T22:58:42.734Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-09-10T22:52:08.986Z",
+    "team_member_agreed_on_going_public_at": "2018-09-10T22:58:42.488Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I would like to report an injection in express-cart\nIt allows to enumerate the email address of the customers and the administrators.\n\n# Module\n\n**module name:** express-cart\n**version:** 1.1.7\n**npm page:** `https://www.npmjs.com/package/express-cart`\n\n## Module Description\n\nexpressCart is a fully functional shopping cart built in Node.js (Express, MongoDB) with Stripe, PayPal and Authorize.net payments.\n\n## Module Stats\n\n31 downloads in the last week\n\n# Vulnerability\n\n## Vulnerability Description\n\nThe vulnerability is caused by the lack of user input sanitization in the login handlers. In both cases, the customer login and the admin login, parameters from the JSON body are sent directly into the MongoDB query which allows to insert operators. These operators can be used to extract the value of the field blindly in the same manner of a blind SQL injection. In this case, the `$regex` operator is used to guess each character of the token from the start. \n\n## Steps To Reproduce:\n\nUse MongoDB `$regex` operator to test if each characters of the emails in the database.\n\nThe provided Python script exploits the customer login to find all the customer emails in the database. Some recursion is used to make sure all of the fields\n\nThe attached screenshot is the customer list currently in my database. The output of the script is the following:\n\n```\n$ python exploit.py \nalan.k@example.com\nalice.r@hotmail.com\nben76543@gmail.com\nbob@test.com\n```\n\n## Patch\n\nEnsure the parameters are indeed strings before doing a MongoDB request. There are multiple ways this could be achieved. Using `toString` on the parameters is good enough. \n \n```\ndb.customers.findOne({email: req.body.loginEmail}, (err, customer) => { // eslint-disable-line\n```\nbecomes\n```\ndb.customers.findOne({email: req.body.loginEmail.toString()}, (err, customer) => { // eslint-disable-line\n```\n\nWhile a user can still trigger an exception by replacing `toString` with something else than a function, it effectively mitigates the vulnerability.\n\n## Supporting Material/References:\n\n- OS: Ubuntu 16.04.3 LTS\n- Node.js version: 8.11.1 \n- For the script: Python 2.7.12 and the requests package\n\n# Wrap up\n- I contacted the maintainer to let them know: No\n- I opened an issue in the related repository: No\n\n## Impact\n\nAdministrator emails could be used for phishing attemps and spam. Customers emails could be used by an adversary to deliver spam, steal customers and more. In this GDPR era, leaking customer emails is not very desirable.",
+    "weakness": {
+        "id": 67,
+        "name": "SQL Injection"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 335811,
+            "file_name": "expressCart-admin-emails.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/335/811/8ae9db0edc5d52b311969fc443da7d6070b0fbc1/expressCart-admin-emails.png?response-content-disposition=attachment%3B%20filename%3D%22expressCart-admin-emails.png%22%3B%20filename%2A%3DUTF-8%27%27expressCart-admin-emails.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073818Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=130151bc0165ca14939e88eaa684607d8bca3b4efecf44e91d91fa91796dd4b5",
+            "file_size": 63267,
+            "type": "image/png"
+        },
+        {
+            "id": 335814,
+            "file_name": "exploit.py",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/335/814/dfca1bce80e984a67040b28fb27487f43432e760/exploit.py?response-content-disposition=attachment%3B%20filename%3D%22exploit.py%22%3B%20filename%2A%3DUTF-8%27%27exploit.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073818Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8a92ef452a2d5a63e64a536b00b024271dbc45d320f8f46e18355cfcb938f463",
+            "file_size": 572,
+            "type": "text/x-python"
+        }
+    ],
+    "allow_singular_disclosure_at": "2018-10-10T22:52:09.183Z",
+    "allow_singular_disclosure_after": -154082769.72885492,
+    "singular_disclosure_allowed": true,
+    "vote_count": 6,
+    "voters": [
+        "tuo4n8",
+        "bl4de",
+        "eveeez",
+        "siraneephoung629",
+        "serosh",
+        "mbilaljs"
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.2,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 10291,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "express-cart",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3222458,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nThanks for reporting this to us. Someone will quickly look at this report and triage it.",
+            "automated_response": true,
+            "created_at": "2018-08-20T20:25:01.325Z",
+            "updated_at": "2018-08-20T20:25:01.325Z",
+            "actor": {
+                "username": "vdeturckheim_dev",
+                "cleared": false,
+                "verified": false,
+                "url": "/vdeturckheim_dev",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3229271,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-08-22T08:21:55.838Z",
+            "updated_at": "2018-08-22T08:21:55.838Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3229274,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for reporting it! I will have a look and come back to you.",
+            "automated_response": false,
+            "created_at": "2018-08-22T08:22:32.949Z",
+            "updated_at": "2018-08-22T08:23:06.618Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3269649,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@mrvautin I have invited you to this report as it is quite related to your work on #343726. I can confirm the vulnerability (after few tries as I am not too familiar with Mongo). Thanks",
+            "automated_response": false,
+            "created_at": "2018-08-30T13:40:32.668Z",
+            "updated_at": "2018-08-30T13:40:32.668Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3269786,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-08-30T14:12:15.608Z",
+            "updated_at": "2018-08-30T14:12:15.608Z",
+            "actor": {
+                "username": "mrvautin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mrvautin",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3272812,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for reporting. This vuln has been fixed in the latest version. ",
+            "automated_response": false,
+            "created_at": "2018-08-31T05:13:40.990Z",
+            "updated_at": "2018-08-31T05:13:40.990Z",
+            "actor": {
+                "username": "mrvautin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mrvautin",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3272814,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "https://github.com/mrvautin/expressCart/commit/b2234ef4f28225bb42f74bf6cf33759048aba518",
+            "automated_response": false,
+            "created_at": "2018-08-31T05:14:16.843Z",
+            "updated_at": "2018-08-31T05:14:16.843Z",
+            "actor": {
+                "username": "mrvautin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mrvautin",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3275539,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The fix works 👍",
+            "automated_response": false,
+            "created_at": "2018-08-31T15:47:30.177Z",
+            "updated_at": "2018-08-31T15:47:30.177Z",
+            "actor": {
+                "username": "becojo",
+                "cleared": false,
+                "verified": false,
+                "url": "/becojo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/098/231/63593e9c91c71360cff543bc29b1ceaabaddb3da_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318648,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I can confirm it. Thanks everyone for the quick response on this one. I will close the report.",
+            "automated_response": false,
+            "created_at": "2018-09-10T22:49:48.075Z",
+            "updated_at": "2018-09-10T22:49:48.075Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318650,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-10T22:50:04.301Z",
+            "updated_at": "2018-09-10T22:50:04.301Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "becojo",
+                "url": "/becojo"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318656,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-10T22:52:09.095Z",
+            "updated_at": "2018-09-10T22:52:09.095Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "becojo",
+                "cleared": false,
+                "verified": false,
+                "url": "/becojo",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/098/231/63593e9c91c71360cff543bc29b1ceaabaddb3da_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318668,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-10T22:58:42.611Z",
+            "updated_at": "2018-09-10T22:58:42.611Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318669,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-10T22:58:42.772Z",
+            "updated_at": "2018-09-10T22:58:42.772Z",
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3318683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-10T23:00:24.598Z",
+            "updated_at": "2018-09-10T23:00:24.598Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "High (8.2)",
+                "old_severity_id": 198976,
+                "new_severity_id": 208284
+            },
+            "actor": {
+                "username": "dagonza",
+                "cleared": false,
+                "verified": false,
+                "url": "/dagonza",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

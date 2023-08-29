@@ -1,0 +1,554 @@
+{
+    "id": 162955,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjI5NTU=",
+    "url": "https://hackerone.com/reports/162955",
+    "title": "Code Injection in Slack's Windows Desktop Client leads to Privilege Escalation",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-08-24T08:27:34.777Z",
+    "submitted_at": "2016-08-24T08:27:34.777Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "fbogner",
+        "url": "/fbogner",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 69,
+        "url": "https://hackerone.com/slack",
+        "handle": "slack",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Slack",
+            "twitter_handle": "slackhq",
+            "website": "https://slack.com",
+            "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-07-14T19:01:03.937Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-06-14T19:01:03.784Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\n\nThis report is about a Code Injection vulnerability in Slack's Windows Desktop Client (slack.exe) that allows any local user to inject code into other user's Slack client.\n\nIt has been verified on a fully patched english Windows 7 64bit running the latest available Slack Desktop Client (2.1.1 32-Bit Direct Download). \n\nThe issue is that slack.exe tries to load its OpenSSL configuration from the non-existing file\nC:\\usr\\local\\ssl\\openssl.cnf (See Procmon screenshot). As any authenticated Windows user is allowed to\ncreate new folders at the system drive's root, the expected folder structure can be created by anyone. \n\nThis enables any local user to create the expected OpenSSL config file. Using this config file it is then possible to instruct OpenSSL to load additional libraries. This finally leads to arbitrary code execution in other user's slack.exe process. This is especially a problem as Slack is automatically started after logging in.\n\nHere's a video illustrating the attack: https://owncloud.bogner.sh/s/MRXZSp0YyfK9ycf\nAdditionally you can download the source code and the binary version of the used payloads here: https://owncloud.bogner.sh/s/z7kbZr9STr08R73\n\nTo fix this vulnerability the OpenSSL config file should only be loaded from secure locations (like somewhere from within the application's root folder)\n\nIf you have any questions just let me know.\nFlorian",
+    "weakness": {
+        "id": 58,
+        "name": "Command Injection - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 114492,
+            "file_name": "Screen_Shot_2016-08-24_at_09.48.52.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/114/492/5593935fbce2c828dcde2d853a4e161865617f5f/Screen_Shot_2016-08-24_at_09.48.52.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2016-08-24_at_09.48.52.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2016-08-24_at_09.48.52.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080128Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=13ef3f26b16ffdf881dc51589ebe3a063fc0d61815da427886ae033728d4b218",
+            "file_size": 54588,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-07-14T19:01:03.862Z",
+    "allow_singular_disclosure_after": -193237224.45517662,
+    "singular_disclosure_allowed": true,
+    "vote_count": 14,
+    "voters": [
+        "sp1d3rs",
+        "stefanofinding",
+        "bl4de",
+        "spam404",
+        "0xsyndr0me",
+        "fbogner",
+        "cayj",
+        "xiaoyinl",
+        "pappan",
+        "r3y",
+        "and 4 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1154337,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thank you for your very interesting report!\n\nWe can confirm the behavior you describe, however, after discussing this internally, it seems that exploiting this behavior would be quite difficult without either another vulnerability on the system or direct physical access to the machine. The attacker would need to place the openssl.cnf file specifically in the C:\\usr\\local\\ssl\\ folder (likely requiring the creation of this folder), suggesting they already have a large amount of access to the system.  While it's true that this could be an issue on a shared or multi-user systems, for the purposes of our HackerOne program, issues requiring physical access are considered to be ineligible for a bounty at this time.  While we may or may not make  change here in the future, for now, we will be closing this report.  We hope that you will continue to report security related issues to us in the future.\n\nThanks, and good luck with your future bug hunting.",
+            "automated_response": false,
+            "created_at": "2016-08-25T18:42:34.886Z",
+            "updated_at": "2016-08-25T18:42:34.886Z",
+            "actor": {
+                "username": "bugtriage-josh",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugtriage-josh",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1154367,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, \n\nThanks for your reply!\n\nJust to be sure: Did I made it clear that C:\\usr\\local\\ssl\\ can be created by non-admin users? (see screenshot)\nThat means that a malicious attacker who gained access to for example credentials to a terminal server could abuse this vulnerability to broaden his access to other user's sessions. This may even allow him to get full system level access if any admin user logs on and uses Slack... Additionally an insider could also abuse this to extend his access within an organisation.\n\nPS: As I also think that this is a very interesting issue I would like to write a blog post about it. Is that OK for you?",
+            "automated_response": false,
+            "created_at": "2016-08-25T18:59:09.379Z",
+            "updated_at": "2016-08-25T18:59:09.379Z",
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 114904,
+                    "filename": "Screen_Shot_2016-08-24_at_09.47.49.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/114/904/14db5730db90531ddd9078b6d2743e1a8ce1098c/Screen_Shot_2016-08-24_at_09.47.49.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2016-08-24_at_09.47.49.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2016-08-24_at_09.47.49.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080128Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e5355d99b3d7f3a21b5fb21c25e032a470401fcb33b54917894ffd9bde1e6660"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1163113,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi,\n\nAs my last reply did not reopen this vulnerability I don't know if you have even seen it. So here's another try to bring this back to life. \n\nAs stated I would also love to blog about this issue.",
+            "automated_response": false,
+            "created_at": "2016-08-30T19:12:55.015Z",
+            "updated_at": "2016-08-30T19:12:55.015Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1163301,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "Hi @fbogner,\n\nSorry for the delay here! We're reevaluating the issue and will have a response for you shortly. We appreciate the further information about the vulnerability as well.\n\nThank you,\nMax",
+            "automated_response": false,
+            "created_at": "2016-08-30T20:34:40.203Z",
+            "updated_at": "2016-08-30T20:34:40.203Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1165975,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @fbogner,\n\nA quick update here - we're going to log this as an issue, but we're investigating the root cause. It may be due to the framework we're using. We'll update shortly!\n\nMax",
+            "automated_response": false,
+            "created_at": "2016-08-31T19:22:56.251Z",
+            "updated_at": "2016-08-31T19:22:56.251Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1165995,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThanks for the update!\n\nJust a note: I think it would be possible to integrate Procmon into your build process so that similar issues can be detected before a version is released. Are you  interested?",
+            "automated_response": false,
+            "created_at": "2016-08-31T19:29:45.923Z",
+            "updated_at": "2016-08-31T19:29:45.923Z",
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1166434,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @fbogner,\n\nThanks for the suggestion! I've reached out to our desktop team about it. We currently have other automated tests in our build process, but we'll explore that as well!\n\nBest,\nMax",
+            "automated_response": false,
+            "created_at": "2016-08-31T22:50:14.041Z",
+            "updated_at": "2016-08-31T22:50:14.041Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1180980,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Just an update @fbogner - we're still looking into the root cause of this issue and will keep you updated!",
+            "automated_response": false,
+            "created_at": "2016-09-07T20:39:13.753Z",
+            "updated_at": "2016-09-07T20:39:13.753Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1208693,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, as 14 days have passed I just wanted to ask if you could isolate the issue?",
+            "automated_response": false,
+            "created_at": "2016-09-21T11:11:42.210Z",
+            "updated_at": "2016-09-21T11:11:42.210Z",
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1209303,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @fbogner,\n\nUnfortunately we're still digging into this. We think it's an issue with Electron and are trying to find the code there which would cause this issue. We appreciate your patience here - this is proving a bit trickier than we expected, but we will be working on a fix.\n\nThanks,\nMax",
+            "automated_response": false,
+            "created_at": "2016-09-21T17:38:02.708Z",
+            "updated_at": "2016-09-21T17:38:02.708Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1232367,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @fbogner,\n\nWe're still working on a fix for this since it's an issue with upstream code (and not our own). We're working with those developers and will keep you updated!\n\nThanks,\nMax",
+            "automated_response": false,
+            "created_at": "2016-10-04T22:46:06.960Z",
+            "updated_at": "2016-10-04T22:46:06.960Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1754042,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @fbogner,\n\nWe believe this issue has been patched (upstream, and then incorporated into our release). Would you mind verifying that this issue no longer reproduces for you?\n\nThank you!\nMax",
+            "automated_response": false,
+            "created_at": "2017-06-13T23:05:28.490Z",
+            "updated_at": "2017-06-13T23:05:28.490Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1754586,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Max,\n\nYes this looks good!\nThe file not not loaded anymore!",
+            "automated_response": false,
+            "created_at": "2017-06-14T07:12:43.462Z",
+            "updated_at": "2017-06-14T07:12:43.462Z",
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1755996,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thank you @fbogner for the confirmation and for your patience!",
+            "automated_response": false,
+            "created_at": "2017-06-14T18:16:15.682Z",
+            "updated_at": "2017-06-14T18:16:15.682Z",
+            "actor": {
+                "username": "maxfeldman",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxfeldman",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "fbogner",
+                "url": "/fbogner"
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1755998,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thank you for an interesting finding!\n\nThe Slack Security Team",
+            "automated_response": false,
+            "created_at": "2017-06-14T18:16:35.267Z",
+            "updated_at": "2017-06-14T18:16:35.267Z",
+            "actor": {
+                "url": "/slack",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Slack"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "slack",
+            "collaborator": {
+                "username": "fbogner",
+                "url": "/fbogner"
+            }
+        },
+        {
+            "id": 1756087,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose this?",
+            "automated_response": false,
+            "created_at": "2017-06-14T19:01:03.807Z",
+            "updated_at": "2017-06-14T19:01:03.807Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1756089,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "What I forgot: Thanks for the bounty!",
+            "automated_response": false,
+            "created_at": "2017-06-14T19:01:30.738Z",
+            "updated_at": "2017-06-14T19:01:30.738Z",
+            "actor": {
+                "username": "fbogner",
+                "cleared": false,
+                "verified": false,
+                "url": "/fbogner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/097/209/c6a39a3f503e5915ea2ebf90fc4f5b2ca45ef78e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        },
+        {
+            "id": 1836511,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-07-14T19:01:03.964Z",
+            "updated_at": "2017-07-14T19:01:03.964Z",
+            "actor": {
+                "url": "/slack",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Slack"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "slack"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

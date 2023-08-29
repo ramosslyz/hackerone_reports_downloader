@@ -1,0 +1,391 @@
+{
+    "id": 895730,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84OTU3MzA=",
+    "url": "https://hackerone.com/reports/895730",
+    "title": "Contacts menu (not app) fails to restrict (to local groups) for contacts from federated servers",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2020-06-11T00:03:52.909Z",
+    "submitted_at": "2020-06-11T00:03:52.909Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nursoda",
+        "url": "/nursoda",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/bFsX9j1QPxJy2tMEmvC1NXts/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13291,
+        "url": "https://hackerone.com/nextcloud",
+        "handle": "nextcloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Nextcloud",
+            "twitter_handle": "nextclouders",
+            "website": "https://nextcloud.com",
+            "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-07-25T08:10:36.069Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2020-06-25T08:10:24.331Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "In two Nextclouds A and B, in settings/admin/sharing, these settings are enabled:\n* Restrict users to only share with users in their groups\n* Restrict username autocompletion to users within the same groups\n* Add server automatically once a federated share was created successfully\n\nSome user on A now shares something to some other user on B → federation for that server is established and green on both NCs.\n\nOn B, add a new group with a new user N. That user is the only user in that new, separate group. Log in as N. Click on contacts menu (next to the user menu). One sees all contacts of A. One shouldn't see any.\n\nThis is relevant since it is unexpected and NC lacks a means to restrict viewing of such contact data. This may lead to a GDPR relevant data breach. (In my case, it did!) IF data were COPIED to B (cached?, not sure), this would be even worse.\n\nDeleting the federation solves the issue (but breaks functionality otherwise desired). I propose to add further restriction selections (for contacts from federated servers) to sharing.\n\nSidenote: The way it is now also has a functional glitch: If one clicks in the info \"i\" next to one contact from a federated server, the \"contacts\" app opens and shows an error \"No such contact found\"…\n\n## Impact\n\nWell, what SECURITY impact? It's a PRIVACY impact. But since Nextcloud strives to be the privacy-friendly alternative to big players…\n\nOK: Impact is simple contact information disclosure. But to make clear what dimensions this could lead to: Imagine all business contact information in A (in my case >1000 contacts), readable to completely unrelated people on another instance.",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2020-07-25T08:10:24.405Z",
+    "allow_singular_disclosure_after": -97629019.35617414,
+    "singular_disclosure_allowed": true,
+    "vote_count": 3,
+    "voters": [
+        "sa1tama0",
+        "cryptographer",
+        "controlpanel"
+    ],
+    "severity": {
+        "rating": "low",
+        "score": 3.2,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "low",
+            "integrity": "none",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 13,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "nextcloud/server",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8258649,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us!\n\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster. For obvious reasons we'd like to ask you to not disclose this issue to any other party.",
+            "automated_response": true,
+            "created_at": "2020-06-11T00:03:53.262Z",
+            "updated_at": "2020-06-11T00:03:53.262Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8269827,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> Add server automatically once a federated share was created successfully\n\nFrom my understanding this is the expected behaviour with this configuration, also the description of the trusted server section is pretty clear:\n\n> ### Trusted servers\n> \n> Federation allows you to connect with other trusted servers to exchange the user directory. For example this will be used to auto-complete external users for federated sharing.\n\nMaybe the \"restrict sharing/autocomplete\" settings description need adjustment to make clear that they only apply to local users/groups. Otherwise this also makes no sense really. Why would you trust a server to ease autocomplete, when no one can autocomplete?\n\nSo to fix your case, you should remove the trusted server and then disable `Add server automatically once a federated share was created successfully`\n\nPS: This is just my quick feedback and I will ping the sharing expert to confirm this.",
+            "automated_response": false,
+            "created_at": "2020-06-12T07:26:45.617Z",
+            "updated_at": "2020-06-12T07:26:45.617Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8271636,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "First of all: Thanks for looking into this, much appreciated. I disagree your reasoning, even if documented. Primary function of federation is to be able to share files to other clouds, not autocompletion. At least, there should be a warning to the admins on both sides. I'd even urge Nextcloud to implement an Opt-In for sharing contacts on both sides. This may be \"none\" (default), \"these groups\" […] and \"all\" (maybe along with a warning).\n\nNextcloud is about sharing files but there are use cases where it is desirable to share CERTAIN files easily (including autocompletion of CERTAIN contacts) but in far fewer use cases it is desirable or required to see ALL contacts stored in the contacs app. The admin usually doesn't know what users store there, and the users may not know about federation!",
+            "automated_response": false,
+            "created_at": "2020-06-12T10:26:59.973Z",
+            "updated_at": "2020-06-12T10:26:59.973Z",
+            "actor": {
+                "username": "nursoda",
+                "cleared": false,
+                "verified": false,
+                "url": "/nursoda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bFsX9j1QPxJy2tMEmvC1NXts/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8290418,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> Primary function of federation is to be able to share files to other clouds, not autocompletion. At least, there should be a warning to the admins on both sides. I'd even urge Nextcloud to implement an Opt-In for sharing contacts on both sides. This may be \"none\" (default), \"these groups\" […] and \"all\" (maybe along with a warning).\n\nThis is the case. The following setting is opt-in:\n`Add server automatically once a federated share was created successfully`\n\nIt also states pretty clear that the only use case of trusted servers is to exchange user directories, to autocomplete users. If you don't want this, don't opt in on the setting and remove all trusted servers. A server does not need to be trusted to do a federated share.",
+            "automated_response": false,
+            "created_at": "2020-06-15T06:42:31.059Z",
+            "updated_at": "2020-06-15T06:42:31.059Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 868276,
+                    "filename": "trusted-server-settings.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/JFyhW3j11xFqxg3jHyXocwLY?response-content-disposition=attachment%3B%20filename%3D%22trusted-server-settings.png%22%3B%20filename%2A%3DUTF-8%27%27trusted-server-settings.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072043Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=039cf58be1b2d246dee8be875958117bf0784c155a561fc3a171f8844c85e3cd"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8292715,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Agreed. Maybe a clarification that this is NOT necessary to do a federated share is helpful, in the \"automatically add\" setting AND in the \"manually add\" section. (At least I was under the impression that trust was necessary.)\n\nBut please be specific on this (I reuse A and B from my initial description): Does the ADMIN of A need to allow trust to B to share his user directory (user directory EXPORT RESTRICTION) – or is it shared as soon as the admin of B allows to (automatically or manually) trust A (which resembles an IMPORT FILTER)?",
+            "automated_response": false,
+            "created_at": "2020-06-15T09:55:01.865Z",
+            "updated_at": "2020-06-15T09:55:01.865Z",
+            "actor": {
+                "username": "nursoda",
+                "cleared": false,
+                "verified": false,
+                "url": "/nursoda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bFsX9j1QPxJy2tMEmvC1NXts/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8403351,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> But please be specific on this (I reuse A and B from my initial description): Does the ADMIN of A need to allow trust to B to share his user directory (user directory EXPORT RESTRICTION) – or is it shared as soon as the admin of B allows to (automatically or manually) trust A (which resembles an IMPORT FILTER)?\n\nNo, only after both instances added the other instance as trusted server, a sync token is exchanged between the two instances.\nAfter this the addressbook is sync using this token.",
+            "automated_response": false,
+            "created_at": "2020-06-25T08:09:10.041Z",
+            "updated_at": "2020-06-25T08:09:10.041Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8403354,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "The description has been adjusted with:\nhttps://github.com/nextcloud/server/pull/21582",
+            "automated_response": false,
+            "created_at": "2020-06-25T08:09:40.071Z",
+            "updated_at": "2020-06-25T08:09:40.071Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "nursoda",
+                "url": "/nursoda"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8403359,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "As the resulting code change is just a better description in the UI, it is not eligible for a bounty.",
+            "automated_response": false,
+            "created_at": "2020-06-25T08:10:18.966Z",
+            "updated_at": "2020-06-25T08:10:18.966Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8403360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-06-25T08:10:24.349Z",
+            "updated_at": "2020-06-25T08:10:24.349Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8408282,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "THANK you for looking into this, and sorry if that should have been reported elsewhere (forum/issue/PR).",
+            "automated_response": false,
+            "created_at": "2020-06-25T15:52:00.074Z",
+            "updated_at": "2020-06-25T15:52:00.074Z",
+            "actor": {
+                "username": "nursoda",
+                "cleared": false,
+                "verified": false,
+                "url": "/nursoda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bFsX9j1QPxJy2tMEmvC1NXts/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8750547,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-07-25T08:10:36.088Z",
+            "updated_at": "2020-07-25T08:10:36.088Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

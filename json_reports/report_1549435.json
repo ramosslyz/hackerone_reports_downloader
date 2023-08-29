@@ -1,0 +1,414 @@
+{
+    "id": 1549435,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTQ5NDM1",
+    "url": "https://hackerone.com/reports/1549435",
+    "title": "CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256 comparison disaster",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "medium",
+    "readable_substate": "N/A",
+    "created_at": "2022-04-24T16:02:36.316Z",
+    "submitted_at": "2022-04-24T16:02:36.368Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nyymi",
+        "url": "/nyymi",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-04-25T10:58:34.118Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-04-25T10:58:34.075Z",
+    "team_member_agreed_on_going_public_at": "2022-04-25T06:22:30.678Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n`CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256` base64 encoded host fingerprint is compared case-insensitive by accident. This means that it is technically possible (however still difficult) to create forged ssh host key that matches in this comparison.\n\nThe bug appears to have been introduced when adding `CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256`  support, and then copying the case insensitive comparison of the string for` CURLOPT_SSH_HOST_PUBLIC_KEY_MD5` (where it is appropriate since the MD5 fingerprint is a hex string).\n\nThis bug as added by commit https://github.com/curl/curl/commit/d1e7d9197b7fe417fb4d62aad5ea8f15a06d906c\n\n## Impact\n\nHost identify spoofing",
+    "weakness": {
+        "id": 32,
+        "name": "Cryptographic Issues - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 2,
+    "voters": [
+        "zy9ard3",
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16419925,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I haven't yet estimated how computationally expensive it would be to try to bruteforce a host key that generates a string that would pass the case insensitive comparison. The probability also varies per key since the amount of a-z / A-Z characters vary per key. Some keys are \"easier\" to forge than others. The more a-z A-Z characters there are in the fingerprint, the easier it would be to hit a key by chance that passes the comparison.",
+            "automated_response": false,
+            "created_at": "2022-04-24T16:09:18.671Z",
+            "updated_at": "2022-04-24T16:09:18.671Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16419938,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'm not sure if this thing is applicable for bounty since it is disabled by default. It is not marked as experimental as far as I can tell.",
+            "automated_response": false,
+            "created_at": "2022-04-24T16:13:56.997Z",
+            "updated_at": "2022-04-24T16:19:01.228Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420014,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Seems like this seriously weakens the checksum check, but ...",
+            "automated_response": false,
+            "created_at": "2022-04-24T16:38:51.847Z",
+            "updated_at": "2022-04-24T16:38:51.847Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=1784&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9969ae1c2c5d563d86796bd01d22ef65884677b57a6c7cb14ed2c79a177af3a0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420078,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The option is still provided in libcurl and is assumed to work and verify the SSH server so if this **seriously weakens** the check, then I figure it could still be eligible and qualify. But this is still a 256 bit number in base64 format. Base64 has 25 out of 64 symbols that can be lowercase or uppercase. I'm not mathematician enough to calculate by how much this weakens the check. And I also don't really know where exactly I would draw the line...",
+            "automated_response": false,
+            "created_at": "2022-04-24T17:00:37.923Z",
+            "updated_at": "2022-04-24T17:00:37.923Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=1784&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9969ae1c2c5d563d86796bd01d22ef65884677b57a6c7cb14ed2c79a177af3a0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420174,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree that this could be nearly impossible (or very very hard) to exploit. I'll likely do some tests with random sha256 sum to see if I can collide it with any sensible time.\n\nBTW libssh backend completely ignores `CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256` - but my understanding is that this is fine and expected behaviour, as it then falls back the code path that does the verification form known hosts (or `CURLOPT_SSH_KEYFUNCTION` callback).",
+            "automated_response": false,
+            "created_at": "2022-04-24T17:29:04.695Z",
+            "updated_at": "2022-04-24T17:29:04.695Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420376,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "DANGER - below could be totally bogus. My math is rusty.\n\nThe base64 of the sha256 is always 43 characters long (the last char is a pad char that is ignored). If we assume that you'd randomly guess one character it'd be 1/64 you guessed right. The likelihood of correctly randomly guessing the exact same string is thus (1/64)^43 = 2.159 × 10^-78.\n\nFor arguments sake lets assume we got really lucky and that all the characters in the base64 string are alpha. Now we have 2 characters out of possible 64 that would be ok for each position. Hence the likelihood of correctly guessing the whole string would now be (2/64)^43 = 1.899 × 10^-65.\n\nBoth of these eventualities are extremely unlikely, but still it makes it nearly (2/64)^43 / (1/64)^43 = 8.7 trillion times \"easier\" to guess a valid string.\n\nBut since this isn't just a random string it doesn't quite work this way. It doesn't take into account that this data that is sha256'd should also be a valid public key. Or that my math could be totally bogus.",
+            "automated_response": false,
+            "created_at": "2022-04-24T18:47:50.490Z",
+            "updated_at": "2022-04-24T18:47:50.490Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420641,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This issue is about making it easier to generate a hash collisions, like when someone maliciously has \"taken over\" an SSH server and wants to trick a curl using application. I would not feel comfortable yelling \"security vulnerability\" for this, even though now curl will consider many more keys to be duplicates. The time and effort it would take to generate one of them even with this flaw are still enormous.",
+            "automated_response": false,
+            "created_at": "2022-04-24T20:44:24.453Z",
+            "updated_at": "2022-04-24T20:44:24.453Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=1784&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9969ae1c2c5d563d86796bd01d22ef65884677b57a6c7cb14ed2c79a177af3a0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16420847,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Not a practically exploitable vulnerability. This issue can be fixed using regular methods.",
+            "automated_response": false,
+            "created_at": "2022-04-24T22:03:18.071Z",
+            "updated_at": "2022-04-24T22:03:18.071Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16423084,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "https://github.com/curl/curl/pull/8744",
+            "automated_response": false,
+            "created_at": "2022-04-25T06:17:54.459Z",
+            "updated_at": "2022-04-25T06:17:54.459Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=1784&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9969ae1c2c5d563d86796bd01d22ef65884677b57a6c7cb14ed2c79a177af3a0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16423125,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-25T06:22:30.708Z",
+            "updated_at": "2022-04-25T06:22:30.708Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4KWRNF7N%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070215Z&X-Amz-Expires=1784&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIAh0mL9Ly4%2BG1RGAhRU0p0ZJn1SQoaouzsZUujelYzBYAiEA6cdRBylnXA3A6q3uaJAyJftIa3Oh%2FqfdP%2FdrjT0nV2cquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDPzGxB9t7q8Nkz%2F5xCqPBXLTfumeSfn5%2BSSG%2FkbRmvXD8keDfCtC4SdsE%2FtxmyoC6RrF3in8Uyc9r1ppa3foAZpBEJGiAAMcpuUUI8hyQgiCNno6mLznzKV3cCIxaKS6%2FNyEXVKhjERDtMHPg%2Bihw7sNBDA%2F4kpZe3cHcM81OQjjqU0kJzTLNe5z74z9zkQVM%2Fq3pWOoitThzYY1NjkusEvBiaO%2BQEND6x%2FHxj%2FiLH6s1Eoo085ehMOAir7LDWBWTpxi4T5cvdfCTRO4YBG8rT4jZrOxmnaOHD2ZFmOm6MsY%2Fmeu%2FLQ%2BsNT9VSsyGwXF4gx57NuzqVG7pip8QMDyyN3ywWNr0u8gdRdKTzPZ7Fl0wyw8U46fIUV5794sRhaChn4e2iNudZlceLTVDcqAw0ndGUt2Mboq26UaTwyM%2BNoOjhaQF4EwLIsomZogHIbr5n1IDIkcS9stPU7Mb8OByR8iHDCOlSldqf923RMaklsYh4CZKrA1vSzVYg9blfZmKQaabzp2vEnvOzu%2FLK4x4Ey%2BCWk6YIMOek%2BNmMKF6thM5dz1%2B11BfWhEuT%2Fm0wjVh3rGz%2BHDuDXkp1rpcPUBNDTTzspCu6Dx12uaZVWwKQ3HSQQ4TjsA%2FPL0oAx3AYAjTCyh6qtHBnkW56sQSeG2Pozj8NNqKlUMk%2FSvTM0i6VP53purV8VFTgCWzsSGgVvse3NaGGu1Xc086UnxJ8uzNtCNw%2BboJd4qSTHInLJV8LCZVyWyF%2Fh8tf2nvb14zQSx0XQFLKYnDESvcvZhLPqAmbTU5LBvuRc3SyLz6chSg30QAZWuOJYA%2FjBP1zXaVVupggLhKIuqxgS%2FjAzOKpJjiGyeEQw7DzPBercxkxJdVkgqnK31IZApLST%2F4LaB4rAwrIq1pwY6sQGfwV3%2BSagkB%2FKp%2FpKn4zFbElDqktvdCYk4KNfSCieD0mgcyZpBpA6qQNh6vyIweRyA%2By0MgHJanQpNprMhE%2BLxuY6wrZuFjBT7Q47X2M0UTkUDfwi6SWzuKkehYWPYBXbXMxv%2BNcu4T%2FI3tcZ17mBgIimyHpf63%2FWbdtOphJoQcGcNhznUWMchLX4cD5BrxuPgBzmnpG6I6A%2FHv6yjivNtk%2Bii3N3RfmO1z4poTvnSgEo%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9969ae1c2c5d563d86796bd01d22ef65884677b57a6c7cb14ed2c79a177af3a0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16426037,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-25T10:58:34.095Z",
+            "updated_at": "2022-04-25T10:58:34.095Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16426038,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-04-25T10:58:34.167Z",
+            "updated_at": "2022-04-25T10:58:34.167Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16430967,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "FWIW, by my calculations this issue reduces the effective size of the hash from 256 bits to 223.9 bits. By one estimate I found, that would reduce the time to find a collision using a brute-force search from 1×10^56 down to 2×10^46 years. It would take chaining this vulnerability with five more of equal severity to reduce the security enough to make a practical exploit.",
+            "automated_response": false,
+            "created_at": "2022-04-25T16:52:57.178Z",
+            "updated_at": "2022-04-25T16:52:57.178Z",
+            "actor": {
+                "username": "dfandrich",
+                "cleared": false,
+                "verified": false,
+                "url": "/dfandrich",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

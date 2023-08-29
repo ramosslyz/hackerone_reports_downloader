@@ -1,0 +1,269 @@
+{
+    "id": 137502,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzc1MDI=",
+    "url": "https://hackerone.com/reports/137502",
+    "title": "All Vimeo Private videos disclosure via Authorization Bypass",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-05-10T14:50:25.496Z",
+    "submitted_at": "2016-05-10T14:50:25.496Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "opnsec",
+        "url": "/opnsec",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/871/17ffe7f89623315912b4a69a6441247262583484_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 56,
+        "url": "https://hackerone.com/vimeo",
+        "handle": "vimeo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Vimeo",
+            "twitter_handle": "vimeo",
+            "website": "https://vimeo.com",
+            "about": "Make life worth watching"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-07-29T12:03:07.183Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-06-29T12:03:00.547Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello,\n\nThere is a vulnerability in `https://vimeo.com/[VIDEO_ID]?action=share` that makes all Vimeo private videos available to anybody.\n\nPOC link :\nhttp://opnsec.com/vimeo/vl/videoLeak.php?video=[VIDEO_ID]\n\nPOC requirements :\n- No need to be logged in Vimeo\n- Because of sensitivity of this, I put a password on the POC :\nusername : vimeo\npassword : aS3cr3tP4$$wrD7854123\n\nPOC instructions :\n1. Open the POC link replacing `[VIDEO_ID]` by any Vimeo private video id (I believe all type of private videos are vulnerable)\n2. Enter the username and password as per requirements \n3. If the Vimeo video id is correct, no matter the status of the video, the video should start playing.\n\n---------\n\nTechnical description :\n\n`https://vimeo.com/[VIDEO_ID]?action=share` is an Ajax link used to ask Vimeo for the \"Share\" code to embed the video\nBecause it is Ajax, the server is only replying if the `Header X-Requested-With is set to XMLHttpRequest`.\n\nIf the Attacker send this request with a [VIDEO_ID] of a private video that he don't have access to, the server reply with an error message. However, this message contains the link to the `config` file of the private video including a `token parameter s=[SECRET]` which will grant the attacker access to the config file.\nThe config file contains all the info about the video including the actual video file links, video title, owner vimeo account, ... which means that the attacker has complete access to the video.\n\nExample of config file with `token parameter s=[SECRET] `\n```\nhttps://player.vimeo.com/video/165266592/config?autoplay=0&byline=0&bypass_privacy=1&context=Vimeo%5CController%5CClipController.main&default_to_hd=1&portrait=0&title=0&s=bb016a22af815053eb54XXXXXXX019d8_1462989197\n```\n------\nVulnerability Mitigation \n\nTo resolve this issue, the `https://vimeo.com/[VIDEO_ID]?action=share` server should not include the token parameter `s=[SECRET]` of the config file in the error response of `https://vimeo.com/[VIDEO_ID]?action=share`if the user doesn't have right to access the video.\nThere is a good chance this vulnerability is present in other links, especially other Ajax links.\n\nIn addition, if that is possible, the `https://player.vimeo.com/video/[VIDEO_ID]/config` config file server should also check that the user has valid right to access the video even if he has a correct `s=[SECRET]` token\n\n-------------\n\nHere is the source code of `http://opnsec.com/vimeo/vl/videoLeak.php`\n\nIf you need more info or if the POC doesn't work feel free to contact me.\n\nRegards,\n\nEnguerran Gillier\n&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;\n&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 92502,
+            "file_name": "videoLeak.php",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/092/502/bce33e94210d6674e694a1cd07227941eabb5dc8/videoLeak.php?response-content-disposition=attachment%3B%20filename%3D%22videoLeak.php%22%3B%20filename%2A%3DUTF-8%27%27videoLeak.php&response-content-type=text%2Fx-php&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081240Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4e7f51ff297e4e4399e5d9eed31ef7f81d5090466b6f00231c6165dbbfd395dd",
+            "file_size": 2955,
+            "type": "text/x-php"
+        }
+    ],
+    "allow_singular_disclosure_at": "2016-07-29T12:03:00.787Z",
+    "allow_singular_disclosure_after": -223502979.89753076,
+    "singular_disclosure_allowed": true,
+    "vote_count": 32,
+    "voters": [
+        "mizzle",
+        "sourc7",
+        "hunter",
+        "spam404",
+        "opnsec",
+        "lucky_sen",
+        "zombiehelp54",
+        "bugdiscloseguys",
+        "jutsuce",
+        "daiji",
+        "and 22 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 948986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks! This should be resolved.",
+            "automated_response": false,
+            "created_at": "2016-05-10T16:05:17.375Z",
+            "updated_at": "2016-05-10T16:05:17.375Z",
+            "actor": {
+                "username": "jayyspence7",
+                "cleared": false,
+                "verified": false,
+                "url": "/jayyspence7",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 949016,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, it is fixed for me.",
+            "automated_response": false,
+            "created_at": "2016-05-10T16:24:52.998Z",
+            "updated_at": "2016-05-10T16:24:52.998Z",
+            "actor": {
+                "username": "opnsec",
+                "cleared": false,
+                "verified": false,
+                "url": "/opnsec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/871/17ffe7f89623315912b4a69a6441247262583484_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 949053,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-05-10T16:44:25.028Z",
+            "updated_at": "2016-05-10T16:44:25.028Z",
+            "actor": {
+                "username": "jayyspence7",
+                "cleared": false,
+                "verified": false,
+                "url": "/jayyspence7",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "opnsec",
+                "url": "/opnsec"
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 949055,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for helping make Vimeo more secure :)",
+            "automated_response": false,
+            "created_at": "2016-05-10T16:45:19.047Z",
+            "updated_at": "2016-05-10T16:45:19.047Z",
+            "actor": {
+                "url": "/vimeo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vimeo"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "vimeo",
+            "collaborator": {
+                "username": "opnsec",
+                "url": "/opnsec"
+            }
+        },
+        {
+            "id": 1045039,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thanks ! Could we publicly disclose this?",
+            "automated_response": false,
+            "created_at": "2016-06-29T12:03:00.658Z",
+            "updated_at": "2016-06-29T12:03:00.658Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "opnsec",
+                "cleared": false,
+                "verified": false,
+                "url": "/opnsec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/871/17ffe7f89623315912b4a69a6441247262583484_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        },
+        {
+            "id": 1094986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-07-29T12:03:07.300Z",
+            "updated_at": "2016-07-29T12:03:07.300Z",
+            "actor": {
+                "url": "/vimeo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Vimeo"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "vimeo"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,476 @@
+{
+    "id": 147744,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDc3NDQ=",
+    "url": "https://hackerone.com/reports/147744",
+    "title": "Back Refresh Attack after registration and successful logout",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "readable_substate": "N/A",
+    "created_at": "2016-06-27T17:22:35.746Z",
+    "submitted_at": "2016-06-27T17:22:35.746Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sudoshekhar",
+        "url": "/sudoshekhar",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 65,
+        "url": "https://hackerone.com/mailru",
+        "handle": "mailru",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Mail.ru",
+            "twitter_handle": "",
+            "website": "https://vk.company/",
+            "about": "Building the Internet since 1998"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-07-01T09:11:10.034Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-06-28T15:51:30.495Z",
+    "team_member_agreed_on_going_public_at": "2016-07-01T09:11:09.916Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "About the vulnerability:\n\nThe back, forward and refresh buttons of the browser can be used to steal the password of a previous user. In this article we examine the vulnerability and look at ways to solve them.A web browser has the functionality to store the recent pages browsed by the user in its history. The back and forward buttons on the browser make use of this history to display the pages that the user visited recently. The browser also keeps track of the variables that were sent as part of the request to the server for each page. The refresh feature of the browser automates posting of the variables to the server thereby greatly improving the user experience while browsing.These features enhance the user experience but at the same time they expose a high risk vulnerability. This happens due to the application being insecurely designed. Attackers exploit these functionalities of the browser to obtain access to user credentials. Let’s see how this works and the solutions to overcome this problem.\n\nSteps to reproduce: (Attached is the live POC)\n\n 1.Go to https://m.my.mail.ru/cgi-bin/my/registration\n2. Complete the registration process.\n3. You will be logged in to the application\n4. Logout from the application\nAt this point of time the victim will leave the system as he is insure he has already logged out.\n\nNow the attacker comes and do the following activities. \n5. Pressed the back button twice, \n6. Now it asks me to resubmit the details.\n7.Credentials got captured in Burpsuite.\n\nHow to Fix:\n\n1. use an intermediate page between the login page and the first page displayed after authentication (myhome.asp in this case). This intermediate page should be used to redirect the user via an “HTTP Redirect command” to myhome.asp after successful login. In such a scenario, the login request is redirected immediately by the intermediate page. \n2, use a salted hash technique for authentication. In this method, the password is hashed before sending it to the server. This hash is made random using a salt (a random value) provided by the server. This salt is added to the hash generated from the password and then hashed again. This salted hash is sent to the server for authentication. This way, even if the attacker uses the refresh button to capture the request, only the salted hash value will be visible. It will not allow the attacker to login by refreshing as the salt would change at the next login.",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 102052,
+            "file_name": "mailru_back_refresh.wmv",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/102/052/19c4001d962ca21f2ecd6098ccdbafc0e63f98ea/mailru_back_refresh.wmv?response-content-disposition=attachment%3B%20filename%3D%22mailru_back_refresh.wmv%22%3B%20filename%2A%3DUTF-8%27%27mailru_back_refresh.wmv&response-content-type=video%2Fx-ms-asf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081255Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=ce72d092c5d88b9ca8260e036cffc7c21d31fec756a00410f572d58151c3ed2c",
+            "file_size": 4480767,
+            "type": "video/x-ms-asf"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "zoom7",
+        "niemand_sec",
+        "dyabla",
+        "khokho1986"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1041303,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Thank you for your report to Mail.Ru Group!   We appreciate your time for helping us to make our web services safer.\n\nUnfortunately, while described scenario is possible, we can't confirm your report as a security boundaries violation. It's impossible to provide reliable protection for web application against password / data stealing attack in the case same browser profile is shared between multiple users.",
+            "automated_response": false,
+            "created_at": "2016-06-27T18:02:19.526Z",
+            "updated_at": "2016-06-27T18:02:19.526Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1041310,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Dear 3apa3a,\n\nIts amazing how this report is getting closed as NA even though I have explained the scenario in detail and including the live POC and detailed mitigation step.\n\nWhile so much detailed documents are available and even OWASP has demonstrated in their links\nSlide number 12 on https://www.owasp.org/images/8/80/Demystifying_Authentication_Attacks.pdf (FYI).\n I have also included one of the OWASP PPT.\n\nRemediation is possible in so many ways(If it is impossible please try to perform the same attack on any reputed websites.)\n",
+            "automated_response": false,
+            "created_at": "2016-06-27T18:10:38.344Z",
+            "updated_at": "2016-06-27T18:10:38.344Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 102058,
+                    "filename": "5_ways_to_lose_your_user's_password_(1).ppt",
+                    "type": "application/vnd.ms-office",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/102/058/f866240931abd2f494114b0ecc9e903f441d04cc/5_ways_to_lose_your_user%27s_password_%281%29.ppt?response-content-disposition=attachment%3B%20filename%3D%225_ways_to_lose_your_user%2527s_password_%25281%2529.ppt%22%3B%20filename%2A%3DUTF-8%27%275_ways_to_lose_your_user%2527s_password_%25281%2529.ppt&response-content-type=application%2Fvnd.ms-office&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081255Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=b63c96608e34b07ba40736302ab4b13c1cd7d3c391667f1555922f6b1f1091ec"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1041375,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This presentation has no relation to official OWASP recommendations and author's expertise in the area is questionable. E.g. client-side calculated  MD5 password exchange demonstrated creates server-side vulnerability equivalent to cleartext password database storage. I would strictly discourage everyone from using this kind of \"protection\" and recommend author to consult cryptography experts before advising protocols like this one.",
+            "automated_response": false,
+            "created_at": "2016-06-27T18:37:11.757Z",
+            "updated_at": "2016-06-27T18:37:11.757Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1041386,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have not provided the links for the recommendation part, It is a demonstration about the recognition it as a valid bug where the application is not able to redirect the pages and handle back and forward buttons. ",
+            "automated_response": false,
+            "created_at": "2016-06-27T18:43:12.074Z",
+            "updated_at": "2016-06-27T18:43:12.074Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1041440,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I have seen many hackerone programs where it is clearly mentioned about the exclusion of those bugs which require physical access of the victims machine. Whereas I don't see any such thing mentioned in mail.ru scope. \n\nSo I have followed all the policies and guidelines written in the scope and It is a valid bug where back button feature is utilized to capture the valid credentials. Please note, even the normal back button browsing is a vulnerability and in this scenario authentication details are getting captured with no extra effort.\n",
+            "automated_response": false,
+            "created_at": "2016-06-27T19:05:52.443Z",
+            "updated_at": "2016-06-27T19:05:52.443Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 102072,
+                    "filename": "mailru_out_of_scope.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/102/072/b71e8a6dcc4e44f1fdde7e825462a6ce8418e417/mailru_out_of_scope.png?response-content-disposition=attachment%3B%20filename%3D%22mailru_out_of_scope.png%22%3B%20filename%2A%3DUTF-8%27%27mailru_out_of_scope.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081255Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=c9c0359fcc2531679afbd6810461ffb27133bd01f075cb112e02f5348daa7db2"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1042279,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Dear 3apa3a,\n\nWaiting for your response.\n\n1. I have not violated any policies and guidelines written in the scope.\n2. It is a valid bug where redirection feature and back button exploitation are being utilized to get the credentials as well as the personal data including phone number and DOB. I have provided you the OWASP link  https://www.owasp.org/images/8/80/Demystifying_Authentication_Attacks.pdf which demonstrates about the attack. \n3. I agree there is one dependency which requires the physical access of the victims machine but again there is nothing mentioned in mail.ru out of scope section.",
+            "automated_response": false,
+            "created_at": "2016-06-28T06:10:42.121Z",
+            "updated_at": "2016-06-28T06:10:42.121Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1042416,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sorry, but I have nothing to add here. I see no security vulnerability in the report and \"mitigation\" offered is not acceptable.",
+            "automated_response": false,
+            "created_at": "2016-06-28T08:51:55.644Z",
+            "updated_at": "2016-06-28T08:51:55.644Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1042465,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can you at least close this as informative. ",
+            "automated_response": false,
+            "created_at": "2016-06-28T09:01:35.732Z",
+            "updated_at": "2016-06-28T09:01:35.732Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1043288,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-06-28T15:51:30.589Z",
+            "updated_at": "2016-06-28T15:51:30.589Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1044608,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can we disclose it publicly if you don't recognize it as a valid bug ?",
+            "automated_response": false,
+            "created_at": "2016-06-29T05:46:37.304Z",
+            "updated_at": "2016-06-29T05:46:37.304Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1047880,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Waiting for the response.",
+            "automated_response": false,
+            "created_at": "2016-06-30T18:05:48.222Z",
+            "updated_at": "2016-06-30T18:05:48.222Z",
+            "actor": {
+                "username": "sudoshekhar",
+                "cleared": false,
+                "verified": false,
+                "url": "/sudoshekhar",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1048836,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-07-01T09:11:09.957Z",
+            "updated_at": "2016-07-01T09:11:09.957Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 1048837,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-07-01T09:11:10.070Z",
+            "updated_at": "2016-07-01T09:11:10.070Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 2150,
+            "category": "team",
+            "content": "Prerequisite for scenario is user's browser compromise. This situation is out of application's security profile. There is no reliable way to eliminate all possible security consequences under this condition.\n\nFirst mitigation supposed by reporter does not eliminate the problem in either way.\n\nSecond \"mitigation\" is a cryptography nonsense:  MD5(password) is both stored by server and is used as a first transformation in (what actually seems to be) challenge-response negotiation. It makes MD5(password) an equivalent of stored cleartext password, because it's both stored and may be used in authentication without the need to bruteforces cleartext password itself. It violates BCPs and recommendations for secure password storing.\n\nThe real mitigation here, used by Mail.Ru in most projects is to submit username/password via AJAX request.  It's not applicable to https://m.my.mail.ru/, because this interface is for old mobile browsers and does not rely on browser's JavaScript support.\n\nWhat's worse, reporters attempts cheating by pointing to OWASP India member's presentation with a nonsense noted above as an official OWASP recommendations.",
+            "user": {
+                "id": 4836,
+                "username": "3apa3a",
+                "name": "Vladimir Dubrovin",
+                "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+                "cleared": false,
+                "verified": false,
+                "website": "https://3proxy.org/",
+                "location": "Nizhny Novgorod, Russia",
+                "created_at": "2014-04-10T22:08:47.745Z",
+                "url": "https://hackerone.com/3apa3a",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "id": 2143,
+            "category": "researcher",
+            "content": "1.I have not violated any policies and guidelines written in the scope.\n2.It is a valid bug where redirection feature and back button exploitation are being utilized to get the credentials as well as the personal data including phone number and DOB. I have provided a good quality live POC with steps to reproduce it. I have also provided the OWASP link https://www.owasp.org/images/8/80/Demystifying_Authentication_Attacks.pdf which demonstrates about the attack.\n3. I agree there is one dependency which requires the physical access of the victims machine but again there is nothing mentioned in mail.ru out of scope section.\n\nStill it is closed as NA.",
+            "user": {
+                "id": 20864,
+                "username": "sudoshekhar",
+                "name": "shekhar suman",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": "http://etchacked.in",
+                "location": "",
+                "created_at": "2015-04-21T06:45:46.999Z",
+                "url": "https://hackerone.com/sudoshekhar",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/020/864/0f25074297f6fe1c4b2ec47dfbd6f0da78c1df9a_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

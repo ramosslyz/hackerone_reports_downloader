@@ -1,0 +1,437 @@
+{
+    "id": 360191,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjAxOTE=",
+    "url": "https://hackerone.com/reports/360191",
+    "title": "[account.mail.ru] XSS на странице удаления аккаунта через backUrl",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2018-05-31T13:22:24.395Z",
+    "submitted_at": "2018-05-31T13:22:24.395Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "s_p_q_r",
+        "url": "/s_p_q_r",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 65,
+        "url": "https://hackerone.com/mailru",
+        "handle": "mailru",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Mail.ru",
+            "twitter_handle": "",
+            "website": "https://vk.company/",
+            "about": "Building the Internet since 1998"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-07-31T14:54:26.604Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-07-31T14:54:26.401Z",
+    "team_member_agreed_on_going_public_at": "2018-07-16T11:07:45.784Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Недостаточная валидация параметра **backUrl** даёт возможность указать javascript-ссылку:\n\nhttps://account.mail.ru/user/delete?backUrl=javascript:alert(document.domain)\n\n```javascript\ngetBackUrl: function (url) {\n\treturn /^http/.test(url) ? url : (this.urlData.backUrl || this.config.get('backUrl') || 'https://e.mail.ru');\n},\n```\n\n```javascript\nexit: function (url) {\n\twindow.location.href = this.getBackUrl(url);\n },\n```\n\n```javascript\nonExit: function (event, ui) {\n\tthis.unloadHandled = true;\n\tthis.router.exit();\n},\n```\n\nDomain, site, application\n--\nhttps://account.mail.ru/user/delete\n\nTesting environment\n--\nFirefox 60.0\nChrome 66.0\n\nSteps to reproduce\n--\n1. Заходим в аккаунт\n2. Открываем https://account.mail.ru/user/delete?backUrl=javascript:alert(document.domain)\n3. Нажимаем «Отменить»\n\nActual results\n--\nXSS\n\nExpected results, security impact description and recommendations\n--\nФильтровать javascript + проверять, что ссылка ведёт на домен mail.ru\n\nPoC, exploit code, screenshots, video, references, additional resources\n--\n{F303613}\n\n## Impact\n\nXSS",
+    "bounty_amount": "500.0",
+    "formatted_bounty": "$500",
+    "weakness": {
+        "id": 63,
+        "name": "Cross-site Scripting (XSS) - DOM"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 303613,
+            "file_name": "acc_del_xss.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/303/613/5b477d228b94469728d9213ee13c842bc4a7cdcb/acc_del_xss.png?response-content-disposition=attachment%3B%20filename%3D%22acc_del_xss.png%22%3B%20filename%2A%3DUTF-8%27%27acc_del_xss.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073829Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=08cd1973e617573b69d39d9c58356651435d0de2b0fca41663e6516988a846bc",
+            "file_size": 31595,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2018-08-15T11:07:45.882Z",
+    "allow_singular_disclosure_after": -158963443.98214892,
+    "singular_disclosure_allowed": true,
+    "vote_count": 8,
+    "voters": [
+        "airblender",
+        "maxarr",
+        "danila",
+        "ali",
+        "theappsec",
+        "apapedulimu",
+        "yusuf_furkan",
+        "cryptographer"
+    ],
+    "structured_scope": {
+        "databaseId": 258,
+        "asset_type": "URL",
+        "asset_identifier": "account.mail.ru",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2822984,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Спасибо за ваш репорт.  Мы ценим ваше желание сделать наши сервисы ещё безопаснее.\n\nПрисланная вами информация передана аналитикам и проверяется, мы обязательно свяжемся с вами в ближайшее время.\n",
+            "automated_response": false,
+            "created_at": "2018-05-31T13:33:43.572Z",
+            "updated_at": "2018-05-31T13:34:06.280Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 2822985,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-05-31T13:34:17.192Z",
+            "updated_at": "2018-05-31T13:34:17.192Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 2850033,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Привет, вознаграждение за найденную уязвимость начислено на твой аккаунт. На странице https://hackerone.com/settings/bounties можно выбрать желаемый метод выплаты. \n\nСпасибо и ждем от тебя новых багрепортов!\n\nP.S. работа по устранению уязвимости пока продолжается.",
+            "automated_response": false,
+            "created_at": "2018-06-06T15:30:23.306Z",
+            "updated_at": "2018-06-06T15:30:23.306Z",
+            "actor": {
+                "url": "/mailru",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Mail.ru"
+                }
+            },
+            "bounty_amount": "500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "mailru",
+            "collaborator": {
+                "username": "s_p_q_r",
+                "url": "/s_p_q_r"
+            }
+        },
+        {
+            "id": 2889137,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Привет, бага закрыта.\nПожалуйста, подтвердите, что проблема больше не воспроизводится. \n",
+            "automated_response": false,
+            "created_at": "2018-06-15T12:39:17.881Z",
+            "updated_at": "2018-06-15T12:39:17.881Z",
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "s_p_q_r",
+                "url": "/s_p_q_r"
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 2907797,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Привет,\n\nДа, добавлена проверка:\n\n```javascript\nvar IsMailRu = /^https?:\\/\\/(?:[\\w.]+\\.)?mail\\.ru(?:[\\/?].*)?$/;\n\nif (backUrl && IsMailRu.test(backUrl)) {\n\treturn backUrl;\n```",
+            "automated_response": false,
+            "created_at": "2018-06-19T15:38:29.592Z",
+            "updated_at": "2018-06-19T15:38:29.592Z",
+            "actor": {
+                "username": "s_p_q_r",
+                "cleared": false,
+                "verified": false,
+                "url": "/s_p_q_r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3051182,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-16T11:07:45.819Z",
+            "updated_at": "2018-07-16T11:07:45.819Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3092689,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "А не фул опять будет, да?",
+            "automated_response": false,
+            "created_at": "2018-07-24T16:18:42.285Z",
+            "updated_at": "2018-07-24T16:18:42.285Z",
+            "actor": {
+                "username": "s_p_q_r",
+                "cleared": false,
+                "verified": false,
+                "url": "/s_p_q_r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3092715,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Поправил на лимитед",
+            "automated_response": false,
+            "created_at": "2018-07-24T16:22:11.095Z",
+            "updated_at": "2018-07-24T16:22:11.095Z",
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3118509,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ну я-то как раз фул хотел) Просто мне не видно отсюда, какой дисклоз ожидается)",
+            "automated_response": false,
+            "created_at": "2018-07-30T22:15:33.941Z",
+            "updated_at": "2018-07-30T22:15:33.941Z",
+            "actor": {
+                "username": "s_p_q_r",
+                "cleared": false,
+                "verified": false,
+                "url": "/s_p_q_r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3121411,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Поправил на фул",
+            "automated_response": false,
+            "created_at": "2018-07-31T09:05:53.772Z",
+            "updated_at": "2018-07-31T09:05:53.772Z",
+            "actor": {
+                "username": "3apa3a",
+                "cleared": false,
+                "verified": false,
+                "url": "/3apa3a",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3122558,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-31T14:54:26.480Z",
+            "updated_at": "2018-07-31T14:54:26.480Z",
+            "actor": {
+                "username": "s_p_q_r",
+                "cleared": false,
+                "verified": false,
+                "url": "/s_p_q_r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 3122559,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-31T14:54:26.679Z",
+            "updated_at": "2018-07-31T14:54:26.679Z",
+            "actor": {
+                "username": "s_p_q_r",
+                "cleared": false,
+                "verified": false,
+                "url": "/s_p_q_r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/547/1d8b3feccf1a8281a2285cdbfc482aaf3b046b22_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 9562,
+            "category": "team",
+            "content": "XSS in account.mail.ru via backUrl GET parameter",
+            "user": {
+                "id": 4836,
+                "username": "3apa3a",
+                "name": "Vladimir Dubrovin",
+                "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+                "cleared": false,
+                "verified": false,
+                "website": "https://3proxy.org/",
+                "location": "Nizhny Novgorod, Russia",
+                "created_at": "2014-04-10T22:08:47.745Z",
+                "url": "https://hackerone.com/3apa3a",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

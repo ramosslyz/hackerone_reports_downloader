@@ -1,0 +1,530 @@
+{
+    "id": 879803,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84Nzk4MDM=",
+    "url": "https://hackerone.com/reports/879803",
+    "title": "Bypass of SSRF Vulnerability",
+    "state": "Closed",
+    "substate": "duplicate",
+    "severity_rating": "high",
+    "readable_substate": "Duplicate",
+    "created_at": "2020-05-21T15:34:21.355Z",
+    "submitted_at": "2020-05-21T15:34:21.355Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "njgadhiya",
+        "url": "/njgadhiya",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-06-28T08:34:16.514Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-07-14T07:45:51.248Z",
+    "team_member_agreed_on_going_public_at": "2021-06-28T08:34:16.384Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "##Bypass of SSRF report https://hackerone.com/reports/793704 \n\nFix applied after reporting the actual report did not prevent from SSRF issue.\nhttps://github.com/TryGhost/Ghost/commit/47739396705519a36018686894d1373e9eb92216#diff-3aa52b4b8c6e0fb8422de65648e35887R101\n\nThe function fetchOembedData() only validates, IPv4, IPv6 and localhost:\n\nif (!HTTP_REGEX.test(protocol) || hostname === 'localhost' || IPV4_REGEX.test(hostname) || IPV6_REGEX.test(hostname))\n\nHowever, it is possible that an attacker would be able to bypass localhost validations with following domains or such:\n\nhttp://spoofed.burpcollaborator.net\nhttp://localtest.me\nhttp://customer1.app.localhost.my.company.127.0.0.1.nip.io\nhttp://mail.ebc.apple.com redirect to 127.0.0.6 == localhost\nhttp://bugbounty.dod.network redirect to 127.0.0.2 == localhost\n\n##Recommendation \nIn order to fix, this vulnerability all the URL provided with \"/ghost/api/v3/admin/oembed/?url=http://169.254.169.254/metadata/v1.json&type=embed\" and URLs getting as a response should be resolved and it should again pass through the filters added to above functions.\n\n## Impact\n\n* An attacker with publisher role (editor, author, contributor, administrator) in a blog may be able to leverage this to make arbitrary GET requests in a Ghost Blog instance's to internal external network.",
+    "weakness": {
+        "id": 68,
+        "name": "Server-Side Request Forgery (SSRF)"
+    },
+    "original_report_id": 815084,
+    "original_report_url": "https://hackerone.com/reports/815084",
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "0xwise",
+        "collinsmarra",
+        "ekgaribadmi",
+        "filipcotan",
+        "althepilot",
+        "steve2gold"
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.6,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "low",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 2986,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "Other module",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8077137,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @njgadhiya,\n\nThank you for your submission. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nKind regards,\n@ktistai",
+            "automated_response": false,
+            "created_at": "2020-05-22T07:31:26.108Z",
+            "updated_at": "2020-05-22T07:31:26.108Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8077154,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @njgadhiya,\n\nThank you for your submission. Is it possible to share with us a PoC that shows all the steps on how to reproduce the issue? Can you also share the instructions on how to run the vulnerable code? \n\nKind regards,\n@ktistai",
+            "automated_response": false,
+            "created_at": "2020-05-22T07:33:24.667Z",
+            "updated_at": "2020-05-22T07:33:24.667Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8077173,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Information on configuration is provided in https://hackerone.com/reports/793704. \n\nThe issue can be replicated by provided URLs:\n* http://spoofed.burpcollaborator.net\n* http://localtest.me\n* http://customer1.app.localhost.my.company.127.0.0.1.nip.io\n* http://mail.ebc.apple.com redirect to 127.0.0.6 == localhost\n* http://bugbounty.dod.network redirect to 127.0.0.2 == localhost",
+            "automated_response": false,
+            "created_at": "2020-05-22T07:37:23.860Z",
+            "updated_at": "2020-05-22T07:37:23.860Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8079750,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Following snapshot suggests that the SSRF validation can be bypassed, in this case \"spoofed.burpcollaborator.net\" resolves \"127.0.0.1\":\n\nGET /ghost/api/v3/admin/oembed/?url=http://spoofed.burpcollaborator.net/index.html&type=embed HTTP/1.1\n\n{F838818}",
+            "automated_response": false,
+            "created_at": "2020-05-22T13:13:50.491Z",
+            "updated_at": "2020-05-22T13:13:50.491Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 838818,
+                    "filename": "SSRF-bypass-example.PNG",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ceJBHgNr5rAVoXhJU93V34VK?response-content-disposition=attachment%3B%20filename%3D%22SSRF-bypass-example.PNG%22%3B%20filename%2A%3DUTF-8%27%27SSRF-bypass-example.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3TTIL2DQ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070955Z&X-Amz-Expires=466&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIByrU6zu8UCr8YtkwWSgXBfGQmLVgHk%2FDibETv1fH01bAiBXrcwW0PCeg6TL8m1olxHgQIbYiRGi1bNtT%2FNR5kuhiyq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM84NLS3Qx4RBN8JsuKo8Fb%2FEcEjuZHQhpG0hCsR37xPLbjFFmj%2F7od%2Bw0AiEgAjGL6miAi%2FW1cNhAAo%2BIAm4OpoS6jusauBAmUaM0lNbf3CuAyr%2BPgxjKKcA639ZetIv3YHfccZhiqLhRwxhrZOYxm%2FBk6iMuuvQP9TmhDW4dBonLo1GLRxMejcheF7P9X4Hmpm0h46%2Bp5GWhy8ml5qA0KZVnMX7M%2BD3HsLGW4Xksla1ULBFMOCmT8k3acIbg53l8qSrBp9zP%2Fc%2FrIAaFIkFOsolHzYloHtFfwIRUjYAr%2BIL8P3bP4aE2ChT%2Bvk%2BoF7Ze9wf%2FMMjUldJzXa%2Ba%2FCEyqQ6UwVx65pa4ANje%2BuaoIkg0O6BIUoQ8Hv%2FA41rpNabzDRiMjMXnnyYfpHQQNYTq%2B%2FdMjDR6BnyKMrrkHbo45rPJH57MNl1SQJD%2FR0605WmW2dbM6uDWdlHQ0xguHyj%2BHIWYsR5Mo73NWx5h3HzM3myqOYDZ1%2B4TSpxGOJG45cMi06atADf6q6gmCQYwm%2BwMrm0VO0tQGs7umFU1CnvnVxn0rVeL4yWQhYupQiY7hCBiWvaTcbFFkPgnGwgEBFjE3CXoilzwiTqEm9VY%2FgOwWe9%2B2kJW3XYONv8tCdZb39yYRtlTE9s73Qsh9D0WFCSCeP31lSnz%2FYVjiAc1SXbf8Dv1QP412%2FbKNmBAvwszv2ztxs3m0oVcJ2VuTXzkkYJqvjsG3qQDNV6Je3uE%2B1u14uhYO776iLEDjp0QLoN94EJAuB26Av4g%2FPr6fq9nFuGAdQMBd4MGSoGofv8KSyLylB%2FhoM%2B1zo2ndaOBpFKiC8IGVjhqwWWOUsk9KVE8Bs5z8u2pE%2FXYVFffVCj2MBISdkHqQ4z%2FWkxjJNtJYcuwsjDcibWnBjqyATfijhJ45QkjTwmJm1gKbwymXMp8DO%2BLJZwtXFXKYdifN4RX5wJLJV75e7CU69zvLRBdV4qaXMnEsXt0ehTdT6TOvkC2AawlILIumcWbw6nXVpV%2FCrgl4uW8nMZR6XfBGHnSyH8moGneD6WsoL0S%2Bf%2BA%2FOHOv21Kq0Vg8mKloNL9RmyVVYRm5fF7%2FtLbD%2Ftl6aG0h42AdHzDJDvpFCVBcGGom9i3KA316WtijHcjh1P2gq4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c8b20fca8978e2cb4936ddf4653ef6c4254012615d00c8b272a48bbf6fbea30e"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8082061,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Installation help: https://github.com/TryGhost/Ghost#quickstart-install ",
+            "automated_response": false,
+            "created_at": "2020-05-22T17:46:37.552Z",
+            "updated_at": "2020-05-22T17:46:37.552Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8097110,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @njgadhiya,\n\nI installed the software using these instructions, https://ghost.org/docs/install/local/, as it's unclear what you wanted to run on your server. I am not able to replicate, however, the behaviour you are describing in the screenshot. \n\nHow exactly did you generate the request? Can you share the steps needed for that?\n\nAlso, when submitting PoC, please submit in the same report and do not reference other reports, as the details might have changed. \n\nThanks, \n@ktistai\n\n",
+            "automated_response": false,
+            "created_at": "2020-05-25T13:06:22.974Z",
+            "updated_at": "2020-05-25T13:07:56.703Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8098561,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @ktistai,\n\nSure, I will take care on providing reports similar to previous one and give the full steps to reproduce. \n\nInstall the ghost-cli\n```npm install ghost-cli@latest -g```\n\nInstallation of Ghost\n```ghost install local```\n\nOnce setup is done, it will automatically start the Ghost, otherwise run:\n```ghost stop to stop Ghost```\n\nRef: https://ghost.org/docs/install/local/\n\nOnce the setup is done, register to the portal, first user will be Administrator and have access to the URL:\n\nhttp://www.example.com:111/ghost/api/v3/admin/oembed/?url=http://spoofed.burpcollaborator.net/index.html&type=embed\n\n\nOr if we directly use Burp Repeater:\n \n```GET /ghost/api/v3/admin/oembed/?url=http://spoofed.burpcollaborator.net/index.html&type=embed HTTP/1.1```\n\nIf we run ```sudo python -m SimpleHTTPServer 80```, we should get the request to the server. \n\nSo, I was able to bypass the restriction(set after the old report) and was able to query internal servers.\n\nPlease let me know if you need any information.\n\nThanks,\n@njgadhiya ",
+            "automated_response": false,
+            "created_at": "2020-05-25T16:45:29.972Z",
+            "updated_at": "2020-05-25T16:45:29.972Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8117977,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugDuplicate",
+            "message": "Hi @njgadhiya,\n\nThanks for the report. Unfortunately, this was submitted previously by another researcher, but we appreciate your work and look forward to additional reports from you.\n\nBest regards,\n@ktistai",
+            "automated_response": false,
+            "created_at": "2020-05-27T11:44:18.631Z",
+            "updated_at": "2020-05-27T11:44:18.631Z",
+            "original_report_id": 815084,
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8118318,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ktistai Can you please add me on that report #815084?",
+            "automated_response": false,
+            "created_at": "2020-05-27T12:26:01.505Z",
+            "updated_at": "2020-05-27T12:26:01.505Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8142989,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@njgadhiya \n\nI just added you. If there are any questions/concerns, I would like to ask you to post them in this thread and not in the other report :) We do this to keep reports clear and easy to follow.  \n\nThanks, \n@ktistai",
+            "automated_response": false,
+            "created_at": "2020-05-29T09:31:17.055Z",
+            "updated_at": "2020-05-29T09:31:17.055Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8150324,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ktistai, \n\nThank you for looking into this. Well, will I be eligible for CVE once it's fixed?\n\nThanks,\n@njgadhiya ",
+            "automated_response": false,
+            "created_at": "2020-05-29T18:13:17.895Z",
+            "updated_at": "2020-05-29T18:13:17.895Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8180675,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@njgadhiya, I'm not exactly sure how the CVE assignment works, but I guess so, yeah. ",
+            "automated_response": false,
+            "created_at": "2020-06-02T15:30:14.996Z",
+            "updated_at": "2020-06-02T15:30:14.996Z",
+            "actor": {
+                "username": "ktistai",
+                "cleared": false,
+                "verified": false,
+                "url": "/ktistai",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/322/520/01cd21dce301646646276fd9125cffd448fbffd6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8181298,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you @ktistai. I suppose you can add both to the CVE assignment. Let me know if you need any information form me.\n\n@njgadhiya ",
+            "automated_response": false,
+            "created_at": "2020-06-02T16:54:00.083Z",
+            "updated_at": "2020-06-02T16:54:00.083Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8188546,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ktistai ,\n\nIt seems like the issue has been fixed and no longer allow to resolve and use private IPs.\n\nThanks,\n@njgadhiya ",
+            "automated_response": false,
+            "created_at": "2020-06-03T10:15:41.456Z",
+            "updated_at": "2020-06-03T10:15:41.456Z",
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 8590742,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose it now?",
+            "automated_response": false,
+            "created_at": "2020-07-14T07:45:51.266Z",
+            "updated_at": "2020-07-14T07:45:51.266Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "njgadhiya",
+                "cleared": false,
+                "verified": false,
+                "url": "/njgadhiya",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/juyRbkkFiEePab7nf6ZZZNhd/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 12267126,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Disclosing as requested and due to duplicate report being disclosed in full too.\nThanks!",
+            "automated_response": false,
+            "created_at": "2021-06-28T08:34:16.406Z",
+            "updated_at": "2021-06-28T08:34:16.406Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 12267127,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-28T08:34:16.550Z",
+            "updated_at": "2021-06-28T08:34:16.550Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

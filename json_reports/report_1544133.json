@@ -1,0 +1,564 @@
+{
+    "id": 1544133,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTQ0MTMz",
+    "url": "https://hackerone.com/reports/1544133",
+    "title": "SSRF vulnerability can be exploited when a hijacked aggregated api server such as metrics-server returns 30X",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2022-04-19T01:33:58.642Z",
+    "submitted_at": "2022-04-19T01:33:58.737Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "weinongw",
+        "url": "/weinongw",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 39386,
+        "url": "https://hackerone.com/kubernetes",
+        "handle": "kubernetes",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Kubernetes",
+            "twitter_handle": "kubernetesio",
+            "website": "https://kubernetes.io/",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2022-3172"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2022-12-10T18:45:00.828Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-11-10T18:44:57.136Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Report Submission Form\n\n## Summary:\nThis report uses metrics-server as example, but it should be applicable to any aggregated api server.\n\nWhen metrics-server is hijacked, either by modifying the container image directly or by running another pods using the same label selector in kube-system namespace, and is returning 30X redirect, the clients calling the metrics api will follow the redirect.\n\nIt could be a serious issue in managed Kubernetes offerings such as Azure Kubernetes Service (AKS) where clients from managed components may be redirected to call the internal endpoints.\n\nNote: my coworker, Nicolas Joly, found the issue and reported my team (AKS)\n\n## Kubernetes Version:\nall k8s versions on AKS. I believe it's the same in other cloud providers.\n\n## Component Version:\nn/a\n\n## Steps To Reproduce:\n* Attached main.go is a very simple redirection api server. I've built the docker image on weinong/go-redirect.\n* update and deploy `go-redirect.yaml` with your endpoint to capture the redirected  traffic in kube-system namespace. It uses the same pod label selector as metrics-server does\n* you should be able to observe redirected traffic from the control plane components \n\n## Supporting Material/References:\nSample output being logged in the web server capturing redirected traffic:\n```\n2022/04/16 00:30:13 src IP: 20.51.80.40:4096\nGET / HTTP/1.1\nHost: 20.85.59.5\nAccept: application/json, */*\nAccept-Encoding: gzip\nAuthorization: Bearer <omitted>\nUser-Agent: azurepolicyaddon/v0.0.0 (linux/amd64) kubernetes/$Format\n\nGET / HTTP/1.1\nHost: 20.85.59.5\nAccept: application/vnd.kubernetes.protobuf, */*\nAuthorization: Bearer <omitted>\nUser-Agent: kube-controller-manager/v1.17.13 (linux/amd64) kubernetes/f4a8e76/system:serviceaccount:kube-system:generic-garbage-collector\n\n2022/04/16 00:34:37 src IP: 20.69.190.88:21504\nGET / HTTP/1.1\nHost: 20.85.59.5\nAccept: application/json, */*\nAccept-Encoding: gzip\nAuthorization: Bearer  <omitted>\nUser-Agent: cpmonitor/v0.0.0 (linux/amd64) kubernetes/$Format\n```\n\n  * [attachment / reference]\n\n## Impact\n\n* Bearer token may be logged in the logging system in those internal backend \n* Potentially, they may be logged by kube-controller-manager or kubernetes api-server at certain verbose level   (not verified)\n* Redirected traffic may hit external/internal endpoints for spamming which would look originating from the cloud providers",
+    "bounty_amount": "1000.0",
+    "formatted_bounty": "$1,000",
+    "weakness": {
+        "id": 68,
+        "name": "Server-Side Request Forgery (SSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1698068,
+            "file_name": "go-redirect.yaml",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1gtkkevefgffgztljnozrdz6228e?response-content-disposition=attachment%3B%20filename%3D%22go-redirect.yaml%22%3B%20filename%2A%3DUTF-8%27%27go-redirect.yaml&response-content-type=application%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=858&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=09f8a2a577e6cb483c43594565b82464033a2e113715b255e45da6647667857a",
+            "file_size": 478,
+            "type": "application/x-yaml"
+        },
+        {
+            "id": 1698069,
+            "file_name": "main.go",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/amwwsuruv90unujefwwcfz8s91yc?response-content-disposition=attachment%3B%20filename%3D%22main.go%22%3B%20filename%2A%3DUTF-8%27%27main.go&response-content-type=text%2Fx-go&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=858&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=12958787cfe34e62ed24f4556101a49d3b54ddd60457499e62905ab042f86485",
+            "file_size": 952,
+            "type": "text/x-go"
+        }
+    ],
+    "allow_singular_disclosure_at": "2022-12-10T18:44:57.254Z",
+    "allow_singular_disclosure_after": -22594395.303753786,
+    "singular_disclosure_allowed": true,
+    "vote_count": 44,
+    "voters": [
+        "jumpydata",
+        "n1m0",
+        "s0h3ilsec",
+        "zy9ard3",
+        "encryptsaan123",
+        "savitar0x01",
+        "sameersec",
+        "shivammusic",
+        "naceureddine_sn",
+        "wanted_terminal_03",
+        "and 34 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 32497,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/kubernetes/kube-aggregator",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16372838,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @weinongwa,\n\nThank you for the report!\n\nTo make sure this is reproduced correctly, can you please include every command that needs to be executed in your reproduction steps? \n\nRegards,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2022-04-20T15:14:53.614Z",
+            "updated_at": "2022-04-20T15:14:53.614Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16376559,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi, you can use the attached zip file. you can use my container image, docker.io/weinong/go-redirect, which is what's being used in the repro. just run run.sh",
+            "automated_response": false,
+            "created_at": "2022-04-20T20:18:00.951Z",
+            "updated_at": "2022-04-20T20:18:00.951Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1700888,
+                    "filename": "archive.zip",
+                    "type": "application/zip",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gd36ii5y062fgzu9vaqmfjv8i706?response-content-disposition=attachment%3B%20filename%3D%22archive.zip%22%3B%20filename%2A%3DUTF-8%27%27archive.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=858&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cbeaca5f58befffa49448f62a594d0c172a3c8e4a47af13f4eb8944fc12d0c89"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16405110,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @weinongw,\n\nThank you for putting together the script and container image! \n\nUnfortunately, I was not able to reproduce this using it. I uncommented the docker build command and got the following error when executing `run.sh`:\n\n```\nError from server (NotFound): deployments.apps \"metrics-server\" not found\n```\n\nAre there any additional steps? \n\nRegards,\n@tuxedo ",
+            "automated_response": false,
+            "created_at": "2022-04-22T17:16:15.838Z",
+            "updated_at": "2022-04-22T17:16:15.838Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16405353,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @tuxedo \n\nWhat distribution are you running? This should work in managed Kubernetes like GKE and AKS.",
+            "automated_response": false,
+            "created_at": "2022-04-22T17:56:08.088Z",
+            "updated_at": "2022-04-22T17:56:08.088Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16405702,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "oh i see the issue. i will update the script",
+            "automated_response": false,
+            "created_at": "2022-04-22T18:41:11.439Z",
+            "updated_at": "2022-04-22T18:41:11.439Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16406318,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "~~updated the run.sh to find the metrics-server deployment to scale down~~\n\nscrape it... that too isn't right",
+            "automated_response": false,
+            "created_at": "2022-04-22T18:57:49.095Z",
+            "updated_at": "2022-04-22T19:01:58.861Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16407293,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "ok... the script is updated to run end to end on gke and on aks\nto run it: `USE_GKE=1 ./run.sh`\nto cleanup: `USE_GKE=1 CLEANUP=1 ./run.sh`\n`output.txt` was captured on gke. in that file, you can see traffic from control plane with IP `34.122.28.173`. Requests from controller-manager include Bearer token\n\nIf you don't want to use my container image, you will need to modify the yamls accordingly.",
+            "automated_response": false,
+            "created_at": "2022-04-22T21:18:59.070Z",
+            "updated_at": "2022-04-22T21:18:59.070Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1703636,
+                    "filename": "archive.zip",
+                    "type": "application/zip",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/i8swtmru51uc6od8pfd8ktak1t8d?response-content-disposition=attachment%3B%20filename%3D%22archive.zip%22%3B%20filename%2A%3DUTF-8%27%27archive.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=858&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f3dd386d9d93be6b9c2d7c14e13b454289f462601650f4a93c3b50ce0f827c44"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16469304,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@tuxedo any update?",
+            "automated_response": false,
+            "created_at": "2022-04-27T20:54:58.882Z",
+            "updated_at": "2022-04-27T20:54:58.882Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16498634,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @weinongw - I'm discussing this submission internally with the Kubernetes team. You will be updated as soon as there is additional information to share. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2022-04-29T18:51:13.191Z",
+            "updated_at": "2022-04-29T18:51:13.191Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16592848,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @weinongw,\n\nThanks for your patience!\n\nUnfortunately, the HackerOne triage team doesn't have access to GKE or AKS, however, we can try to reproduce this using EKS. If possible, can you please modify your PoC or provide step-by-step instructions for me to do so? \n\nRegards,\n@tuxedo",
+            "automated_response": false,
+            "created_at": "2022-05-06T15:20:05.339Z",
+            "updated_at": "2022-05-06T15:20:05.339Z",
+            "actor": {
+                "username": "h1_analyst_leon",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_leon",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9G6pgB95of3ikt3prqQunAfD/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16730887,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "@tuxedo I tried it on EKS, but EKS doesn't install metrics-server by default. Even after I added it, there isn't any component from control plane calling metrics API. So EKS isn't really affected.\nThat being said, do I really need a repro on EKS to raise the issue? I thought the issue is pretty obvious... ",
+            "automated_response": false,
+            "created_at": "2022-05-17T02:11:47.643Z",
+            "updated_at": "2022-05-17T02:11:47.643Z",
+            "actor": {
+                "username": "weinongw",
+                "cleared": false,
+                "verified": false,
+                "url": "/weinongw",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pzm1oebfe949nlq59hr5riqn6fak/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 16799214,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the report. We are working on reproducing this on GKE and evaluating severity.",
+            "automated_response": false,
+            "created_at": "2022-05-20T21:32:06.955Z",
+            "updated_at": "2022-05-20T21:32:06.955Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 19178045,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-10T18:35:57.148Z",
+            "updated_at": "2022-11-10T18:35:57.148Z",
+            "cve_ids": [
+                "CVE-2022-3172"
+            ],
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 19178050,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-10T18:37:44.253Z",
+            "updated_at": "2022-11-10T18:37:44.253Z",
+            "actor": {
+                "url": "/kubernetes",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Kubernetes"
+                }
+            },
+            "bounty_amount": "1000.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "kubernetes",
+            "collaborator": {
+                "username": "weinongw",
+                "url": "/weinongw"
+            }
+        },
+        {
+            "id": 19178071,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-10T18:41:10.429Z",
+            "updated_at": "2022-11-10T18:41:10.429Z",
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "weinongw",
+                "url": "/weinongw"
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 19178116,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-11-10T18:44:57.166Z",
+            "updated_at": "2022-11-10T18:44:57.166Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "cjcullen",
+                "cleared": false,
+                "verified": false,
+                "url": "/cjcullen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        },
+        {
+            "id": 19514818,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-10T18:45:00.904Z",
+            "updated_at": "2022-12-10T18:45:00.904Z",
+            "actor": {
+                "url": "/kubernetes",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Kubernetes"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "kubernetes"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

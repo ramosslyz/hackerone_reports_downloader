@@ -1,0 +1,299 @@
+{
+    "id": 224927,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMjQ5Mjc=",
+    "url": "https://hackerone.com/reports/224927",
+    "title": "Missing Rate Limiting protection leading to mass triggering of e-mails",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2017-04-29T13:05:35.781Z",
+    "submitted_at": "2017-04-29T13:05:35.781Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "giligails",
+        "url": "/giligails",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13291,
+        "url": "https://hackerone.com/nextcloud",
+        "handle": "nextcloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Nextcloud",
+            "twitter_handle": "nextclouders",
+            "website": "https://nextcloud.com",
+            "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2017-06-05T06:35:55.592Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2017-05-06T06:35:44.125Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The issue is that there is a speed bump missing in the subscription of e-mail for a user. This would eventually let the attacker spam to *any* random e-mail resulting in exhaustion of resources on your side and I see that you are using Amazon AWS's SES where you are charged per e-mail.  If a dedicated attacker wants to, he/she create significant loss at his/her whim and fancy. \n\nThe mails can be triggered to a specific user , post his/her confirmation to subscription thereby causing frustration to users due to flooded inbox, consequently forcing users to classify emails from your application as SPAM . \n\n This poses a significant threat to the integrity and reputation of your organisation. \n\nThe request which when captured triggers mails.\nPOST /?p=subscribe&id=1 HTTP/1.1\nHost: newsletter.nextcloud.com\nHost: google.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-GB,en;q=0.5\nReferer: https://newsletter.nextcloud.com/?p=subscribe&id=1\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 199\nCookie: PHPSESSID=15vcjnijfjq2vlo8ihpkcdk9f3\nConnection: close\nUpgrade-Insecure-Requests: 1\n\nemail=testonhackerone%40gmail.com&emailconfirm=testonhackerone%40gmail.com&htmlemail=1&list%5B3%5D=signup&listname%5B3%5D=Nextcloud+newsletter&VerificationCodeX=&subscribe=Subscribe+to+the+newsletter\n\nProof of Concept / Steps to reproduce: \n\n1. Copy the request to the Burp Intruder\n2. Now, paste the target and the request and set the options to Null Payloads. \n3. Intrude the request say 10 times to the target email. \n4. You can see the e-mails being spammed to your inbox. \n\nAttached is the screenshot showing count of mails triggered post confirmation of subscription(61) due to the capture of request.\n\nAlso, confirming the e-mail doesn't make that confirmed user immune to this attack. The e-mail spam attack can be performed even if the user has previously confirmed. \n\nPOC: \n1. Confirm the subscription once and try the same again. \n\nI'd be more than happy to assist you with anything regarding the issue. \n\nLook forward to hear from you. \n\nHave a happy day. \n",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 180637,
+            "file_name": "NextCloud.PNG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/180/637/05e34bb071e090a7a5195f8a57b217af7c1c7d20/NextCloud.PNG?response-content-disposition=attachment%3B%20filename%3D%22NextCloud.PNG%22%3B%20filename%2A%3DUTF-8%27%27NextCloud.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080355Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=016030b3dd189f05e3ff391b84a1f334d555c7c36518de39a8a178334db73c7c",
+            "file_size": 64852,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-06-05T06:35:44.178Z",
+    "allow_singular_disclosure_after": -196651691.76383668,
+    "singular_disclosure_allowed": true,
+    "vote_count": 4,
+    "voters": [
+        "eveeez",
+        "b3nac",
+        "japz",
+        "spetr0x"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.5,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "low"
+        }
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1644427,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us!\n\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster. For obvious reasons we'd like to ask you to not disclose this issue to any other party.",
+            "automated_response": true,
+            "created_at": "2017-04-29T13:05:36.010Z",
+            "updated_at": "2017-04-29T13:05:36.010Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1645256,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-04-30T12:07:43.735Z",
+            "updated_at": "2017-04-30T12:07:43.735Z",
+            "actor": {
+                "username": "lukasreschke",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschke",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1657907,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "As per our bounty policy at the moment we don't award monetary bounties for issues within our infrastructure.",
+            "automated_response": false,
+            "created_at": "2017-05-06T06:34:45.768Z",
+            "updated_at": "2017-05-06T06:34:51.579Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1657909,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks a lot for your report again. This has been resolved now by deploying reCAPTCHA in front of our newsletter subscriptions.",
+            "automated_response": false,
+            "created_at": "2017-05-06T06:35:35.190Z",
+            "updated_at": "2017-05-06T06:35:35.190Z",
+            "actor": {
+                "username": "lukasreschke",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschke",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "giligails",
+                "url": "/giligails"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1657910,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-06T06:35:44.146Z",
+            "updated_at": "2017-05-06T06:35:44.146Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "lukasreschke",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschke",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1665897,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-05-10T15:01:00.605Z",
+            "updated_at": "2017-05-10T15:01:00.605Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 227501
+            },
+            "actor": {
+                "username": "0xelement",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xelement",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 1729599,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-05T06:35:55.610Z",
+            "updated_at": "2017-06-05T06:35:55.610Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

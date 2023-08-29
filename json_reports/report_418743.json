@@ -1,0 +1,222 @@
+{
+    "id": 418743,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTg3NDM=",
+    "url": "https://hackerone.com/reports/418743",
+    "title": "Email Spoofing Possible on djangoproject.com Email Domain",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "medium",
+    "readable_substate": "N/A",
+    "created_at": "2018-10-03T22:19:36.475Z",
+    "submitted_at": "2018-10-03T22:19:36.475Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "greenwolf",
+        "url": "/greenwolf",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/367/843/95ce1166f2f3d48a4133dc0210c03ccc15f385a2_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23,
+        "url": "https://hackerone.com/django",
+        "handle": "django",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/023/b457fd4bd71786ab14973cc3d53f9faf4d6c38ea_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/023/b457fd4bd71786ab14973cc3d53f9faf4d6c38ea_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Django",
+            "twitter_handle": null,
+            "website": "",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-10-05T12:56:49.573Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-10-05T08:21:44.372Z",
+    "team_member_agreed_on_going_public_at": "2018-10-05T12:56:49.531Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Summary:** Due to lacking a SPF and DMARC record it is possible to spoof emails from djangoproject.com. This could potentially be used to trick employees, customers or clients via phishing emails.  \n\n**Description:** Mail servers rely on both SPF and DMARC to properly deal with email spoofing. SPF shows what servers are allowed to send emails for the current domain. However when a mail does not originate from one of the listed IP's or domains it does not automatically get rejected. What happens to the spoofed email relies of the DMARC policy of the domain. If there is no DMARC policy or the DMARC policy contains 'p=none;' then no action is taken and the email is accepted, even though SPF has failed. In this case there is neither a SPF or a DMARC record.\n\n## Steps To Reproduce:\n\n  1.  You can verify the missing SPF and DMARC policy with the following commands on Linux or OSX:\ngit clone https://github.com/BishopFox/spoofcheck\ncd spoofcheck; python spoofcheck.py djangoproject.com\nVerify the lines: \n[+] djangoproject.com has no SPF record!\n[*] No DMARC record found. Looking for organizational record\n[+] No organizational DMARC record\n  2. You can test if spoofing is legitimate by sending a spoofed email using Send Grid. I have attached a small bash script which can do this for you, but you will need to provide a SendGrid username (SGUSER) and password (SGPASS) to use it. Also make sure to update the recipient email address (SGTO).\n\n\n## Supporting Material/References:\n\n  * I have attached an image of a spoofed email from vimeo.com to my outlook account called 'Vimeo-Spoofed-Email.png'. \n  * I have attached the output of spoofcheck showing the misconfigured DMARC record called 'misconfigured-dns.txt'. \n  * I have attached a small sendgrid script for you to test the spoofing called 'spooftest.sh'.\n\n## Impact\n\nBy exploiting this issue, attackers can spoof emails from your domain, which could be used to target your customers or employees with phishing emails. \n\nAs 90% of security breaches and compromises start with Phishing emails, allowing your domain to be spoofed removes an additional layer of protection for your customers, as they will see a legitimate from address at the top of a non legitimate email. This means an attacker doesn't have to rely on techniques such as character replacement which users have been trained to spot. E.g goggle.com or microsift.com\n\nTo fix the issue, a DMARC record containing 'p=reject;' should be added, which will cause spoofed emails to be rejected by the recipients mailbox.",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 355105,
+            "file_name": "spooftest.sh",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/355/105/79be1f3afc10d8f63efb5e07f2f25cd3aebbf6dd/spooftest.sh?response-content-disposition=attachment%3B%20filename%3D%22spooftest.sh%22%3B%20filename%2A%3DUTF-8%27%27spooftest.sh&response-content-type=text%2Fx-shellscript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073708Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d9971e059f143a28ee4b75e912fa2f7fa36aaf42d7611181363826f364e987ff",
+            "file_size": 595,
+            "type": "text/x-shellscript"
+        },
+        {
+            "id": 355106,
+            "file_name": "Spoofed-Email.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/355/106/559d9109d112edd6c63f327084206de6bea7402b/Spoofed-Email.png?response-content-disposition=attachment%3B%20filename%3D%22Spoofed-Email.png%22%3B%20filename%2A%3DUTF-8%27%27Spoofed-Email.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073708Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ed7b53657a27ae878116a54e715412d8b7f7400fed7a6150f08daa04a3f1b8ed",
+            "file_size": 201340,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 7,
+    "voters": [
+        "sameerphad72",
+        "shubham_srt",
+        "eveeez",
+        "greenwolf",
+        "noobiekid",
+        "onerealdem",
+        "bhagathhacker"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3431598,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-10-03T22:32:56.154Z",
+            "updated_at": "2018-10-03T22:32:56.154Z",
+            "actor": {
+                "username": "timgraham",
+                "cleared": false,
+                "verified": false,
+                "url": "/timgraham",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "django"
+        },
+        {
+            "id": 3437735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Good Morning, if you believe this is not a risk and will be not be address the emailing spoofing for your domain, please could you publicly disclose the report. ",
+            "automated_response": false,
+            "created_at": "2018-10-05T08:21:44.393Z",
+            "updated_at": "2018-10-05T08:21:44.393Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "greenwolf",
+                "cleared": false,
+                "verified": false,
+                "url": "/greenwolf",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/367/843/95ce1166f2f3d48a4133dc0210c03ccc15f385a2_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "django"
+        },
+        {
+            "id": 3439415,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-10-05T12:56:49.552Z",
+            "updated_at": "2018-10-05T12:56:49.552Z",
+            "actor": {
+                "username": "timgraham",
+                "cleared": false,
+                "verified": false,
+                "url": "/timgraham",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "django"
+        },
+        {
+            "id": 3439416,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-10-05T12:56:49.587Z",
+            "updated_at": "2018-10-05T12:56:49.587Z",
+            "actor": {
+                "username": "timgraham",
+                "cleared": false,
+                "verified": false,
+                "url": "/timgraham",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "django"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

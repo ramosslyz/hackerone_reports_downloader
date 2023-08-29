@@ -1,0 +1,330 @@
+{
+    "id": 129862,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjk4NjI=",
+    "url": "https://hackerone.com/reports/129862",
+    "title": "Stored XSS on [your_zendesk].zendesk.com in Facebook Channel",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-04-11T16:27:13.292Z",
+    "submitted_at": "2016-04-11T16:27:13.292Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "eboda",
+        "url": "/eboda",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/247/a6446792be4fa0fc962bcba2811ef801ddff87be_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 205,
+        "url": "https://hackerone.com/zendesk",
+        "handle": "zendesk",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Zendesk",
+            "twitter_handle": "",
+            "website": "https://www.zendesk.com",
+            "about": "Zendesk is a leading cloud-based customer service software solution. Over 100,000 customer accounts use Zendesk to increase customer satisfaction."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-06-01T21:16:03.496Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-05-30T12:42:28.011Z",
+    "team_member_agreed_on_going_public_at": "2016-06-01T21:16:03.405Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "I have found a stored XSS in the Facebook Channel options at ```https://[your_zendesk].zendesk.com/agent/admin/facebook/facebook_auth```.\n\nThe XSS is a result of improperly escaping Facebook Page names.\n\nSteps to reproduce\n-------------------------\n\n1. Create a facebook page with the following title/page name:\n\n    ```Foobar\" onmouseover=location&#x3d;'javascript:alert\\x28document.domain\\x29'```\n\n    (I had to play around with this a bit to get it working correctly as Facebook has strict policies on the page name. If the page already exists, try to replace `Foobar` with any other random string)\n2. Create your own zendesk account and then go to ```https://[your_zendesk].zendesk.com/agent/admin/facebook/facebook_auth``` to add a facebook page.\n3. After adding the page created in Step 1, hover over the \"Unlink\" button to trigger the XSS. See also attached screenshot.\n\nAttack scenario\n--------------------\nObviously anyone with the permissions to add facebook pages can trigger this stored XSS and attack the admins with the usual XSS attacks. \n\n",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 84649,
+            "file_name": "zendesk_stored_xss.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/084/649/55a3ee1b8ccb74fa058764a08b5c515c11245c1a/zendesk_stored_xss.png?response-content-disposition=attachment%3B%20filename%3D%22zendesk_stored_xss.png%22%3B%20filename%2A%3DUTF-8%27%27zendesk_stored_xss.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081406Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=eb2873e97776f299c50d873ed9beccdf43dc5924b4c87a3ceb20171f52ca854d",
+            "file_size": 50312,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "fantam1",
+        "spetr0x",
+        "anik",
+        "dyabla"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 899743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @eboda,\n\nThank you for reporting this issue. The Zendesk Security Team will begin investigating the details of your report immediately. If the issue is verified as a security vulnerability, we will contact you with a timeline for remediation and the amount awarded for the submitted issue.\n\nRegards,\n[Zendesk Security](https://www.zendesk.com/product/features/zendesk-security/)",
+            "automated_response": false,
+            "created_at": "2016-04-11T17:03:49.685Z",
+            "updated_at": "2016-04-11T17:03:49.685Z",
+            "actor": {
+                "username": "noops43",
+                "cleared": false,
+                "verified": false,
+                "url": "/noops43",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 912264,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hello @eboda,\n\nCongratulations! Your submitted vulnerability has been validated and is in process for remediation. You will be awarded $50 and publicly thanked for the responsible disclosure on our Hall of Fame. \n\nThis was a good find and a creative exploit. Unfortunately because the channels settings page is restricted to admins, the risk of the vulnerability decreases considerably.Furthermore, as mentioned in our bug bounty program we award based on risk. \n\nHaving said that, we enjoyed reading your report and would like to extend an invite into our private bug-bounty program for [BIME](https://hackerone.com/bime). Happy Hacking!\n\nRegards,\n[Zendesk Security](https://www.zendesk.com/product/features/zendesk-security/)",
+            "automated_response": false,
+            "created_at": "2016-04-18T16:40:29.951Z",
+            "updated_at": "2016-04-18T16:40:29.951Z",
+            "actor": {
+                "url": "/zendesk",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Zendesk"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "zendesk",
+            "collaborator": {
+                "username": "eboda",
+                "url": "/eboda"
+            }
+        },
+        {
+            "id": 912266,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-04-18T16:40:40.991Z",
+            "updated_at": "2016-04-18T16:40:40.991Z",
+            "actor": {
+                "username": "noops43",
+                "cleared": false,
+                "verified": false,
+                "url": "/noops43",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 912819,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @zendesk @noops43 ,\n\nThanks for the bounty and the invite to your private program!\n\nYeah I realize its implied risk is very low, but I didn't see a way to exploit it further and thought I would just report it as is.\n\nBest of luck to you!",
+            "automated_response": false,
+            "created_at": "2016-04-18T19:03:53.798Z",
+            "updated_at": "2016-04-18T19:03:53.798Z",
+            "actor": {
+                "username": "eboda",
+                "cleared": false,
+                "verified": false,
+                "url": "/eboda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/247/a6446792be4fa0fc962bcba2811ef801ddff87be_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 933253,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @zendesk @noops43 ,\nI noticed, that this bug is fixed now. Could you mark this issue as resolved?\n\nI would like to submit some bugs to @BIME, but I don't have yet 5 resolved reports, so my Signal calculation is \"pending\" and hence I don't meet the minimum requirement of having a Signal > 1.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2016-04-29T08:50:14.441Z",
+            "updated_at": "2016-04-29T08:50:14.441Z",
+            "actor": {
+                "username": "eboda",
+                "cleared": false,
+                "verified": false,
+                "url": "/eboda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/247/a6446792be4fa0fc962bcba2811ef801ddff87be_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 961931,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hello @eboda,\n\nYour submitted issue has been remediated. Thank you for participating in the [Zendesk Bug Bounty program](https://hackerone.com/zendesk). Please feel free to reach out if you have any questions or concerns.\n\nRegards,\n[Zendesk Security](https://www.zendesk.com/product/features/zendesk-security/)",
+            "automated_response": false,
+            "created_at": "2016-05-17T18:59:10.339Z",
+            "updated_at": "2016-05-17T18:59:10.339Z",
+            "actor": {
+                "username": "noops43",
+                "cleared": false,
+                "verified": false,
+                "url": "/noops43",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "eboda",
+                "url": "/eboda"
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 990785,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Do you mind disclosing?",
+            "automated_response": false,
+            "created_at": "2016-05-30T12:42:28.062Z",
+            "updated_at": "2016-05-30T12:42:28.062Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "eboda",
+                "cleared": false,
+                "verified": false,
+                "url": "/eboda",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/247/a6446792be4fa0fc962bcba2811ef801ddff87be_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 995682,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-06-01T21:16:03.445Z",
+            "updated_at": "2016-06-01T21:16:03.445Z",
+            "actor": {
+                "username": "noops43",
+                "cleared": false,
+                "verified": false,
+                "url": "/noops43",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        },
+        {
+            "id": 995683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-06-01T21:16:03.517Z",
+            "updated_at": "2016-06-01T21:16:03.517Z",
+            "actor": {
+                "username": "noops43",
+                "cleared": false,
+                "verified": false,
+                "url": "/noops43",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zendesk"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

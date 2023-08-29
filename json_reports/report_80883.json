@@ -1,0 +1,353 @@
+{
+    "id": 80883,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MDg4Mw==",
+    "url": "https://hackerone.com/reports/80883",
+    "title": "Authentication errors in server side validaton of E-MAIL",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2015-08-06T12:00:40.577Z",
+    "submitted_at": "2015-08-06T12:00:40.577Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "faisalahmed",
+        "url": "/faisalahmed",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/726/e66916f9112a11c1e97ec5ea0ad886121d14f38b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1868,
+        "url": "https://hackerone.com/gratipay",
+        "handle": "gratipay",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Gratipay",
+            "twitter_handle": "Gratipay",
+            "website": "https://gratipay.com/",
+            "about": "Gratitude? Gratipay! The easiest way for your company to pay for open source."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2015-08-10T13:26:24.963Z",
+    "bug_reporter_agreed_on_going_public_at": "2015-08-10T13:26:24.822Z",
+    "team_member_agreed_on_going_public_at": "2015-08-10T13:00:35.223Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "To be honest, I'm not sure if there is any real security implications of this bug, but it's something which should be fixed at some point (since it'll be pretty easy).\r\nI'm going to describe the issue with reproducible steps:\r\n1. Navigate to Gratipay Settings Page. https://gratipay.com/~username/settings/\r\n2. Try adding an invalid e-mail address. ex: `myemail@gmail.com'`.\r\n3. You won't be able to, as it says \"please add an e-mail address. means you're only allowed to add a valid e-mail address.\r\n\r\nNow this can be bypassed by intercepting request. Let me show you how.\r\n* Add a valid email address in e-mail field. ex:mail01@gmail.com\r\n* Run any Request Repeater (ex: BURP Repeater, Live HTTP Header, Temper Data)\r\n* Click **Add E-Mail Address** and intercept the request.\r\n* Go to your repeater and you'll find there this form contents,\r\n\r\n> POST https://gratipay.com/~lolzsec007/emails/modify.json\r\nPost Content:\r\n```\r\naction=add-email&address=mymail%40gmail.com\r\n```\r\n\r\n* Change email address from `mymail%40gmail.com` to `mymail%40gmail.com\"><h1>`\r\n* Reply/Repeat your request.\r\n* The **Invalid** Email address will get saved.\r\n\r\nSo that means, there is no server side validation for adding e-mail addresses.\r\nNow in this point, i would like to talked about another issue that i noticed because of this process,\r\nI discovered there is simply character limit for email addresses, as there is no server side validation implemented, an attacker can add an email address with as much characters he wants.\r\nbut as per RFC, an email address that has more than **255** characters, shouldn't be allowed.\r\n\r\nPossible Fix:\r\n* Implementation of server side validation for email address should resolve both issues.\r\n\r\nLooking forward.\r\nThanks\r\n",
+    "weakness": {
+        "id": 27,
+        "name": "Improper Authentication - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2015-09-09T13:00:35.403Z",
+    "allow_singular_disclosure_after": -251493470.86849603,
+    "singular_disclosure_allowed": true,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 539452,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "screenshot",
+            "automated_response": false,
+            "created_at": "2015-08-06T12:03:39.840Z",
+            "updated_at": "2015-08-06T12:03:39.840Z",
+            "actor": {
+                "username": "faisalahmed",
+                "cleared": true,
+                "verified": true,
+                "url": "/faisalahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/726/e66916f9112a11c1e97ec5ea0ad886121d14f38b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 48704,
+                    "filename": "gr.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/048/704/6f8fafe19c4749756242c5a03676dd7727725fa0/gr.png?response-content-disposition=attachment%3B%20filename%3D%22gr.png%22%3B%20filename%2A%3DUTF-8%27%27gr.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081826Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=72f78825496132eb536627b616b10a6e934a8f402c6307f5629dd40c956a6d16"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 539743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the report, faisalahmed! This is to confirm that we have received your report and are taking steps to validate your findings.\n\nThanks again,\n\nBen, Gratipay Security",
+            "automated_response": false,
+            "created_at": "2015-08-06T16:47:56.967Z",
+            "updated_at": "2015-08-06T16:47:56.967Z",
+            "actor": {
+                "username": "bhc",
+                "cleared": false,
+                "verified": false,
+                "url": "/bhc",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/009/667/b469b5c20ad0e91bac9a4ce0d31bfd71a1c26b71_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542347,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ftr, I hypothesize that this research is behind the alert we got from Mandrill:\n\n> Your bounce rate for today is currently 13.58%, compared to your 90-day average bounce rate of 0.60%.\n\nhttps://gratipay.freshdesk.com/helpdesk/tickets/2782",
+            "automated_response": false,
+            "created_at": "2015-08-10T00:41:29.314Z",
+            "updated_at": "2015-08-10T00:41:29.314Z",
+            "actor": {
+                "username": "whit537",
+                "cleared": false,
+                "verified": false,
+                "url": "/whit537",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/034/094/b38b9225fd8592d05d5e6939116e8f30d7c98af5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542352,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I guess you're right! \nI tried a few times to be sure before reporting it. \nI'm sorry for the inconvenience caused because of my research. \n",
+            "automated_response": false,
+            "created_at": "2015-08-10T01:03:31.054Z",
+            "updated_at": "2015-08-10T01:03:31.054Z",
+            "actor": {
+                "username": "faisalahmed",
+                "cleared": true,
+                "verified": true,
+                "url": "/faisalahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/726/e66916f9112a11c1e97ec5ea0ad886121d14f38b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542353,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No worries, @faisalahmed, just cross-linking for future reference. :-)",
+            "automated_response": false,
+            "created_at": "2015-08-10T01:06:13.693Z",
+            "updated_at": "2015-08-10T01:06:13.693Z",
+            "actor": {
+                "username": "whit537",
+                "cleared": false,
+                "verified": false,
+                "url": "/whit537",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/034/094/b38b9225fd8592d05d5e6939116e8f30d7c98af5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542748,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "It looks like we made an intentional decision to only perform [light email validation on the server-side](https://github.com/gratipay/gratipay.com/blob/1874/www/~/%25username/emails/modify.json.spt#L20-L23). The reason for this decision is that [email address syntax](https://en.wikipedia.org/wiki/Email_address#Syntax) is so arcane that any validation algorithm we implement is bound to be imperfect. Rather than risking false positives or negatives we simply try sending an email, and let that be our test. Even with regard to length, a cursory investigation reveals conflicting information: you said 255 characters, Wikipedia says 254 characters, [one of their sources](https://tools.ietf.org/html/rfc3696#section-3) says 320. Better to just send the mail and wait for the bounce. :-)",
+            "automated_response": false,
+            "created_at": "2015-08-10T12:13:44.181Z",
+            "updated_at": "2015-08-10T12:13:44.181Z",
+            "actor": {
+                "username": "whit537",
+                "cleared": false,
+                "verified": false,
+                "url": "/whit537",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/034/094/b38b9225fd8592d05d5e6939116e8f30d7c98af5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542830,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-08-10T13:00:35.255Z",
+            "updated_at": "2015-08-10T13:00:35.255Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "whit537",
+                "cleared": false,
+                "verified": false,
+                "url": "/whit537",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/034/094/b38b9225fd8592d05d5e6939116e8f30d7c98af5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542846,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-08-10T13:26:24.847Z",
+            "updated_at": "2015-08-10T13:26:24.847Z",
+            "actor": {
+                "username": "faisalahmed",
+                "cleared": true,
+                "verified": true,
+                "url": "/faisalahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/726/e66916f9112a11c1e97ec5ea0ad886121d14f38b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 542847,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2015-08-10T13:26:24.987Z",
+            "updated_at": "2015-08-10T13:26:24.987Z",
+            "actor": {
+                "username": "faisalahmed",
+                "cleared": true,
+                "verified": true,
+                "url": "/faisalahmed",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/726/e66916f9112a11c1e97ec5ea0ad886121d14f38b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 1340088,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-04T18:37:35.442Z",
+            "updated_at": "2016-12-04T18:37:35.442Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "None",
+                "old_severity_id": null,
+                "new_severity_id": 11548
+            },
+            "actor": {
+                "username": "dmk246",
+                "cleared": false,
+                "verified": false,
+                "url": "/dmk246",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

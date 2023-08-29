@@ -1,0 +1,446 @@
+{
+    "id": 170548,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzA1NDg=",
+    "url": "https://hackerone.com/reports/170548",
+    "title": "Ruby OpenSSL Library - IV Reuse in GCM Mode",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-09-19T21:05:58.161Z",
+    "submitted_at": "2016-09-19T21:05:58.161Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "offftherecord",
+        "url": "/offftherecord",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2021-03-07T11:46:51.786Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-02-12T16:46:35.851Z",
+    "team_member_agreed_on_going_public_at": "2021-03-07T11:46:51.640Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello,\n\nAn IV reuse bug was discovered in Ruby's OpenSSL library when using\naes-gcm. When encrypting data with aes-*-gcm, if the IV is set before\nsetting the key, the cipher will default to using a static IV. This creates\na static nonce and since aes-gcm is a stream cipher, this can lead to known\ncryptographic issues.\n\nThe documentation does not appear to specify the order of operations when\nsetting the key and IV [1]. As an example, see the following insecure code\nsnippet below:\n\nVulnerable Code:\n```\ndef encrypt(plaintext)\n    cipher = OpenSSL::Cipher.new('aes-256-gcm')\n    iv = cipher.random_iv # Notice here the IV is set before the key\n    cipher.key = '11111111111111111111111111111111'\n    cipher.auth_data = \"\"\n    ciphertext = cipher.update(plaintext) + cipher.final\n    tag = cipher.auth_tag\n\n    puts \"[+] Encrypting: #{plaintext}\"\n    puts \"[+] CipherMessage (IV | Tag | Ciphertext): #{bin2hex(iv)} |\n#{bin2hex(tag)} | #{bin2hex(ciphertext)}\"\nend\n```\nA developer that uses the code above may incorrectly assume that their code\nis secure from the pitfalls associated with IV reuse in aes-*-gcm, since\nthe ‘cipher.random_iv’ method is used. According to the documentation, this\nshould generate a random IV each time the encryption method is called.\n\nWhen the code above is run with the same key and same plaintext message,\nthe following results are obtained:\n\nOutput:\n```\n# Run 1\n./gcm_encrypt.rb 'This is some secret message.'\n[+] Encrypting: This is some secret message.\n[+] CipherMessage (IV | Tag | Ciphertext): e32594080cca2b37f7d7e968 |\n8c676db7551cf046266252ee776ecaa9 | 81092d16b62902d9985656253891dc\n800a5bb48fb1c4ad0b7bdf6054\n```\n```\n# Run 2\n./gcm_encrypt.rb 'This is some secret message.'\n[+] Encrypting: This is some secret message.\n[+] CipherMessage (IV | Tag | Ciphertext): 431d70714f5e5f876d1c7830 |\n8c676db7551cf046266252ee776ecaa9 | 81092d16b62902d9985656253891dc\n800a5bb48fb1c4ad0b7bdf6054\n```\nNotice that in the output above a unique IV is returned for both runs, but\nwith the same ciphertext. This proves that even though the random_iv method\nis called, the code is defaulting to a static IV. If an attacker can\nretrieve multiple ciphertext messages, it is possible to decrypt the\nciphertexts by applying the same attack one would use in a two-time pad\n(XOR ciphertexts and crib drag).\n\nNext review the following code snippet and output, which depicts a secure\nimplementation of the code:\n\nValid Code:\n```\ndef encrypt(plaintext)\n    cipher = OpenSSL::Cipher.new('aes-256-gcm')\n    cipher.key = '11111111111111111111111111111111'\n    iv = cipher.random_iv # Notice here the IV is set after the key\n    cipher.auth_data = \"\"\n    ciphertext = cipher.update(plaintext) + cipher.final\n    tag = cipher.auth_tag\n\n    puts \"[+] Encrypting: #{plaintext}\"\n    puts \"[+] CipherMessage (IV | Tag | Ciphertext): #{bin2hex(iv)} |\n#{bin2hex(tag)} | #{bin2hex(ciphertext)}\"\nend\n```\nOutput:\n```\n# Run 1\n./gcm_encrypt.rb 'This is some secret message.'\n[+] Encrypting: This is some secret message.\n[+] CipherMessage (IV | Tag | Ciphertext): 8beb4aa05533e90f4f4eddd3 |\nea1b015958a9b8bd2aafa61887309caf | 19574a9c9869b92140a57a5fd43a14\n9a5eaa7e5beefdff5d56cc4136\n```\n```\n# Run 2\n./gcm_encrypt.rb 'This is some secret message.'\n[+] Encrypting: This is some secret message.\n[+] CipherMessage (IV | Tag | Ciphertext): 87361b3f1e32291602ac7b40 |\nbce7093daa10cc9d2fad0f2b91e077f2 | 47f9a5ba55631204233ace70f169e6\n65846e877dca11a6e13a659540\n```\nNotice that this time both the IV and ciphertexts are both different for\nthe same plaintext. This is the intended result a developer would expect to\nhappen when using this library.\n\nReference:\n[1] https://ruby-doc.org/stdlib-2.0.0/libdoc/openssl/rdoc/OpenSSL/Cipher.html#class-OpenSSL::Cipher-label-Authenticated+Encryption+and+Associated+Data+-28AEAD-29",
+    "bounty_amount": "500.0",
+    "formatted_bounty": "$500",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2021-03-14T16:46:35.929Z",
+    "allow_singular_disclosure_after": -77552772.85234077,
+    "singular_disclosure_allowed": true,
+    "vote_count": 17,
+    "voters": [
+        "xploiterr",
+        "theappsec",
+        "salahhasoneh",
+        "khizer47",
+        "offftherecord",
+        "c1231665",
+        "makeg",
+        "spetr0x",
+        "k4l1",
+        "janmeyjaysharma",
+        "and 7 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1220713,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "See also https://github.com/ruby/openssl/issues/49\n\nThis is fixed by https://github.com/ruby/openssl/commit/8108e0a6db133f3375608303fdd2083eb5115062 just now.\n\nI'd say this is rather a normal bug, as the encryption result will be just an undecryptable garbage.",
+            "automated_response": false,
+            "created_at": "2016-09-28T07:46:31.960Z",
+            "updated_at": "2016-09-28T07:46:31.960Z",
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1224523,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Rhe, thank you for getting back to me. I'm glad to see that you guys fixed this (still need to verify), however, I disagree with you that this is just a \"normal\" bug. I do indeed see this as a security vulnerability and I'll explain why below. \n\nI'm also unsure what you mean by 'as the encryption result will be just an undecryptable garbage.'  If you're saying the ciphertext will not decrypt to its original message, that's incorrect. If the encryption and decryption code set the properties in the same order (iv then key), then the ciphertext should decrypt to the original message. It's only when they are not set in the same order does the ciphertext decrypt to 'garbage'.\n\nLet me elaborate more on the bug and maybe outline a scenario to show that this is a security vulnerability.\n\nAs we've seen, it's possible to encrypt two messages with the same Key/IV. Assuming that the messages are different, the resulting ciphertexts will naturally be different. However, because they are xord with the same key stream, it's possible to decrypt both ciphertexts and any ciphertexts in the future. This is a classic attack against stream ciphers as well as a many-time pad. An excellent thread discussing how to attack and decrypt values can be read here (with pictures and examples): https://crypto.stackexchange.com/questions/59/taking-advantage-of-one-time-pad-key-reuse\n\nIf a developer were to encrypt files using aes-gcm and the vulnerable version of ruby, and assuming the encryption used the same key, it would be possible to decrypt the files.",
+            "automated_response": false,
+            "created_at": "2016-09-29T20:37:26.682Z",
+            "updated_at": "2016-09-29T20:38:43.406Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1235616,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @rhe,\n\nIt's been a week since our last discussion. I've received a CVE for this bug (http://www.openwall.com/lists/oss-security/2016/10/01/2). Is there any update from your side?\n\nThanks.",
+            "automated_response": false,
+            "created_at": "2016-10-06T14:37:45.038Z",
+            "updated_at": "2016-10-06T14:37:45.038Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1237481,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You are correct - if the decryption code also sets key and IV in the problematic order, it will happily decrypt using all-zero IV.\n\nHowever it doesn't seem to me that this issue warrants a special treatment for severe vulnerability, in other words, immediate new versions of Ruby.",
+            "automated_response": false,
+            "created_at": "2016-10-07T16:30:52.214Z",
+            "updated_at": "2016-10-07T16:30:52.214Z",
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1237631,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree with you that this bug isn't Critical. I think there may be some misunderstanding between us. You said \"I'd say this is rather a normal bug\". I interpreted that to mean that you thought this was just a regular bug - comparable to a UI bug and not a Security related bug. Is that accurate?\n\nSince the bug is now fixed and a CVE has been assigned, would you say it's safe to say this is Valid and Fixed and ready for Closing?",
+            "automated_response": false,
+            "created_at": "2016-10-07T17:45:59.995Z",
+            "updated_at": "2016-10-07T17:45:59.995Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1251101,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi is there any update on resolving this ticket? I believe we both agree that this can be marked as resolved.",
+            "automated_response": false,
+            "created_at": "2016-10-17T15:31:54.701Z",
+            "updated_at": "2016-10-17T15:31:54.701Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1298319,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::HackerRequestedMediation",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-11-14T14:48:43.206Z",
+            "updated_at": "2016-11-14T14:48:43.206Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1764080,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello - Just wanted to know if there's any update on this.\n\nThanks.",
+            "automated_response": false,
+            "created_at": "2017-06-18T17:34:53.627Z",
+            "updated_at": "2017-06-18T17:34:53.627Z",
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1890741,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @drhp - sorry for the delayed response! I've pinged the Ruby team to see if they can help provide an update.",
+            "automated_response": false,
+            "created_at": "2017-08-03T17:46:41.868Z",
+            "updated_at": "2017-08-03T17:46:41.868Z",
+            "actor": {
+                "username": "adambacchus",
+                "cleared": false,
+                "verified": false,
+                "url": "/adambacchus",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/075/400/1c51e504e70e06ff844af60ed6a3957e95bb7880_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1965227,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "This has been fixed by openssl gem v2.0.0, Ruby 2.4.0, and backported to ruby_2_3 branch by r59267.",
+            "automated_response": false,
+            "created_at": "2017-08-30T08:59:52.822Z",
+            "updated_at": "2017-08-30T08:59:52.822Z",
+            "actor": {
+                "username": "rhe",
+                "cleared": false,
+                "verified": false,
+                "url": "/rhe",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/970/b790d7ee54de6cc2bcc9c54c34b70cd0dfd54fc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "offftherecord",
+                "url": "/offftherecord"
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1965307,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-30T09:38:48.355Z",
+            "updated_at": "2017-08-30T09:38:48.355Z",
+            "actor": {
+                "url": "/ruby",
+                "ibb": true,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Ruby"
+                }
+            },
+            "bounty_amount": "500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "ruby",
+            "collaborator": {
+                "username": "offftherecord",
+                "url": "/offftherecord"
+            }
+        },
+        {
+            "id": 10659271,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hello, is it possible to disclose this?\n\nThank you!",
+            "automated_response": false,
+            "created_at": "2021-02-12T16:46:35.874Z",
+            "updated_at": "2021-02-12T16:46:35.874Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "offftherecord",
+                "cleared": false,
+                "verified": false,
+                "url": "/offftherecord",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/717/bc24b05572e1595ff8d7e9f45761d4ffae0f6ad3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 10905682,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-07T11:46:51.661Z",
+            "updated_at": "2021-03-07T11:46:51.661Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071248Z&X-Amz-Expires=568&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d4d2c11022ddc3a44031f4fa4a19ac611468fafd72cbe3c482667827fc2e44dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 10905683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-07T11:46:51.810Z",
+            "updated_at": "2021-03-07T11:46:51.810Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUR2ZSYPL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071248Z&X-Amz-Expires=568&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCuJ7GGKM7kIZUlE%2BEjrt%2Bxv5BG%2Fd%2F6MZdNdXaAdLbypAIgWhnU6okSPCcwU2VK%2BkQwglklOGyuwTSp8e0XgpiaTsMquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDCxq6aFU7nsH%2B6tVECqPBYfRIb1SThCbd1maLSA%2Bz34g%2Bwh%2B0kLpyIzK8gI1I376Nfiqm4jzHZin%2Fi1t9CbVntbcdVUKpl5LBomGC0biywH2qmIDQYHf%2B4Ivdm4qJgeYjBFkVjXXaGrGIHVjm4Qm5vbSgTAqTkhTdRAkAkbHHUGl2LTf5yXK8qQ3MO9rzxQ6jcKMn31IIHPSGMpQ8Pc%2ByHvNCTtzjjy2Fj1BGiWx9r9MQ82VbipBPKywpGx71D3bfxbOAIe6jbk6DN60zvDpMZh%2BbhfkjNXMqCjkTt6chd2%2BmdWqYwN7tjqN7hCnmfKFcO%2FZM%2FND7d9ihU14L0e7fUYaP9ttwDTRSzHNWQKhbLdIPUeCkr6jUknEaom4MsGV6hp5FRyrmf5XaSLIQPROIveYcyCmH%2B9bLkSG1%2FJc%2Byha0BDRydwqtkJHgGPwKFhoo5yPxGKyyanGWMmNXfmPMV%2FBnO2i3nUNmQVRz009ACtL1aWD3LFdxWCn3GN8UA1%2Frjv8TCFgaXA7ZjUtQqf%2Bg1B%2F0mfgiZ9PxUj%2BR2XNIQO3RfPKE0b6uQdmnu85EJrWcIccSqndUSSZrGk%2F4%2FkGYD1Etg6l6IlQqxLOqGwJiYjjI6lf74d71xjdgh2l4pP8QOknOj%2Fyr7CkHtRRt0ujdKmW0BwwkJXxuYSdnQJTyFsVChUZGVXmTiRbYiizTg8sJf6YYQHNXgWw4Oh1KhYXFgQbHVcs%2FX95SDxAlFiOOE08k9RSYETfDpIwmwEkyAyLcBJCcD%2Bsu2hhI%2Fit1J%2BktZAnq9eCTmWVsPM9tXGsX1b0jSb9sb6lecY6usDkO0tuAdnZ0%2B8pbrZuVqjyTKfdZL4aeZIuOlTLkpr7OsCUEQ8aEJGJZx8at6H5wF1mYnIwyYK1pwY6sQHa9NWtSr124WBteOMuZ0gRxs4h7%2B45MQ4Jajx54ZYNp3CzErjQsi074sjhlC%2BgUdUkdv9AJ%2FXnIjscPmbEAOBS1ezvurw3cyM4cDGTs0DFCEF4mtFK3UsBx8CsE0ACWlzoXkcfZWltI2e4mWNuLQrhAKsm7Lpp2%2B23Qc88gL8I%2BFFlGmA68WBDP9ucnEldjgnESenwlTYaBCrPUv9ZnIwNPzlW5RAFvpGY%2BRPFLPWOHC0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d4d2c11022ddc3a44031f4fa4a19ac611468fafd72cbe3c482667827fc2e44dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

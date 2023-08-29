@@ -1,0 +1,476 @@
+{
+    "id": 881891,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84ODE4OTE=",
+    "url": "https://hackerone.com/reports/881891",
+    "title": "File System Monitoring Queue Overflow",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2020-05-24T18:37:13.000Z",
+    "submitted_at": "2020-05-24T18:37:13.000Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ihsinme",
+        "url": "/ihsinme",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 3059,
+        "url": "https://hackerone.com/owncloud",
+        "handle": "owncloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "ownCloud",
+            "twitter_handle": "ownCloud",
+            "website": "https://www.owncloud.com",
+            "about": "ownCloud GmbH is the company behind the ownCloud Project - the most downloaded open source project for data and file sync, share and view."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-12-03T14:01:05.136Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-12-03T13:55:22.801Z",
+    "team_member_agreed_on_going_public_at": "2021-12-03T14:01:05.000Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "in the source code \"owncloud/client\" in the file \"src/gui/folderwatcher_linux.cpp\" in the function \"void FolderWatcherPrivate :: inotifyRegisterPath (const QString & path)\" by calling \"inotify_add_watch\" the file paths are set for monitoring\n\n```cpp\n int wd = inotify_add_watch(_fd, path.toUtf8().constData(),\n        IN_CLOSE_WRITE | IN_ATTRIB | IN_MOVE | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_MOVE_SELF | IN_UNMOUNT | IN_ONLYDIR);\n```\nBut in the specified call, the flag \"IN_Q_OVERFLOW\" is omitted, which allows an attacker to influence the operation of the software.\nThe essence of the impact is to form a large number of events overflowing the monitoring queue.\nIn my opinion, the most effective and not noticeable will be creating a hidden file, writing data to it, closing and deleting.\n\nIt is worth noting that the function code \"void FolderWatcherPrivate :: slotReceivedNotification (int fd)\"\n\n```cpp\n  do {\n        len = read(fd, buffer.data(), buffer.size());\n        error = errno;\n        /**\n          * From inotify documentation:\n          *\n          * The behavior when the buffer given to read(2) is too\n          * small to return information about the next event\n          * depends on the kernel version: in kernels  before 2.6.21,\n          * read(2) returns 0; since kernel 2.6.21, read(2) fails with\n          * the error EINVAL.\n          */\n        if (len < 0 && error == EINVAL) {\n            // double the buffer size\n            buffer.resize(buffer.size() * 2);\n            /* and try again ... */\n            continue;\n        }\n    } while (false);\n``` \n\nAs my tests showed, it does not provide an increase in the buffer, which could offset the impact.\nThe function reads part of the data from the queue, since the minimum buffer necessary for reading is much less than 2048.\n\n```\nSpecifying a buffer of size\nsizeof(struct inotify_event) + NAME_MAX + 1\nwill be sufficient to read at least one event.\n```\n\n## Impact\n\nThus, the essence of the impact will consist in overflowing the monitoring queue.\nWhat will force the system to discard incoming events and the program will skip them.\nSkipping program monitoring events will lead to incorrect display of files and directories in the program, and will also affect the synchronization with the server.",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "low",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 471,
+        "asset_type": "DOWNLOADABLE_EXECUTABLES",
+        "asset_identifier": "Desktop Client",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8092217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us. We take security very seriously and would appreciate if you would not share any information about this bug until we have determined a potential patch.\r\n \r\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster.",
+            "automated_response": true,
+            "created_at": "2020-05-24T18:37:14.436Z",
+            "updated_at": "2020-05-24T18:37:14.436Z",
+            "actor": {
+                "url": "/owncloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "ownCloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8145176,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-29T13:33:51.524Z",
+            "updated_at": "2020-05-29T13:33:51.524Z",
+            "additional_data": {
+                "old_severity": "Medium (5.2)",
+                "new_severity": "Low",
+                "old_severity_id": 730845,
+                "new_severity_id": 735651
+            },
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8145178,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @ihsinme,\n\nwe discussed your reports and came to the conclusion that they are informative but not really critical in our point of view.\nIf you can show as a practical exploit (preferebly with a pov video) to those issues we can reevaluate but until then I will close your reports.\n\nIf you find any more issues feel free to open new reports.\n\nThanks,\nCorby",
+            "automated_response": false,
+            "created_at": "2020-05-29T13:34:03.355Z",
+            "updated_at": "2020-05-29T13:34:03.355Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8155744,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Corby.\nOf the reports presented, it is easier to show on this.\n\nIn the video, I synchronize with your demo account and create several folders, some of them do not get into client processing. In non-synchronized folders, I can perform any action more aggressively. In the end, I wait for synchronization not due to changes in the file system and make sure that the folders do not appear in the client.\n\nOther reports can also be demonstrated in a similar way, but they are more complex and less stable. If your experts are aware of the reality of the problems described in the reports and still consider these reports informative, then this probably makes no sense?\n\nThank you for your time.",
+            "automated_response": false,
+            "created_at": "2020-05-30T13:48:16.790Z",
+            "updated_at": "2020-05-30T13:48:16.790Z",
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 848996,
+                    "filename": "Kazam_screencast_00001.mp4",
+                    "type": "video/mp4",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9aFduYmqj3bNCZbunPLK5Qnq?response-content-disposition=attachment%3B%20filename%3D%22Kazam_screencast_00001.mp4%22%3B%20filename%2A%3DUTF-8%27%27Kazam_screencast_00001.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070600Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=de093e872293216675327d1a4bca749fb78835acdea4ae0827346bf76d9d3f54"
+                },
+                {
+                    "id": 848995,
+                    "filename": "crAnddelFile.py",
+                    "type": "text/plain",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/x4FRa8a1VRvpeu3KYQetXLZL?response-content-disposition=attachment%3B%20filename%3D%22crAnddelFile.py%22%3B%20filename%2A%3DUTF-8%27%27crAnddelFile.py&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070600Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=57a6a30c606e54722522e55c57d46f1f53bf533fcbd2764306528b90f0242314"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8175923,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ihsinme,\n\nthanks for your video. We acknowledge the impact but the severity is not high enough in our opinion to classify this as a security issue.\nWe will take care of the bug.\n\nThanks,\nCorby",
+            "automated_response": false,
+            "created_at": "2020-06-02T08:40:29.675Z",
+            "updated_at": "2020-06-02T08:40:29.675Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8176229,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "thanks, I'm sorry.\nI’m probably not experienced enough in assessing the severity of influence.",
+            "automated_response": false,
+            "created_at": "2020-06-02T09:02:11.895Z",
+            "updated_at": "2020-06-02T09:02:11.895Z",
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8176248,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "No need to feel sorry. :)",
+            "automated_response": false,
+            "created_at": "2020-06-02T09:03:32.756Z",
+            "updated_at": "2020-06-02T09:03:32.756Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8178266,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Dear Corby, all the same, sorry for my persistence. But I ask you to understand, I'm just starting to look for errors, and it is very important for me to understand the algorithm for evaluating my work.\n\nI understand very well that you could put in place of \"informatively\" and \"Spam\" and \"Not Applicable\". Thank you for not setting. But still, I have a number of questions on all three of my reports. (881891, 881895, 878739).\n\nInitially, you closed them all with the wording \"informative but not really critical in our point of view\" and I thought that the question was confirmation of the impact. But unfortunately, after watching the video, you agreed with the impact but pointed out the lack of \"high enough\" to classify as a security problem. I thought that it would be more correct to rely on CVSS v3.0 in the evaluation of \"enough\". Therefore, I reiterate below the rationale for my assessment of CVSS v3.0 for report 881891: CVSS: 3.0 / AV: L / AC: L / PR: L / UI: N / S: C / C: N / I: L / A: L.\n\nYes, in this assessment you can discuss PR: L or PR: H. But the impact on availability and integrity confirmed in the video does not exactly allow this assessment to fall below the average level, which is important for me.\nI looked at your program again and there are lines describing both the low and very low levels. It turns out that in my report, in your opinion, it is below a very low level.\n\nI ask you to understand correctly, I am very grateful to you for the time spent on me and would not like to abuse it, but it is really important for me to understand the principles of evaluations from yours for further development.\n\nThank you for your time.",
+            "automated_response": false,
+            "created_at": "2020-06-02T12:36:31.286Z",
+            "updated_at": "2020-06-02T12:36:31.286Z",
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8201508,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ihsinme,\n\nokay let me try to explain.\nI acknowledge the impact, by that I meant that I acknowledge that there is a bug (not yet a security issue).\nFurthermore yes, this issue has an impact on the availability of the system but only to the local owncloud client process. There is no loss of data, no corruption or modification of data. Also or your exploit to work, as you have shown, the attacker has to have local access. But with local access an attacker could do much more damage, than just blocking the sync, like deleting, modifying the files. etc.\n\nI hope you understand.\n\nThanks for asking,\nCorby",
+            "automated_response": false,
+            "created_at": "2020-06-04T14:43:00.361Z",
+            "updated_at": "2020-06-04T14:43:00.361Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8202617,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Corby.  \nThank you so much for the answer. In general, I agree with you in your reasoning. But it would be great if you told me where I am mistaken, I will start from the end of your answer:   \n1.   \n```  \nAlso or your exploit to work, as you have shown, the attacker has to have local access. But with local access an attacker could do much more damage, than just blocking the sync, like deleting, modifying the files. etc.  \n```  \nIt is absolutely true, but this circumstance cannot block attributing the error to the security problem. Otherwise, it would not have been in the specification of the \"Common Vulnerability Scoring System v3.0\".  \n```  \nLocal (L) A vulnerability exploitable with Local access means that the vulnerable component is not bound to the network stack, and the attacker's path is via read / write / execute capabilities. In some cases, the attacker may be logged in locally in order to exploit the vulnerability, otherwise, she may rely on User Interaction to execute a malicious file.  \n```  \nRegarding the fact that you can delete, modify files with local access, is also absolutely true, but in this case the threat model will not be associated with your software.  \nYes, you may not consider this level, but this exception is not described in your program. Therefore, sending you a report, I could not know that this could lead to the status of \"informatively low.\" Moreover, looking at your work with researcher Florian Bogner (fbogner) in 2016 (https://hackerone.com/reports/155657), I could assume that the local threat model is interesting to you and is being evaluated.  \n2.  \n```  \nFurthermore yes, this issue has an impact on the availability of the system but only to the local owncloud client process. There is no loss of data, no corruption or modification of data.  \n```  \nI have to apologize, but I do not agree. When the queue is blocked, different nuggetes of files are recorded on the server and the local client (these can be unrecorded changes, deleted files, or deleted files). In addition, we must take into account that the client uses cloud storage from different devices, as a rule, this leads to a change in the general data. Therefore, the loss and modification of data is possible. But again referring to the specification, we see that the loss of integrity is understood including:  \n```  \nIntegrity refers to the trustworthiness and veracity of information.  \n```  \nAnd the point of impact I have chosen as low describes just our situation:  \n```  \nModification of data is possible, but the attacker does not have control over the consequence of a modification, or the amount of modification is constrained. The data modification does not have a direct, serious impact on the impacted component.  \n```   \n  \n  \nIn the end, I sincerely want to individually thank you Corby for the answers. This is really important to me and at the moment it is the only thing that can be called positive from my attempt to improve your software.  \n\nI will look forward to your reply.  ",
+            "automated_response": false,
+            "created_at": "2020-06-04T15:52:39.875Z",
+            "updated_at": "2020-06-04T15:52:39.875Z",
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8229027,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ihsinme,\n\nI didn't mean `local` always equals low impact.\nThe difference between your report and his is that he injected code wich is then executed by the ownCloud client with elevated priviliges. He could gain access to the user credentials or something in that category which would result in account take over.\n\nWith the issue you reported on the other hand there is no higher damage. If your script is stopped and the ownCloud process is restarted the syncing works again and no files are lost.\nOr the user could still access the ownCloud via a webbrowser.\n\n",
+            "automated_response": false,
+            "created_at": "2020-06-08T09:23:14.540Z",
+            "updated_at": "2020-06-08T09:23:14.540Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 8232751,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I do not quite agree with you. But anyway, thanks for the experience.",
+            "automated_response": false,
+            "created_at": "2020-06-08T13:23:46.673Z",
+            "updated_at": "2020-06-08T13:23:46.673Z",
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 14534190,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-03T13:55:22.844Z",
+            "updated_at": "2021-12-03T13:55:22.844Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ihsinme",
+                "cleared": false,
+                "verified": false,
+                "url": "/ihsinme",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/EfzvpGEZUFwUq5x6HAHsiUtY/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 14534231,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-03T14:01:05.035Z",
+            "updated_at": "2021-12-03T14:01:05.035Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        },
+        {
+            "id": 14534232,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-12-03T14:01:05.190Z",
+            "updated_at": "2021-12-03T14:01:05.190Z",
+            "actor": {
+                "username": "corby",
+                "cleared": false,
+                "verified": false,
+                "url": "/corby",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "owncloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

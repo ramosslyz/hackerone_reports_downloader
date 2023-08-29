@@ -1,0 +1,395 @@
+{
+    "id": 697055,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTcwNTU=",
+    "url": "https://hackerone.com/reports/697055",
+    "title": "Worker container escape lead to arbitrary file reading in host machine [again]",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "critical",
+    "readable_substate": "Resolved",
+    "created_at": "2019-09-18T09:34:52.929Z",
+    "submitted_at": "2019-09-18T09:34:52.929Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "testanull",
+        "url": "/testanull",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 27264,
+        "url": "https://hackerone.com/semmle",
+        "handle": "semmle",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/027/264/8af1325fdaccc38beab4451ba68ace24623b248c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/027/264/8af1325fdaccc38beab4451ba68ace24623b248c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Semmle",
+            "twitter_handle": "semmle",
+            "website": "https://semmle.com",
+            "about": "Semmle's engineering analytics platform helps leading technology companies and open-source developers build secure, reliable software."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2019-10-21T01:32:16.250Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-10-21T01:32:16.194Z",
+    "team_member_agreed_on_going_public_at": "2019-10-14T06:28:56.811Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nAfter a successful build, LGTM allow user to view the file list.\nBy default, only source code files and build config files are reserved (``lgtm.yml`` and ``.lgtm.yml``).\nIf there are both files in folder, LGTM will process ``lgtm.yml`` file and skip ``.lgtm.yml``, but it still keeps both of files in directory.\nBy making symlink to ``.lgtm.yml`` file, after successful build, it will point to HOST MACHINE file!\n\n## Steps To Reproduce:\n\n1. Create a simple project which LGTM can build successful.\nIn this report, I use this project (https://github.com/testanull/test11)\n2. Create file: ``lgtm.yml``  with a valid config content, for example:\n\n```\nextraction:\n  java:\n    index:\n      build_command:\n      - ./custom-build\n```\n\n3. Make a symlink point to a HOST MACHINE file/directory with name: ``.lgtm.yml``\n4. After successful build, ``.lgtm.yml`` file will contain the host machine file content!\n\n##PoC of reading ``/etc/passwd`` is attached below\n\n## Impact\n\nGive attacker ability to explore the host machine, expose more sensitive informations from it.",
+    "bounty_amount": "2000.0",
+    "formatted_bounty": "$2,000",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 585650,
+            "file_name": "docker_escape_read_passwd_2.PNG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6Uu9hMYFdnm1ndFRzyQkduBs?response-content-disposition=attachment%3B%20filename%3D%22docker_escape_read_passwd_2.PNG%22%3B%20filename%2A%3DUTF-8%27%27docker_escape_read_passwd_2.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072959Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=b12aa9e4c5584b8f85da195da19b79e004e6b623bb5122aad43a749220efbcdf",
+            "file_size": 97132,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2019-11-13T06:28:56.957Z",
+    "allow_singular_disclosure_after": -119667662.25038598,
+    "singular_disclosure_allowed": true,
+    "vote_count": 175,
+    "voters": [
+        "dittyroma",
+        "p1stachios",
+        "zonduu",
+        "mashoud1122",
+        "dpt",
+        "kapytein",
+        "base_64",
+        "sameerphad72",
+        "chulian",
+        "spam404",
+        "and 165 more..."
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 9.3,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 8552,
+        "asset_type": "URL",
+        "asset_identifier": "lgtm-com.pentesting.semmle.net",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5834103,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Update:\nI just set the project on github to private\nThe project files is attached below",
+            "automated_response": false,
+            "created_at": "2019-09-18T09:59:58.467Z",
+            "updated_at": "2019-09-18T09:59:58.467Z",
+            "actor": {
+                "username": "testanull",
+                "cleared": false,
+                "verified": false,
+                "url": "/testanull",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 585667,
+                    "filename": "test11.tar.gz",
+                    "type": "application/gzip",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/9VNgVpMCkKhCNSweXAgZbfyK?response-content-disposition=attachment%3B%20filename%3D%22test11.tar.gz%22%3B%20filename%2A%3DUTF-8%27%27test11.tar.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072959Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=266f6a6f6c343c8c62d307a0be7471370a40f29bfba6b22a0b25505d894a3c3a"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 5834760,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for another great report. We have confirmed this bug, and are working on a fix.\n\nRegards,\nJulian",
+            "automated_response": false,
+            "created_at": "2019-09-18T12:07:12.927Z",
+            "updated_at": "2019-09-18T12:07:12.927Z",
+            "actor": {
+                "username": "jtibble",
+                "cleared": false,
+                "verified": false,
+                "url": "/jtibble",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 5837706,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-18T17:10:15.463Z",
+            "updated_at": "2019-09-18T17:10:15.463Z",
+            "actor": {
+                "url": "/semmle",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/027/264/8af1325fdaccc38beab4451ba68ace24623b248c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Semmle"
+                }
+            },
+            "bounty_amount": "2000.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "semmle",
+            "collaborator": {
+                "username": "testanull",
+                "url": "/testanull"
+            }
+        },
+        {
+            "id": 5837727,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks again @testanull.\n\nWe've deployed an initial fix for the problem you've found. We're currently in the process of fully auditing our use of symlinks before marking this report as resolved, but we hope to have this done over the next few days.\n\nThanks,\nChris",
+            "automated_response": false,
+            "created_at": "2019-09-18T17:12:05.963Z",
+            "updated_at": "2019-09-18T17:12:05.963Z",
+            "actor": {
+                "username": "chrisgavin",
+                "cleared": false,
+                "verified": false,
+                "url": "/chrisgavin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/259/787/73e7651e088896c2379249d5752999800fc9c2c6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 5840263,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Can you make a disclosure request after closing this report?\n",
+            "automated_response": false,
+            "created_at": "2019-09-19T03:29:08.374Z",
+            "updated_at": "2019-09-19T03:29:08.374Z",
+            "actor": {
+                "username": "testanull",
+                "cleared": false,
+                "verified": false,
+                "url": "/testanull",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 6029766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It has been a while since last activity,\nHave your team resolved this issues yet?\n",
+            "automated_response": false,
+            "created_at": "2019-10-14T06:23:46.391Z",
+            "updated_at": "2019-10-14T06:23:46.391Z",
+            "actor": {
+                "username": "testanull",
+                "cleared": false,
+                "verified": false,
+                "url": "/testanull",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 6029786,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi again @testanull,\n\nMy apologies for the delay. Yes, we believe we've now got sufficient mitigation in place to defend against this attack and other similar attacks. We're happy do disclose whenever you are.\n\nThanks,\nChris",
+            "automated_response": false,
+            "created_at": "2019-10-14T06:28:43.282Z",
+            "updated_at": "2019-10-14T06:28:43.282Z",
+            "actor": {
+                "username": "chrisgavin",
+                "cleared": false,
+                "verified": false,
+                "url": "/chrisgavin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/259/787/73e7651e088896c2379249d5752999800fc9c2c6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "testanull",
+                "url": "/testanull"
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 6029787,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-14T06:28:56.840Z",
+            "updated_at": "2019-10-14T06:28:56.840Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "chrisgavin",
+                "cleared": false,
+                "verified": false,
+                "url": "/chrisgavin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/259/787/73e7651e088896c2379249d5752999800fc9c2c6_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 6087834,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-21T01:32:16.209Z",
+            "updated_at": "2019-10-21T01:32:16.209Z",
+            "actor": {
+                "username": "testanull",
+                "cleared": false,
+                "verified": false,
+                "url": "/testanull",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        },
+        {
+            "id": 6087835,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-10-21T01:32:16.264Z",
+            "updated_at": "2019-10-21T01:32:16.264Z",
+            "actor": {
+                "username": "testanull",
+                "cleared": false,
+                "verified": false,
+                "url": "/testanull",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/SF93KjfUXeXdWWFga4q3gwCa/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "semmle"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,381 @@
+{
+    "id": 518928,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MTg5Mjg=",
+    "url": "https://hackerone.com/reports/518928",
+    "title": "Sending Unlimited Emails to anyone from zomato mail server.",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2019-03-30T05:10:48.992Z",
+    "submitted_at": "2019-03-30T05:10:48.992Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "bihari_web",
+        "url": "/bihari_web",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/209/891/0674c16705aae310e7963bffd5b2518ae1d73200_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 2943,
+        "url": "https://hackerone.com/zomato",
+        "handle": "zomato",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Zomato",
+            "twitter_handle": "Zomato",
+            "website": "https://www.zomato.com",
+            "about": "The fastest way to search for great places to eat at and order from around you. Serving 24 countries worldwide."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-04-16T15:39:04.413Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-04-01T11:45:14.341Z",
+    "team_member_agreed_on_going_public_at": "2019-04-16T15:39:04.348Z",
+    "comments_closed?": true,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "**Summary:** Zomoto provides developers to get the rich data of restaurant from their API.\nhttps://developers.zomato.com/api\nBut here there is a security issue that can we exploited against zomato's Simple Email Server on Aws. \n\n**Description:**When  we request the api_key from zomato they ask us for our email address and if the registration is successful then the developer would receive the confirmation email and they would get the api key. But there is no limit on number of times we can request the api_key. Although we get the same api_key every time but every time a email is sent to the specified email (This can we email of anyone).\n**Platform(s) Affected:** Website\n\n\n## Steps To Reproduce:\n\n1. Go to this url https://developers.zomato.com/api and click on the generate api key button.\n\n>Note:- This button is only shown to the users those who have not generated the api_key before.\n\n\n2 . Intercept the request in proxy you would get a post request\n\n``` \nPOST /php/developer HTTP/1.1\nHost: www.zomato.com\nConnection: close\nContent-Length: 223\nAccept: application/json, text/javascript, */*; q=0.01\nOrigin: https://developers.zomato.com\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36\nDNT: 1\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nReferer: https://developers.zomato.com/\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,fr;q=0.8,hi;q=0.7,ru;q=0.6\nCookie: PHPSESSID=f735ebfd3e11e47782417af48ab7ee23700ba818; \n\ncontext=api&action=generate_api_key&plan=premium&token=c8bb20d4e575cf91aa8028ac9802a050&name=VIPIN+BIHARI&email=<ANY_EMAIL>&phone=8127411000&company=XYZ.com&country=1\n```\nF454847: Screenshot from 2019-03-30 10-31-02.png\n\n3 . Now Attacker can Brute force the same request ( as above ) any numbers of times and the attacker would be able to send api_key email to anyone many times.\n\n## Impact\n\n1. The attacker can send api_key email to anyone ( It will be a spam mail for anyone ) any number of times and there making there mailbox out of storage.\n2. It cost money to send emails to anyone and here the company may have the financial loss (If attacker tries to send thousands of mail ).",
+    "weakness": {
+        "id": 31,
+        "name": "Improper Restriction of Authentication Attempts"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 454847,
+            "file_name": "Screenshot_from_2019-03-30_10-31-02.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/454/847/9718dc59a781b3651a5b6f5e2a62c27eb1ce2598/Screenshot_from_2019-03-30_10-31-02.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2019-03-30_10-31-02.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2019-03-30_10-31-02.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3M3ZUGHF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073417Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDalu3R3A%2FswTPJ4xVHOG9Rxl2RApgY8sDhKppqfGAqUQIgYRBv%2BXAmyBbaQawCIn40ZDK40fVkJHB%2FveoHhr1DlesqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDJ%2F4bKMCrS7jIJwMtiqOBd%2FriANSh5ipBo8Pk%2F2qb1z5a0uuM2PdRzqESOe7VvDp2Qb4FOUjbmWUlbaFWD8QKCBfRxUchp5N36dI8BDE1Fu3JNTXj6zUJB8ynNY37PM8a9OxhHOFsdRIDX2DAUt99aaSeFLpCfWSzZmgFg5zOzSET2USuldSMvVn0mF6Q3TgV0FGypNplJbb7pipy5SsltuaylNiSVXn7ksT4%2BCaiDyPu0aiEximdK7dDGqZGy%2FV5TM3wWaZyabFm5LkvbKmkMsSuy%2FteOZVfnz5WS54DCAgFk3BkYRe1sR9v7G6bWkI2wLugYmg72chgnrnriCzE0hGEXnO9EFMBws0BGBY3Ug4FDE1TZMi87%2FqBcGR97mlCIYsP%2BVCM723Bd6WSUS%2BzEeBYFoUT9iO5YHFEy8fw%2FnrM1iOt1nKsPdTdOzQduTV1SlzJ%2FDLuHjFyVBWGCivs88xGFIqJPeFqSOHqUo3UzYeDQhdPJzkDDM%2FI9njibpaiyGs1oALVu3IBnIxkXS5CHFpYciPsHF%2F4raxKXpon6BMx3ZAMKTfhYOcFqIcFIDi22YkKJxYedXNOhMtQ7sTAYBwZG%2B1z%2FgIPfJPJeN4BkF%2FNpnvwThw2cbyM6EmTfwe0qqtLfmIZHaIa0eyCtd96iO15JfptkDRrrOb3Aqpkp15g%2B22lD4mhnBnaJv67%2FvHeJH7Nir6w%2BxGqIJmozIJ828xZ2Pr97VsI4EmPi637KNZV5SVnXEIkRqhsZCEz%2F8o4v6m8mHkk2%2B9mlkkXMjGHrcFiHKSwnWxuDY%2BhaT9EfJFDQakyKaWJXWwRUI9%2F%2Bgz3LwComeOi11ysyBCCZsLyamqnStpOeP6aNEUTXLa%2B0OTdU22NEbO4iiVsv63jDDcqranBjqxASLvyauRn%2FzRj6Fk%2FoXEaEcToFwsxz%2FuiH7YLtJQoADGa4xQ%2BHp5%2BtVbj10EvYfXNdzqfn7NU0Zp7FAb4j2bw73CIg1m%2F%2BG0yg9qkKCCJeh9mVROmsoU9faMoswyb5G0l01K547DYaXx6PXGCdiFcf3FmifZ66Uzod21ITV%2B%2FEeXzYeGCknxhsK9dcOw4z5NYmglL7Ns1qDcK6MTZ8044CCp6XRpr%2Fr8GamPJmpfWx1T2Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d8e236f5f1b537ae584920152147baddb2e91bb8760e2102c4684a8c25e79bd1",
+            "file_size": 166083,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 11,
+    "voters": [
+        "upx",
+        "terjanq",
+        "shubham_srt",
+        "bihari_web",
+        "cryptographer",
+        "elliott-io",
+        "thebuddy",
+        "tbillar",
+        "bipinsingh9757",
+        "jainam_mehta",
+        "and 1 more..."
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 383,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.zomato.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4424368,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-03-30T05:27:53.365Z",
+            "updated_at": "2019-03-30T05:27:53.365Z",
+            "additional_data": {
+                "old_severity": "Low",
+                "new_severity": "None",
+                "old_severity_id": 326531,
+                "new_severity_id": 326534
+            },
+            "actor": {
+                "username": "biryani-is-lob",
+                "cleared": false,
+                "verified": false,
+                "url": "/biryani-is-lob",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4424369,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @vipinbihari, \n\nThank you for the report. Unfortunately, Spamming users is currently under our out of scope list at https://hackerone.com/zomato. \n\nClosing it as informative so, it won't affect your reputation, ██████\n\nThank you for the report once again. We look forward to more reports from you in the future. :) \n@ehsahil-zomato ",
+            "automated_response": false,
+            "created_at": "2019-03-30T05:28:49.215Z",
+            "updated_at": "2019-04-16T15:34:35.519Z",
+            "actor": {
+                "username": "biryani-is-lob",
+                "cleared": false,
+                "verified": false,
+                "url": "/biryani-is-lob",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4424410,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ehsahil-zomato  Thank You for quick response.\nYou did not notice the second impact which is\n>It cost money to send emails to anyone and here the company may have the financial loss (If attacker tries to send millions of mail ).\nSince zomato is using SES (simple email service) from AWS it cost money on basic of number of email sent.\nhttps://aws.amazon.com/ses/pricing/\n\nIf any competitive company tries to use this technique to generate the api_key again and again it would be a financial loss to zomato.",
+            "automated_response": false,
+            "created_at": "2019-03-30T06:02:14.851Z",
+            "updated_at": "2019-03-30T06:02:14.851Z",
+            "actor": {
+                "username": "bihari_web",
+                "cleared": false,
+                "verified": false,
+                "url": "/bihari_web",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/209/891/0674c16705aae310e7963bffd5b2518ae1d73200_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4425412,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "There is further exploit that can be made by the **name** parameter of above request.\nHere instead of writing the name of the person we can type a custom custom message ( There is no limit on the length of name parameter ).\n>Note:- The message should be url encoded.\nF455010: Screenshot from 2019-03-30 17-24-13.png\n\nF455012: Screenshot of Email received.",
+            "automated_response": false,
+            "created_at": "2019-03-30T11:56:59.930Z",
+            "updated_at": "2019-03-30T11:56:59.930Z",
+            "actor": {
+                "username": "bihari_web",
+                "cleared": false,
+                "verified": false,
+                "url": "/bihari_web",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/209/891/0674c16705aae310e7963bffd5b2518ae1d73200_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 455012,
+                    "filename": "Screenshot_from_2019-03-30_17-25-56.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/455/012/0082334fccca9aef9c8dfa21142a114760d20997/Screenshot_from_2019-03-30_17-25-56.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2019-03-30_17-25-56.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2019-03-30_17-25-56.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3M3ZUGHF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073417Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDalu3R3A%2FswTPJ4xVHOG9Rxl2RApgY8sDhKppqfGAqUQIgYRBv%2BXAmyBbaQawCIn40ZDK40fVkJHB%2FveoHhr1DlesqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDJ%2F4bKMCrS7jIJwMtiqOBd%2FriANSh5ipBo8Pk%2F2qb1z5a0uuM2PdRzqESOe7VvDp2Qb4FOUjbmWUlbaFWD8QKCBfRxUchp5N36dI8BDE1Fu3JNTXj6zUJB8ynNY37PM8a9OxhHOFsdRIDX2DAUt99aaSeFLpCfWSzZmgFg5zOzSET2USuldSMvVn0mF6Q3TgV0FGypNplJbb7pipy5SsltuaylNiSVXn7ksT4%2BCaiDyPu0aiEximdK7dDGqZGy%2FV5TM3wWaZyabFm5LkvbKmkMsSuy%2FteOZVfnz5WS54DCAgFk3BkYRe1sR9v7G6bWkI2wLugYmg72chgnrnriCzE0hGEXnO9EFMBws0BGBY3Ug4FDE1TZMi87%2FqBcGR97mlCIYsP%2BVCM723Bd6WSUS%2BzEeBYFoUT9iO5YHFEy8fw%2FnrM1iOt1nKsPdTdOzQduTV1SlzJ%2FDLuHjFyVBWGCivs88xGFIqJPeFqSOHqUo3UzYeDQhdPJzkDDM%2FI9njibpaiyGs1oALVu3IBnIxkXS5CHFpYciPsHF%2F4raxKXpon6BMx3ZAMKTfhYOcFqIcFIDi22YkKJxYedXNOhMtQ7sTAYBwZG%2B1z%2FgIPfJPJeN4BkF%2FNpnvwThw2cbyM6EmTfwe0qqtLfmIZHaIa0eyCtd96iO15JfptkDRrrOb3Aqpkp15g%2B22lD4mhnBnaJv67%2FvHeJH7Nir6w%2BxGqIJmozIJ828xZ2Pr97VsI4EmPi637KNZV5SVnXEIkRqhsZCEz%2F8o4v6m8mHkk2%2B9mlkkXMjGHrcFiHKSwnWxuDY%2BhaT9EfJFDQakyKaWJXWwRUI9%2F%2Bgz3LwComeOi11ysyBCCZsLyamqnStpOeP6aNEUTXLa%2B0OTdU22NEbO4iiVsv63jDDcqranBjqxASLvyauRn%2FzRj6Fk%2FoXEaEcToFwsxz%2FuiH7YLtJQoADGa4xQ%2BHp5%2BtVbj10EvYfXNdzqfn7NU0Zp7FAb4j2bw73CIg1m%2F%2BG0yg9qkKCCJeh9mVROmsoU9faMoswyb5G0l01K547DYaXx6PXGCdiFcf3FmifZ66Uzod21ITV%2B%2FEeXzYeGCknxhsK9dcOw4z5NYmglL7Ns1qDcK6MTZ8044CCp6XRpr%2Fr8GamPJmpfWx1T2Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=479580ef41e5b8aace811a3af54275f3e995179571a3a4e5c052fd537df9cbe6"
+                },
+                {
+                    "id": 455010,
+                    "filename": "Screenshot_from_2019-03-30_17-24-13.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/455/010/b8f2ab99eb94006530ed1798d6b218d46558146e/Screenshot_from_2019-03-30_17-24-13.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2019-03-30_17-24-13.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2019-03-30_17-24-13.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3M3ZUGHF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073417Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDalu3R3A%2FswTPJ4xVHOG9Rxl2RApgY8sDhKppqfGAqUQIgYRBv%2BXAmyBbaQawCIn40ZDK40fVkJHB%2FveoHhr1DlesqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDJ%2F4bKMCrS7jIJwMtiqOBd%2FriANSh5ipBo8Pk%2F2qb1z5a0uuM2PdRzqESOe7VvDp2Qb4FOUjbmWUlbaFWD8QKCBfRxUchp5N36dI8BDE1Fu3JNTXj6zUJB8ynNY37PM8a9OxhHOFsdRIDX2DAUt99aaSeFLpCfWSzZmgFg5zOzSET2USuldSMvVn0mF6Q3TgV0FGypNplJbb7pipy5SsltuaylNiSVXn7ksT4%2BCaiDyPu0aiEximdK7dDGqZGy%2FV5TM3wWaZyabFm5LkvbKmkMsSuy%2FteOZVfnz5WS54DCAgFk3BkYRe1sR9v7G6bWkI2wLugYmg72chgnrnriCzE0hGEXnO9EFMBws0BGBY3Ug4FDE1TZMi87%2FqBcGR97mlCIYsP%2BVCM723Bd6WSUS%2BzEeBYFoUT9iO5YHFEy8fw%2FnrM1iOt1nKsPdTdOzQduTV1SlzJ%2FDLuHjFyVBWGCivs88xGFIqJPeFqSOHqUo3UzYeDQhdPJzkDDM%2FI9njibpaiyGs1oALVu3IBnIxkXS5CHFpYciPsHF%2F4raxKXpon6BMx3ZAMKTfhYOcFqIcFIDi22YkKJxYedXNOhMtQ7sTAYBwZG%2B1z%2FgIPfJPJeN4BkF%2FNpnvwThw2cbyM6EmTfwe0qqtLfmIZHaIa0eyCtd96iO15JfptkDRrrOb3Aqpkp15g%2B22lD4mhnBnaJv67%2FvHeJH7Nir6w%2BxGqIJmozIJ828xZ2Pr97VsI4EmPi637KNZV5SVnXEIkRqhsZCEz%2F8o4v6m8mHkk2%2B9mlkkXMjGHrcFiHKSwnWxuDY%2BhaT9EfJFDQakyKaWJXWwRUI9%2F%2Bgz3LwComeOi11ysyBCCZsLyamqnStpOeP6aNEUTXLa%2B0OTdU22NEbO4iiVsv63jDDcqranBjqxASLvyauRn%2FzRj6Fk%2FoXEaEcToFwsxz%2FuiH7YLtJQoADGa4xQ%2BHp5%2BtVbj10EvYfXNdzqfn7NU0Zp7FAb4j2bw73CIg1m%2F%2BG0yg9qkKCCJeh9mVROmsoU9faMoswyb5G0l01K547DYaXx6PXGCdiFcf3FmifZ66Uzod21ITV%2B%2FEeXzYeGCknxhsK9dcOw4z5NYmglL7Ns1qDcK6MTZ8044CCp6XRpr%2Fr8GamPJmpfWx1T2Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9c9ee3d1bd94d589fc365bf32ec55f35dfaa38d65b752fbe4e8d75ae085a37d1"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4432713,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-01T11:45:14.373Z",
+            "updated_at": "2019-04-01T11:45:14.373Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bihari_web",
+                "cleared": false,
+                "verified": false,
+                "url": "/bihari_web",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/209/891/0674c16705aae310e7963bffd5b2518ae1d73200_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4575282,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @ehsahil-zomato  is there any update on it ??",
+            "automated_response": false,
+            "created_at": "2019-04-16T14:24:41.749Z",
+            "updated_at": "2019-04-16T14:24:41.749Z",
+            "actor": {
+                "username": "bihari_web",
+                "cleared": false,
+                "verified": false,
+                "url": "/bihari_web",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/209/891/0674c16705aae310e7963bffd5b2518ae1d73200_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4575941,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-16T15:39:04.371Z",
+            "updated_at": "2019-04-16T15:39:04.371Z",
+            "actor": {
+                "username": "biryani-is-lob",
+                "cleared": false,
+                "verified": false,
+                "url": "/biryani-is-lob",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4575942,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-16T15:39:04.436Z",
+            "updated_at": "2019-04-16T15:39:04.436Z",
+            "actor": {
+                "username": "biryani-is-lob",
+                "cleared": false,
+                "verified": false,
+                "url": "/biryani-is-lob",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        },
+        {
+            "id": 4575952,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CommentsClosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-04-16T15:40:09.569Z",
+            "updated_at": "2019-04-16T15:40:09.569Z",
+            "actor": {
+                "url": "/zomato",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Zomato"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "zomato"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "id": 15217,
+            "category": "team",
+            "content": "We've been receiving similar issues, disclosing it publicly so that everyone reading this report can know that this is out of scope and hence going forward will be closed as N/A.",
+            "user": {
+                "id": 547853,
+                "username": "biryani-is-lob",
+                "name": "Biryani is lob <3 ",
+                "bio": "",
+                "cleared": false,
+                "verified": false,
+                "website": null,
+                "location": "",
+                "created_at": "2019-03-18T12:32:47.504Z",
+                "url": "https://hackerone.com/biryani-is-lob",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "company",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/sYPtN4bJVr35fXwTxNPhuBtp/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

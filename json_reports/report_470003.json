@@ -1,0 +1,619 @@
+{
+    "id": 470003,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzAwMDM=",
+    "url": "https://hackerone.com/reports/470003",
+    "title": "Privilege Escalation via Keybase Helper (incomplete security fix)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2018-12-19T16:43:13.301Z",
+    "submitted_at": "2018-12-19T16:43:13.301Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "0xcccc",
+        "url": "/0xcccc",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 2809,
+        "url": "https://hackerone.com/keybase",
+        "handle": "keybase",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "paused",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Keybase",
+            "twitter_handle": "keybaseio",
+            "website": "https://keybase.io",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-01-31T02:19:46.101Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-01-31T02:19:46.033Z",
+    "team_member_agreed_on_going_public_at": "2019-01-30T18:12:08.607Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "In the previous [report](https://hackerone.com/reports/397478), about the privileged helper lacks of validation so any applications can abuse it to gain root privilege.\n\nBut the security fix is incomplete.\n\nI can describe 3 different ways to bypass (possibly 4, I doubt).\n\nAll the poc are simplified to not sending the actual attack payload, but instead a simple xpc_dictionary. If the code sign check works, I should received a \"connection interrupt\" error. To prove that I have bypassed the check, I will get a \"Unable to read object\" reply (that the MPMessagePack has received the message but doesn't recognize its format).\n\n## Description\n\n1. Time of use time of check\n\nsource code: `poc1.m`\n\nUnlike Windows, macOS does not lock the executable that being executed.\nSo between my evil process's creation and the XPC, there's a time window that I can simply replace my self with a valid executable.\nSince the original binary has `@rpath` dependencies, I have to copy the whole app bundle (not the single executable)\n\nIf the code sign check works, I should received a \"connection interrupt\" error.\n\n2. pid reuse race condition\n\nAccording to the code, you've already known this, but just couln't believe that it could be an actual attack:\n \n > https://github.com/gabriel/MPMessagePack/commit/c01e974b09d8278696582c40bf73ddf74e7531ad#diff-de800048bd73ccd8bd9fea83da21f613R143\n >\n > The OS’s process ID space is relatively small, which means that process IDs are commonly reused.\n > There is a recommended alternative to process IDs, namely audit tokens (audit_token_t), but you can’t use this because a critical piece of public API is missing.\n > While you can do step 2 with an audit token (using kSecGuestAttributeAudit), there’s no public API to get an audit token from an XPC connection.\n > Fortunately, process ID wrapping problems aren’t a real threat in this context because, if you create an XPC connection per process, you can do your checking based on the process ID of that process. If the process dies, the connection goes away and you’ll end up rechecking the process ID on the new connection.\n \n This technique is the variant of Ian Beer's exploit\n https://bugs.chromium.org/p/project-zero/issues/detail?id=1223\n \n on macOS, pid can be reuse. You can even replace current executable\n to a different process with fork() / posix_spawn() while keeping the old pid.\n \n For loop for about 8 times you can trigger the race condition.\n \nIn the Console.app, search `process:keybase.Helper`\n\nI was expected to see this message repeats 8 times:\n\n``` \nFailed to pass code requirement: Error Domain=MPMessagePack Code=-67050 \"Binary failed code requirement\" UserInfo={NSLocalizedDescription=Binary failed code requirement, NSLocalizedRecoveryOptions=(\n OK\n```\n \n But instead, some of the messages got passed\n\n```\n You can attach to Keybase.Helper process, put a breakpoint at SecStaticCodeCheckValidityWithErrors to see the behavior\n```\n\n3. `DYLD_INSERT_LIBRARIES` library injection\n\nsource code: `poc1.m` and `injected.m`\n \n`DYLD_INSERT_LIBRARIES` can inject evil payload to valid signed process, without touching its code signature.\n \n To prevent this attack, you can either add LibraryValidation to whitelisted binary (I strongly recommend this) or add any custom Entitlement to the code signature.\n \n Addictionaly, XPC has the built-in support for checking entitlement.\n\nPlease refer to \n\n> (Objective See: \"Reversing to Engineer: Learning to 'Secure' XPC from a Patch\")[https://objective-see.com/blog.html]\n\nfor more information.\n\n4. (possible) abuse Electron remote debugging and process.dlopen to load untrusted code\n\n The allowed identifiers are keybase.Installer and keybase.Keybase, but I couln't find where keybase.Keybase is.\nI doubt that it's the typo for \"Keybase.Electron\" because I found this: \nhttps://github.com/keybase/client/blob/6f1e2c08d514713db6dc33081a09a6dcf9bd5493/osx/KBKit/KBKit/Component/KBAppBundle.m#L52\n\nIf so, there's the 4th bypass:\nAbuse trusted Electron to load evil library and run the exploit.\n\nKeybase gui is based on Electron, which has built in debugg option like --inspect=[port] or --inspect-brk=[port]\nThen it will expose the debug protocol on localhost that can be interacted via WebSocket\nThrough this debug protocol\n\nWe should NEVER trust such script language interpreters like Electron, node.js, or even lua or something.\nLibrary Validation can prevent them from dylib hijack, but some interpreter also have the ablity to run shellcode.\n \nSo just block them.\n\n## The advise\n\nTo implement a secure XPC server, you need to follow all of these:\n\n1. Just as the comment in https://github.com/gabriel/MPMessagePack/commit/c01e974b09d8278696582c40bf73ddf74e7531ad#diff-de800048bd73ccd8bd9fea83da21f613R143 says, don't use pid the check code signature. Use `audit_token_t`!\n\n2. PID can be reused, not to mention path. Don't trust it.\n\n2. Add Library Validation flag (https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Procedures/Procedures.html#//apple_ref/doc/uid/TP40005929-CH4-SW9) to whitelisted clients. This kills all dylib injection tricks ( (but not shellcode, so don't whitelist script interpreters)\n\n3. After the new flags applied, attackers can still grab old signed binaries. Add new custom entitlements (you can customize the name, as long as it don't starts with `com.apple.private`) check to the code sign requirements.\n\n## Impact\n\nAn attacker that can execute arbitrary code in normal user can be elevated to root privilege.",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 394572,
+            "file_name": "poc.zip",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/394/572/e667fc68753a5d70bcb06bf573037357445e0719/poc.zip?response-content-disposition=attachment%3B%20filename%3D%22poc.zip%22%3B%20filename%2A%3DUTF-8%27%27poc.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073536Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3eae00e835964146c2652250ea1746255b550d2376e354b88ed6c2ff8fcd8f71",
+            "file_size": 8600,
+            "type": "application/zip"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 42,
+    "voters": [
+        "mirchr",
+        "bl4de",
+        "spam404",
+        "yashrs",
+        "k3mlol",
+        "dhakal_ananda",
+        "ali",
+        "harry_mg",
+        "savitar0x01",
+        "r3y",
+        "and 32 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3867662,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-12-19T18:11:47.535Z",
+            "updated_at": "2018-12-19T18:11:47.535Z",
+            "additional_data": {
+                "old_severity": "Critical (9.2)",
+                "new_severity": "High",
+                "old_severity_id": 269660,
+                "new_severity_id": 269695
+            },
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3867664,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for the report and the great writeup.  We're looking into it ASAP.",
+            "automated_response": false,
+            "created_at": "2018-12-19T18:12:11.898Z",
+            "updated_at": "2018-12-19T18:12:11.898Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3867737,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @0xcccc, do you have any references for how to use `auth_token_t`?  We couldn't find it when last we looked. ",
+            "automated_response": false,
+            "created_at": "2018-12-19T18:24:13.900Z",
+            "updated_at": "2018-12-19T18:24:13.900Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3868049,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@0xcccc we found a good reference via the similar 2017 issue in Chromium.",
+            "automated_response": false,
+            "created_at": "2018-12-19T19:21:16.648Z",
+            "updated_at": "2018-12-19T19:21:16.648Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3869210,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@maxtaco `auth_token_t` is mentioned in Objective See's blog. https://objective-see.com/blog.html\nHe forgot to create a single page for this article, search \"Learning to 'Secure' XPC from a Patch\" on that page",
+            "automated_response": false,
+            "created_at": "2018-12-20T02:40:24.804Z",
+            "updated_at": "2018-12-20T02:40:42.795Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3869277,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Uh, I did so many typos in the writeup. If you met any confusion, just feel free to ask...",
+            "automated_response": false,
+            "created_at": "2018-12-20T03:08:02.278Z",
+            "updated_at": "2018-12-20T03:08:02.278Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3872014,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Not a worry.  We're hard at work and hope to have an update in the next day or two.",
+            "automated_response": false,
+            "created_at": "2018-12-20T16:51:00.617Z",
+            "updated_at": "2018-12-20T16:51:00.617Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3880012,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, we have fixes for the holes you found. There are two patches: one to the build system, and another to the underlying msgpack library, to use `audit_token_t` rather than PIDs. We've attached a new build, can you try it out?\n\nNote there is still one issue that we're looking into, which is that poc2 no longer breaks confinement, but it does still crash the helper. We're investigating.\n\nThank you for your work and help.",
+            "automated_response": false,
+            "created_at": "2018-12-22T01:14:01.892Z",
+            "updated_at": "2018-12-22T01:14:01.892Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3880013,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Here's the updated package: https://s3.amazonaws.com/prerelease.keybase.io/darwin/Keybase-2.13.1-20181221191618%2Bb4a1bca.dmg",
+            "automated_response": false,
+            "created_at": "2018-12-22T01:15:01.584Z",
+            "updated_at": "2018-12-22T01:15:01.584Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 395830,
+                    "filename": "MPXPCService.m.3.patch",
+                    "type": "text/x-diff",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/395/830/d377836b196e3c0a7b85670cb522f52d79744dc2/MPXPCService.m.3.patch?response-content-disposition=attachment%3B%20filename%3D%22MPXPCService.m.3.patch%22%3B%20filename%2A%3DUTF-8%27%27MPXPCService.m.3.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073536Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9153941adb452285b5d4a52839afd7dc29e485f03ae0b6eb71e539f4622ac4ed"
+                },
+                {
+                    "id": 395829,
+                    "filename": "0001-set-LibraryInvalidation-and-change-name.patch",
+                    "type": "text/x-diff",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/395/829/7f1abf22e7a1fabaedc0d3883d5a74b9ad6ce968/0001-set-LibraryInvalidation-and-change-name.patch?response-content-disposition=attachment%3B%20filename%3D%220001-set-LibraryInvalidation-and-change-name.patch%22%3B%20filename%2A%3DUTF-8%27%270001-set-LibraryInvalidation-and-change-name.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073536Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c59ba499aebad6f4ee2769996c841cc1bd71fc5fe10ca52ed09365f307252cd3"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3885180,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I can confirm that all bugs have been fixed.\n",
+            "automated_response": false,
+            "created_at": "2018-12-24T04:06:01.952Z",
+            "updated_at": "2018-12-24T04:06:01.952Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3900043,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-12-28T12:18:52.790Z",
+            "updated_at": "2018-12-28T12:18:52.790Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 472379
+            },
+            "actor": {
+                "username": "ntrippar",
+                "cleared": false,
+                "verified": false,
+                "url": "/ntrippar",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3900138,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We're readying a candidate for release today. Thanks again for your great work.\n\nhttps://s3.amazonaws.com/prerelease.keybase.io/darwin-test/Keybase-2.12.4-20181227202844%2Bf616a46.dmg",
+            "automated_response": false,
+            "created_at": "2018-12-28T12:37:47.122Z",
+            "updated_at": "2018-12-28T12:37:47.122Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3932719,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, thanks again for this great bug report and and your research. Our current plan is to bounty and disclose this issue after our next release cycle (2.13.0), later this month. In the mean time, we're reaching out to all users who haven't upgraded to 2.12.6 yet and encouraging them to upgrade. We'll be in touch shortly. Thank you.",
+            "automated_response": false,
+            "created_at": "2019-01-07T01:07:34.070Z",
+            "updated_at": "2019-01-07T01:07:34.070Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 3939965,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@maxtaco Nice work!",
+            "automated_response": false,
+            "created_at": "2019-01-08T04:18:08.077Z",
+            "updated_at": "2019-01-08T04:18:08.077Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 4066197,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-30T18:10:44.607Z",
+            "updated_at": "2019-01-30T18:10:44.607Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "0xcccc",
+                "url": "/0xcccc"
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 4066204,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-30T18:11:36.139Z",
+            "updated_at": "2019-01-30T18:11:36.139Z",
+            "actor": {
+                "url": "/keybase",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Keybase"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "keybase",
+            "collaborator": {
+                "username": "0xcccc",
+                "url": "/0xcccc"
+            }
+        },
+        {
+            "id": 4066206,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-30T18:12:08.624Z",
+            "updated_at": "2019-01-30T18:12:08.624Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 4066282,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We posted this security update: https://keybase.io/docs/secadv/kb004",
+            "automated_response": false,
+            "created_at": "2019-01-30T18:21:16.262Z",
+            "updated_at": "2019-01-30T18:21:16.262Z",
+            "actor": {
+                "username": "maxtaco",
+                "cleared": false,
+                "verified": false,
+                "url": "/maxtaco",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 4068445,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thank you!",
+            "automated_response": false,
+            "created_at": "2019-01-31T02:19:46.053Z",
+            "updated_at": "2019-01-31T02:19:46.053Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        },
+        {
+            "id": 4068446,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-31T02:19:46.121Z",
+            "updated_at": "2019-01-31T02:19:46.121Z",
+            "actor": {
+                "username": "0xcccc",
+                "cleared": false,
+                "verified": false,
+                "url": "/0xcccc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "keybase"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

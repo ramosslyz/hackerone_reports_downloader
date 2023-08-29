@@ -1,0 +1,506 @@
+{
+    "id": 390537,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTA1Mzc=",
+    "url": "https://hackerone.com/reports/390537",
+    "title": "DNS misconfiguration on email.alerts.newrelic.com",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "medium",
+    "readable_substate": "N/A",
+    "created_at": "2018-08-04T16:53:05.444Z",
+    "submitted_at": "2018-08-04T16:53:05.444Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "hackerone77-222",
+        "url": "/hackerone77-222",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17011,
+        "url": "https://hackerone.com/newrelic",
+        "handle": "newrelic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "New Relic",
+            "twitter_handle": "newrelic",
+            "website": "https://newrelic.com",
+            "about": "New Relic's Coordinated Disclosure Program"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": true,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-09-17T16:20:44.273Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-09-16T16:13:40.214Z",
+    "team_member_agreed_on_going_public_at": "2018-09-17T16:20:44.141Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "While checking the subdomains i found that the subdomain email.alerts.newrelic.com upon navigating downloads a file saying \"Mailgun Magnificent API\" And has the following DNS info\n(screenshot attached)\nThe problem lies in this issue:\n\nYou add the domain email.alerts.newrelic.com to Mailgun\nMailgun asks you to add a MX record to email.alerts.newrelic.com\nYou add that, then Mailgun also tells you that to get tracking you need to add a CNAME from email.alerts.newrelic.com to mailgun.org as well.\nWhat is missing here, is for you to actually add email.email.alerts.newrelic.com to your account as a separate domain by itself. By not doing this, anyone can add this domain to their account.\nYou probably later on remove the MX from email.alerts.newrelic.com again, but the CNAME is still there for email.alerts.newrelic.com\nThe problem with missing out on #4 above is how DNS CNAMEs works. If you have a CNAME pointing to another domain, this CNAME will actually inherit the MX-records from the other domain. This basically means that your email.staging.airtable.com is now listed with MX-records from Mailgun:\n\nThe Verification process takes upto 24+ Hours but i decided to report the issue as soon as possible so it can be migrated :) let me know I can delete the domain from my account so that you guys can set it up again or maybe U simpel need to delete the DNS info\n\nReport Reference #272357&#174983\n\n## Impact\n\nThis is leading to a subdomain takeover and anyone can use it to send mail using your mail",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 328441,
+            "file_name": "shot-2018-08-04_21-52-15.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/328/441/07efc96a5dfaca9ba6a5a8bc9fa586c7c6ab97eb/shot-2018-08-04_21-52-15.png?response-content-disposition=attachment%3B%20filename%3D%22shot-2018-08-04_21-52-15.png%22%3B%20filename%2A%3DUTF-8%27%27shot-2018-08-04_21-52-15.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073817Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=a39f2d001fbfb9b88db0dba623f6a1fc9e9a09a573cf4e8a31ba44bef5f6e752",
+            "file_size": 158165,
+            "type": "image/png"
+        },
+        {
+            "id": 328442,
+            "file_name": "shot-2018-08-04_21-52-00.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/328/442/67627923ab2f5144ea3367a3b8be4bb8125bdae2/shot-2018-08-04_21-52-00.png?response-content-disposition=attachment%3B%20filename%3D%22shot-2018-08-04_21-52-00.png%22%3B%20filename%2A%3DUTF-8%27%27shot-2018-08-04_21-52-00.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073817Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=6fa312dd62c1e2f6d4c920bfd2b04b301d0a8c723d19af0e387a87ad78b820f2",
+            "file_size": 159847,
+            "type": "image/png"
+        },
+        {
+            "id": 328443,
+            "file_name": "shot-2018-08-04_21-51-46.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/328/443/09dbd4daad7c4f3bc3ee220e87a7e8773965e2f4/shot-2018-08-04_21-51-46.png?response-content-disposition=attachment%3B%20filename%3D%22shot-2018-08-04_21-51-46.png%22%3B%20filename%2A%3DUTF-8%27%27shot-2018-08-04_21-51-46.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073817Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=201fa4a0dab2de0c2f1d13b4c1b4d6251c5efd5de578de991abb394cfdd1c97e",
+            "file_size": 147001,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 3,
+    "voters": [
+        "sameerphad72",
+        "eveeez",
+        "evokolo"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 6454,
+        "asset_type": "URL",
+        "asset_identifier": "alerts.newrelic.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 3143349,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorInvited",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2018-08-05T08:51:21.301Z",
+            "updated_at": "2018-08-05T08:51:21.301Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3143595,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorInvited",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2018-08-05T08:53:28.959Z",
+            "updated_at": "2018-08-05T08:53:28.959Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3143910,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorInvited",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2018-08-05T09:02:14.104Z",
+            "updated_at": "2018-08-05T09:02:14.104Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3145336,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates",
+            "automated_response": false,
+            "created_at": "2018-08-05T17:23:54.521Z",
+            "updated_at": "2018-08-05T17:23:54.521Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3145892,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates?it is more thsn 36 hours",
+            "automated_response": false,
+            "created_at": "2018-08-06T01:55:56.137Z",
+            "updated_at": "2018-08-06T01:55:56.137Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3151394,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Almost  3 days no reply is there any problem\nBecause you reply within 18 hours",
+            "automated_response": false,
+            "created_at": "2018-08-06T15:10:36.301Z",
+            "updated_at": "2018-08-06T15:10:36.301Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3151529,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportCollaboratorInvited",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2018-08-06T15:38:32.036Z",
+            "updated_at": "2018-08-06T15:38:32.036Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3151670,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @obi43, \n\nThanks for your report! I'll be looking at this today.  \n\n-Anna",
+            "automated_response": false,
+            "created_at": "2018-08-06T16:17:40.998Z",
+            "updated_at": "2018-08-06T16:17:40.998Z",
+            "actor": {
+                "username": "alorimer",
+                "cleared": false,
+                "verified": false,
+                "url": "/alorimer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3152454,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates",
+            "automated_response": false,
+            "created_at": "2018-08-06T19:29:23.733Z",
+            "updated_at": "2018-08-06T19:29:23.733Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3156016,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @obi43, \n\nWe're still working on validating this report. We should have more information for you soon :)\n\nThanks,\n\nAnna",
+            "automated_response": false,
+            "created_at": "2018-08-07T16:30:32.996Z",
+            "updated_at": "2018-08-07T16:30:32.996Z",
+            "actor": {
+                "username": "alorimer",
+                "cleared": false,
+                "verified": false,
+                "url": "/alorimer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3156418,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You can use screen shots as a source of validation",
+            "automated_response": false,
+            "created_at": "2018-08-07T18:03:34.707Z",
+            "updated_at": "2018-08-07T18:03:34.707Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3156423,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The real problem is that cname is pointing to mailgun.org,anyone using mailgun can claim this\nif you claim it you are able to send mails but not recieve them but still it used for various purposes\nLike sending malicious file links to your customers",
+            "automated_response": false,
+            "created_at": "2018-08-07T18:04:38.469Z",
+            "updated_at": "2018-08-07T18:07:06.750Z",
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3167999,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Hi @obi43,\n\nMailgun issued a patch for this in October 2016 and New Relic's configuration is consistent with Mailgun's guidelines to mitigate the issue. Mailgun support has also confirmed that any attempts to exploit this issue have been unsuccessful. \n\nWe appreciate the report and if you believe there is still a way to exploit this issue, please let us know. \n\n-Anna",
+            "automated_response": false,
+            "created_at": "2018-08-09T17:08:59.447Z",
+            "updated_at": "2018-08-09T17:08:59.447Z",
+            "actor": {
+                "username": "alorimer",
+                "cleared": false,
+                "verified": false,
+                "url": "/alorimer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3345644,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-16T16:13:40.248Z",
+            "updated_at": "2018-09-16T16:13:40.248Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hackerone77-222",
+                "cleared": false,
+                "verified": false,
+                "url": "/hackerone77-222",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3349687,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-17T16:20:44.192Z",
+            "updated_at": "2018-09-17T16:20:44.192Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 3349688,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-09-17T16:20:44.320Z",
+            "updated_at": "2018-09-17T16:20:44.320Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

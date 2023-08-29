@@ -1,0 +1,404 @@
+{
+    "id": 1169033,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTY5MDMz",
+    "url": "https://hackerone.com/reports/1169033",
+    "title": "Targeted phishing attacks in Login flow v2",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2021-04-19T18:35:52.013Z",
+    "submitted_at": "2021-04-19T18:35:52.117Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "rtod",
+        "url": "/rtod",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13291,
+        "url": "https://hackerone.com/nextcloud",
+        "handle": "nextcloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Nextcloud",
+            "twitter_handle": "nextclouders",
+            "website": "https://nextcloud.com",
+            "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-03-03T07:38:55.211Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-06-23T18:26:47.178Z",
+    "team_member_agreed_on_going_public_at": "2023-03-03T07:38:55.116Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The login flow v2 is used by the desktop client.\n\nThe attack vector assumes the attacker knows the recipient somehow and knows their username and email (or other way to contact them).\n\nIn short it is following the steps from https://docs.nextcloud.com/server/21/developer_manual/client_apis/LoginFlow/index.html#login-flow-v2\n(examples are also taken from there)\n\n1. Attacker send a request to: curl -X POST https://cloud.example.com/index.php/login/v2\n   They can even set the user agent to something that the user will trust. Like 'Company X verification', 'or just dekstop client' or whatever.\n\n2. Attacker obtains the response like\n\n{\n    \"poll\":{\n        \"token\":\"mQUYQdffOSAMJYtm8pVpkOsVqXt5hglnuSpO5EMbgJMNEPFGaiDe8OUjvrJ2WcYcBSLgqynu9jaPFvZHMl83ybMvp6aDIDARjTFIBpRWod6p32fL9LIpIStvc6k8Wrs1\",\n        \"endpoint\":\"https:\\/\\/cloud.example.com\\/login\\/v2\\/poll\"\n    },\n    \"login\":\"https:\\/\\/cloud.example.com\\/login\\/v2\\/flow\\/guyjGtcKPTKCi4epIRIupIexgJ8wNInMFSfHabACRPZUkmEaWZSM54bFkFuzWksbps7jmTFQjeskLpyJXyhpHlgK8sZBn9HXLXjohIx5iXgJKdOkkZTYCzUWHlsg3YFg\"\n}\n\n3. Now the attacker send the login URL to the victim.\n4. The victim logs in, granting the attacker an access token to access all their data.\n\nThe login URL seems to only be valid for 10 minutes. However this is still a 10 minute window the user can be attacked.\nThe attacker could even setup a url that when clicked on will perform the steps in the background and then redirecting them. Making sure the token is always valid.\n\nThe issue here is that there is no warning for the victim that what they are about to do is potentially giving an attacker access to their data. And they can do all the checks when they are on the auth page but it is actually the legit page of their Nextcloud instance.\n\nI'd suggest to work with some verification.For example. Show a 2 digit code (or as many digits as you are comfortable with) and have that be entered in the desktop client screen. That way the attacker has to time it right and be very lucky. Making the attack a lot less likely. As the victim would also notice 'what do you mean I have to enter a code on my device?'\n\n## Impact\n\nPossible granting of access token to the attacker. Resulting in access to all data of a victim.",
+    "weakness": {
+        "id": 73,
+        "name": "Phishing"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 5,
+    "voters": [
+        "0xcyborg",
+        "zy9ard3",
+        "shubham_srt",
+        "xdzibec22",
+        "sachinhacker30"
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.8,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 13,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "nextcloud/server",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11444066,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us!\n\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster. For obvious reasons we'd like to ask you to not disclose this issue to any other party.",
+            "automated_response": true,
+            "created_at": "2021-04-19T18:35:52.502Z",
+            "updated_at": "2021-04-19T18:35:52.502Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 11450516,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Thanks for your report, much appreciated :)\n\nCould you elaborate on the UI that you are seeing here? As per https://github.com/nextcloud/server/blame/9de329a4c2327767d86bd7f594b232eb56af0d01/core/templates/loginflowv2/authpicker.php#L38-L40, there should be an indication in the UI warning users:\n\n> If you are not trying to set up a new device or app, someone is trying to trick you into granting them access to your data. In this case do not proceed and instead contact your system administrator.\n\nWhich has been introduced to mitigate https://github.com/nextcloud/server/issues/21698.\n\n(Arguably that is not a perfect mitigation and communicating with the app using a local webserver may be more reliable. - Or showing a number to verify.)",
+            "automated_response": false,
+            "created_at": "2021-04-20T09:47:49.965Z",
+            "updated_at": "2021-04-20T09:50:06.573Z",
+            "actor": {
+                "username": "lukasreschkenc",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschkenc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 11451509,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "You are right, I actually missed it. (maybe that tells you something already) However I still think that this can be easily abused for phishing.\nJust imagine the mail saying you have to reauthorize your accounts to keep it active. And as user agent your just set the name of the server or something like that.\n\nhttps://github.com/nextcloud/server/issues/21698 seems very similar to this report yes.\nHowever as stated. I do not feel the current situation is mitigating the issue properly.",
+            "automated_response": false,
+            "created_at": "2021-04-20T10:03:44.190Z",
+            "updated_at": "2021-04-20T10:03:44.190Z",
+            "actor": {
+                "username": "rtod",
+                "cleared": false,
+                "verified": false,
+                "url": "/rtod",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 11452823,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thanks for clarifying. I agree that this is something that we can improve, it's however not something that is easily possible as it requires client changes and may break some existing flows relying on this behaviour.\n\nI've filed a ticket to work on:\n\n1. Short-term: Improving the visibility of the warning.\n2. Longer term: Consider how we can make this more phising proof. (e.g. with a secret that the user has to type in, a local web server, etc.)",
+            "automated_response": false,
+            "created_at": "2021-04-20T12:16:15.745Z",
+            "updated_at": "2021-04-20T12:16:15.745Z",
+            "actor": {
+                "username": "lukasreschkenc",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschkenc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 11453147,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the rapid responses!\n\nThose steps sound good. Don't worry I know how long changes to software can take. Good luck with that!",
+            "automated_response": false,
+            "created_at": "2021-04-20T12:41:05.104Z",
+            "updated_at": "2021-04-20T12:41:05.104Z",
+            "actor": {
+                "username": "rtod",
+                "cleared": false,
+                "verified": false,
+                "url": "/rtod",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 11697823,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Thanks a lot for your report. Much appreciated!\n\nWe have decided to move this ticket to GitHub, as it is more of a security hardening. You can find the tickets at https://github.com/nextcloud/server/issues/26943 and https://github.com/nextcloud/server/issues/26944.",
+            "automated_response": false,
+            "created_at": "2021-05-11T12:27:06.546Z",
+            "updated_at": "2021-05-11T12:27:06.546Z",
+            "actor": {
+                "username": "lukasreschkenc",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschkenc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 12211054,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We are considering making the warning more visible with Nextcloud 22, due to be released in July. (https://github.com/nextcloud/server/pull/27605)",
+            "automated_response": false,
+            "created_at": "2021-06-22T17:30:30.805Z",
+            "updated_at": "2021-06-22T17:30:30.805Z",
+            "actor": {
+                "username": "lukasreschkenc",
+                "cleared": false,
+                "verified": false,
+                "url": "/lukasreschkenc",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 12223899,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-23T18:26:47.232Z",
+            "updated_at": "2021-06-23T18:26:47.232Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "rtod",
+                "cleared": false,
+                "verified": false,
+                "url": "/rtod",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 20630305,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "any reason not to disclose thise?",
+            "automated_response": false,
+            "created_at": "2023-03-02T19:24:59.397Z",
+            "updated_at": "2023-03-02T19:24:59.397Z",
+            "actor": {
+                "username": "rtod",
+                "cleared": false,
+                "verified": false,
+                "url": "/rtod",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 20633524,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Not that I'm aware of.\nNormally they disclose after 30 days when requested, but maybe not in this case as it is \"informative\"",
+            "automated_response": false,
+            "created_at": "2023-03-03T07:38:47.066Z",
+            "updated_at": "2023-03-03T07:38:47.066Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 20633526,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-03T07:38:55.158Z",
+            "updated_at": "2023-03-03T07:38:55.158Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 20633527,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-03T07:38:55.289Z",
+            "updated_at": "2023-03-03T07:38:55.289Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

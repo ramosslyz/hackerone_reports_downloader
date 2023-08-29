@@ -1,0 +1,486 @@
+{
+    "id": 685552,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82ODU1NTI=",
+    "url": "https://hackerone.com/reports/685552",
+    "title": "XSS in desktop client via invalid server address on login form",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2019-08-31T15:16:17.398Z",
+    "submitted_at": "2019-08-31T15:16:17.398Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jplopezy",
+        "url": "/jplopezy",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/115/148192f6ec8b1f75f8c9b4c1c8d9be6782aab7c0_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13291,
+        "url": "https://hackerone.com/nextcloud",
+        "handle": "nextcloud",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Nextcloud",
+            "twitter_handle": "nextclouders",
+            "website": "https://nextcloud.com",
+            "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2020-8189"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-08-17T00:50:32.231Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-08-17T00:50:32.123Z",
+    "team_member_agreed_on_going_public_at": "2020-08-05T08:46:59.663Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Team!\n\nI have found this vulnerability that in my time would be called \"cross zone\" but at the moment I don't know.\n\nThe problem is found in the latest version of \"nextcloud.exe\" for your windows version.\n\nThe problem occurs with the initial screen where you ask to connect to a website.\n\nApparently when you put an invalid URI that generates some type of response code like 403, it is reported in a small window, as if it were an alert box, not in the main.\n\nThis \"alert box\" visualizes the response and to my impression (that's why I said the cross zone) has a little more permissions than the internet explorer.\n\nFor example, if the response code has an <S> test</S> it will interpret it as IE does.\n\nThat's fine, it would only be an html injection.\n\nThe problem, for example, is that it allows you to run a file like the calculator locally without any confirmation.\n\nThis vector works : <A HREF=\"file:///C:/WINDOWS/system32/calc.exe\">CALC.EXE</A>\n\nIn my opinion, response code errors are a problem and must be controlled by the application.\n\nFor the demonstration use the burp.\n\nBut basically any personal site where the response code building could be controlled could exploit it.\n\nI attach a video to make everything clearer.\n\n## Impact\n\nThe impact is that you can run local files without authorization (of the application) in a context where you should warn.\n\nIt should be filtered so as not to disturb that it is a vector.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 571293,
+            "file_name": "nextcloud.webm",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/eAe6Aitre3r5FKfjpjomhU1U?response-content-disposition=attachment%3B%20filename%3D%22nextcloud.webm%22%3B%20filename%2A%3DUTF-8%27%27nextcloud.webm&response-content-type=video%2Fwebm&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071929Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=44882fd4f24e6b8da979a6a22bb7adc58c6e3c6842d914d1c39a71f4ee5867a8",
+            "file_size": 13665823,
+            "type": "video/webm"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-09-04T08:46:59.778Z",
+    "allow_singular_disclosure_after": -94084349.88293914,
+    "singular_disclosure_allowed": true,
+    "vote_count": 16,
+    "voters": [
+        "zzero",
+        "mashoud1122",
+        "m00n_knight",
+        "mik317",
+        "sa1tama0",
+        "khizer47",
+        "nhlanhla_dludlu",
+        "imlefty",
+        "taskkill",
+        "mr0bart",
+        "and 6 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 4.7,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "physical",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "required",
+            "scope": "changed",
+            "confidentiality": "low",
+            "integrity": "low",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 77,
+        "asset_type": "DOWNLOADABLE_EXECUTABLES",
+        "asset_identifier": "Desktop Client",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 5704995,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot for reporting this potential issue back to us!\n\nOur security team will take a look at this issue as soon as possible. We will reply to your report within 72 hours, usually much faster. For obvious reasons we'd like to ask you to not disclose this issue to any other party.",
+            "automated_response": true,
+            "created_at": "2019-08-31T15:16:17.693Z",
+            "updated_at": "2019-08-31T15:16:17.693Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 5717283,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @jplopezy,\n\nThanks for your report.\nWe are working with our desktop team to look into this.\n\nWe'll keep you posted.\n\nCheers,\n--Roeland",
+            "automated_response": false,
+            "created_at": "2019-09-03T11:25:13.746Z",
+            "updated_at": "2019-09-03T11:25:13.746Z",
+            "actor": {
+                "username": "rullzer",
+                "cleared": false,
+                "verified": false,
+                "url": "/rullzer",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/086/005/20095c4a0c77c88375f8db5d6ed10f350d98a5a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 5737230,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-05T10:16:29.388Z",
+            "updated_at": "2019-09-05T10:16:29.388Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 6211538,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I hope you are well! something new ?",
+            "automated_response": false,
+            "created_at": "2019-11-04T13:07:46.855Z",
+            "updated_at": "2019-11-04T13:07:46.855Z",
+            "actor": {
+                "username": "jplopezy",
+                "cleared": false,
+                "verified": false,
+                "url": "/jplopezy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/115/148192f6ec8b1f75f8c9b4c1c8d9be6782aab7c0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 7384170,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jplopezy \n\nSo we had some discussion how to fix this. The issue is that in some cases it could have useful information.\nHowever we decided that it is probably better to just remove the message box.\n\nThe PR to do this is in https://github.com/nextcloud/desktop/pull/1885\n\nCheers,\n--Roeland",
+            "automated_response": false,
+            "created_at": "2020-03-21T09:10:05.582Z",
+            "updated_at": "2020-03-21T09:10:05.582Z",
+            "actor": {
+                "username": "rullzer",
+                "cleared": false,
+                "verified": false,
+                "url": "/rullzer",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/086/005/20095c4a0c77c88375f8db5d6ed10f350d98a5a3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8240973,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks a lot for your report again. This has been resolved for our next maintenance releases and we're working on the advisories at the moment.\n\nPlease let us know how you'd like to be credited in our official advisory. We require the following information:\n\n- Name / Pseudonym\n- Email address (optional)\n- Website (optional)\n- Company (optional)\n",
+            "automated_response": false,
+            "created_at": "2020-06-09T09:45:46.446Z",
+            "updated_at": "2020-06-09T09:45:46.446Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "jplopezy",
+                "url": "/jplopezy"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8242631,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Name / Pseudonym : Juan Pablo Lopez Yacubian",
+            "automated_response": false,
+            "created_at": "2020-06-09T13:09:04.393Z",
+            "updated_at": "2020-06-09T13:09:04.393Z",
+            "actor": {
+                "username": "jplopezy",
+                "cleared": false,
+                "verified": false,
+                "url": "/jplopezy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/115/148192f6ec8b1f75f8c9b4c1c8d9be6782aab7c0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8402818,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-06-25T06:52:40.163Z",
+            "updated_at": "2020-06-25T06:52:40.163Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Medium (4.7)",
+                "old_severity_id": null,
+                "new_severity_id": 760400
+            },
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8402864,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-06-25T07:00:36.873Z",
+            "updated_at": "2020-06-25T07:00:36.873Z",
+            "additional_data": {
+                "old_title": "Uncontrolled Response Code Html Injection",
+                "new_title": "XSS in desktop client via invalid server address on login form"
+            },
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8402893,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "SA will be published at https://nextcloud.com/security/advisory/?id=NC-SA-2020-027\nRequested CVE: CVE-2020-8189",
+            "automated_response": false,
+            "created_at": "2020-06-25T07:03:53.481Z",
+            "updated_at": "2020-06-25T07:03:53.481Z",
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8402895,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-06-25T07:04:01.796Z",
+            "updated_at": "2020-06-25T07:04:01.796Z",
+            "actor": {
+                "url": "/nextcloud",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Nextcloud"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "nextcloud",
+            "collaborator": {
+                "username": "jplopezy",
+                "url": "/jplopezy"
+            }
+        },
+        {
+            "id": 8851688,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-05T08:46:59.689Z",
+            "updated_at": "2020-08-05T08:46:59.689Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nickvergessen",
+                "cleared": false,
+                "verified": false,
+                "url": "/nickvergessen",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8951741,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-17T00:50:32.177Z",
+            "updated_at": "2020-08-17T00:50:32.177Z",
+            "actor": {
+                "username": "jplopezy",
+                "cleared": false,
+                "verified": false,
+                "url": "/jplopezy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/115/148192f6ec8b1f75f8c9b4c1c8d9be6782aab7c0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        },
+        {
+            "id": 8951742,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-08-17T00:50:32.300Z",
+            "updated_at": "2020-08-17T00:50:32.300Z",
+            "actor": {
+                "username": "jplopezy",
+                "cleared": false,
+                "verified": false,
+                "url": "/jplopezy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/115/148192f6ec8b1f75f8c9b4c1c8d9be6782aab7c0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nextcloud"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

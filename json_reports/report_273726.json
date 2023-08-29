@@ -1,0 +1,599 @@
+{
+    "id": 273726,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzM3MjY=",
+    "url": "https://hackerone.com/reports/273726",
+    "title": "Information / sensitive data disclosure on some endpoints",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2017-10-02T09:31:58.011Z",
+    "submitted_at": "2017-10-02T09:31:58.011Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "europa",
+        "url": "/europa",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55,
+        "url": "https://hackerone.com/wordpress",
+        "handle": "wordpress",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "WordPress",
+            "twitter_handle": "wordpress",
+            "website": "https://wordpress.org/",
+            "about": "Beautiful sites of any kind."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2018-08-22T14:39:06.155Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2018-07-23T14:38:52.462Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello team!\nWhile doing a preliminary recon on *.wordpress.org I've come across a few sensitive files that should not be facing the public web; I'll leave you a list organized by criticality and some proof.\n\n\n### High priority\n[.travis.yml](https://codex.wordpress.org/.travis.yml) configuration file with credentials\n```\nphp maintenance/install.php testwiki admin\n--pass travis\n--dbname traviswiki\n--dbuser travis\n--dbpass \"\"\n--scriptpath \"/w\"\n```\n\n\n### Medium priority\n[.htaccess](https://munin-lax.wordpress.org/.htaccess) file for **munin-lax.wordpress.org**\n```\nAuthUserFile /usr/local/etc/munin-htpasswd\nAuthName \"Munin\"\nAuthType Basic\nrequire valid-user\n```\n\n### Low priority\none `.bash_history` file accessible from multiple production vhosts:\n```\nhttp://iphone.git.wordpress.org/.bash_history\nhttp://meta.git.wordpress.org/.bash_history\nhttp://wordpress.git.wordpress.org/.bash_history\nhttp://bbpress.git.wordpress.org/.bash_history\nhttp://buddypress.git.wordpress.org/.bash_history\nhttp://core.git.wordpress.org/.bash_history\nhttp://android.git.wordpress.org/.bash_history\nhttp://ios.git.wordpress.org/.bash_history\nhttp://wordcamp.git.wordpress.org/.bash_history\nhttp://develop.git.wordpress.org/.bash_history\nhttp://evelop.git.wordpress.org/.bash_history\n```\n\none ssh `known_hosts` file accessible from multiple production vhosts:\n```\nhttp://wordcamp.git.wordpress.org/.ssh/known_hosts\nhttp://ios.git.wordpress.org/.ssh/known_hosts\nhttp://android.git.wordpress.org/.ssh/known_hosts\nhttp://core.git.wordpress.org/.ssh/known_hosts\nhttp://buddypress.git.wordpress.org/.ssh/known_hosts\nhttp://bbpress.git.wordpress.org/.ssh/known_hosts\nhttp://wordpress.git.wordpress.org/.ssh/known_hosts\nhttp://meta.git.wordpress.org/.ssh/known_hosts\nhttp://iphone.git.wordpress.org/.ssh/known_hosts\nhttp://develop.git.wordpress.org/.ssh/known_hosts\nhttp://evelop.git.wordpress.org/.ssh/known_hosts\n```\n\n\n### Impact\nObviously there's no critical priority here—there could've been juicer stuff in the `.bash_history` but there wasn't; the publicly accessible `.htaccess` and `.travis.yml` might be serious as long as those credentials are really being used somewhere (and it seems to me the DBMS isn't facing the public internet anyway). The real impact is that finding such files always grabs the attention of a threat actor, which might give up not so easily influenced by the fact that there might be \"more\".\n\n\n### (minor) bonus round: host header injection on wordpress.org\nProbably *informational* but you might still want to look into that: **wordpress.org** is susceptible to \"host header injection\", you can read more about it [here](http://carlos.bueno.org/2008/06/host-header-injection.html) and [here](http://www.skeletonscribe.net/2013/05/practical-http-host-header-attacks.html). Essentially, depending on your internal configuration, this flaw ranges from a self-inflicted open-redirect (wow, such threat), to password reset request hijack, to cache poisoning.\n\n**PoC for the self-inflicted open-redirect (why though)**:\n\n```\n❯ curl -v -H \"Host: z.xss.ro\" \"https://wordpress.org/themes/search\"\n> GET /themes/search HTTP/2\n> Host: z.xss.ro\n> User-Agent: curl/7.55.1\n> Accept: */*\n> \n< HTTP/2 301 \n< server: nginx\n< date: Mon, 02 Oct 2017 09:12:59 GMT\n< content-type: text/html\n< content-length: 178\n< location: https://z.xss.ro/themes/search/\n< x-frame-options: SAMEORIGIN\n< x-nc: MISS lax 250\n< \n<html>\n<head><title>301 Moved Permanently</title></head>\n```\nthis is also going down on plain HTTP so maybe a MitM scenario is possible in an already compromised business environment / hosting partner but then again, it's pretty low priority.\n\nI obviously can't test the password reset scenario, you might want to test that as follows:\n\n1. go to wordpress.org and begin the procedure to reset your password\n2. intercept the request on Burp\n3. change the host header to evil.com\n4. send the request and check your e-mail\n\nif the threat is real, the password reset link will be generated with evil.com instead of wordpress.org; otherwise it's all good (which should be, as this doesn't work on wordpress.com)",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2018-08-22T14:38:52.567Z",
+    "allow_singular_disclosure_after": -158345971.4411013,
+    "singular_disclosure_allowed": true,
+    "vote_count": 29,
+    "voters": [
+        "jensec",
+        "p1stachios",
+        "europa",
+        "sameerphad72",
+        "spam404",
+        "ali",
+        "aryan2808",
+        "emitrani",
+        "chinskiy",
+        "apapedulimu",
+        "and 19 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2051205,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report, @europa. I've passed this on to the servers team to investigate each of those issues (no idea why there are bash histories in our Git repos...). We'll keep you posted!",
+            "automated_response": false,
+            "created_at": "2017-10-07T16:01:56.254Z",
+            "updated_at": "2017-10-07T16:01:56.254Z",
+            "actor": {
+                "username": "johnbillion",
+                "cleared": false,
+                "verified": false,
+                "url": "/johnbillion",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/083/8a397390a09844d8b0657ea57e4203abd852bb2e_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2070149,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-16T18:30:14.240Z",
+            "updated_at": "2017-10-16T18:30:14.240Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 277842
+            },
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2070173,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-16T18:36:55.174Z",
+            "updated_at": "2017-10-16T18:36:55.174Z",
+            "actor": {
+                "username": "mahmoud0x00",
+                "cleared": false,
+                "verified": true,
+                "url": "/mahmoud0x00",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pm9f6nwspgy0xijnefbtk7iopgrv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/mahmoud0x00",
+                "username": "mahmoud0x00"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2109715,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-28T01:39:02.878Z",
+            "updated_at": "2017-10-28T01:39:02.878Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2184498,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any developments on this issue?",
+            "automated_response": false,
+            "created_at": "2017-11-27T17:46:53.006Z",
+            "updated_at": "2017-11-27T17:46:53.006Z",
+            "actor": {
+                "username": "europa",
+                "cleared": true,
+                "verified": true,
+                "url": "/europa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2195948,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Not yet, sorry. We've got a large backlog that we're working through. This is still in our queue, though. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2017-12-02T16:18:42.659Z",
+            "updated_at": "2017-12-02T16:18:42.659Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196008,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-12-02T17:28:24.408Z",
+            "updated_at": "2017-12-02T17:28:24.408Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 294500
+            },
+            "actor": {
+                "username": "oubs",
+                "cleared": false,
+                "verified": true,
+                "url": "/oubs",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/lckmpcin8xqs2fm27skhkexbq5z0/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22448ee4ecd2cc8f11198e61dd3ea26828.jpg%22%3B%20filename%2A%3DUTF-8%27%27448ee4ecd2cc8f11198e61dd3ea26828.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d54e3f9e848b3829e5eef4fc1b51ce7b9346ac57efcb18599dea9dc5c253588"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196067,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks For Adding me here !!",
+            "automated_response": false,
+            "created_at": "2017-12-02T18:17:48.173Z",
+            "updated_at": "2017-12-02T18:17:48.173Z",
+            "actor": {
+                "username": "oubs",
+                "cleared": false,
+                "verified": true,
+                "url": "/oubs",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/lckmpcin8xqs2fm27skhkexbq5z0/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22448ee4ecd2cc8f11198e61dd3ea26828.jpg%22%3B%20filename%2A%3DUTF-8%27%27448ee4ecd2cc8f11198e61dd3ea26828.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d54e3f9e848b3829e5eef4fc1b51ce7b9346ac57efcb18599dea9dc5c253588"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196236,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "you can add this \nhttp://ssh.meta.git.wordpress.org/.ssh/",
+            "automated_response": false,
+            "created_at": "2017-12-02T22:34:58.772Z",
+            "updated_at": "2017-12-02T22:34:58.772Z",
+            "actor": {
+                "username": "oubs",
+                "cleared": false,
+                "verified": true,
+                "url": "/oubs",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/lckmpcin8xqs2fm27skhkexbq5z0/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22448ee4ecd2cc8f11198e61dd3ea26828.jpg%22%3B%20filename%2A%3DUTF-8%27%27448ee4ecd2cc8f11198e61dd3ea26828.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d54e3f9e848b3829e5eef4fc1b51ce7b9346ac57efcb18599dea9dc5c253588"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196339,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @europa\nI apologise for the delay in having this fixed.\nWhile AFAIK nothing exposed was too sensitive (and years out of date), this has now been fixed.\n\nThanks also to @n00bst00rm for reporting this, sorry you've only reported it to find out that it'd been previously reported already and not been fixed.\n\n@europa With regards to your 2nd bonus report of `host header injection on wordpress.org`, a new report for that would have be appreciated (and still would be), but I'll verify that shortly to determine it's impact - I don't believe this could affect any caches and is only going to affect a few basic redirects which wouldn't affect normal usage of WordPress.org. \n",
+            "automated_response": false,
+            "created_at": "2017-12-03T00:16:19.609Z",
+            "updated_at": "2017-12-03T00:16:19.609Z",
+            "actor": {
+                "username": "dd32",
+                "cleared": false,
+                "verified": false,
+                "url": "/dd32",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/087/943/9e19cb0d003907374bf35424c36a57c8131cc6b4_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "europa",
+                "url": "/europa"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196542,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "There's nothing to apologise for, absolutely. I'm glad nothing too sensitive was leaking through those endpoints, as we already established when I first submitted this report, as I'm glad it's all been resolved.\nAs far as the Host Header Injection goes, I believe it's not even worth a report as 9 cases out of 10 it's completely harmless and self-inflicted. Do have a quick look if caching is affected, but I'm fairly sure it isn't and it just boils down to a self-open redirect (woah, severe).\nHave a good sunday, and thanks once again!",
+            "automated_response": false,
+            "created_at": "2017-12-03T08:27:46.673Z",
+            "updated_at": "2017-12-03T08:28:02.646Z",
+            "actor": {
+                "username": "europa",
+                "cleared": true,
+                "verified": true,
+                "url": "/europa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2196713,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@dd32 , You're Welcome \ni think the \"http://ssh.meta.git.wordpress.org/.ssh/\" one is not reported , but it is fixed now .\nHave a good weekend !!\nregards,",
+            "automated_response": false,
+            "created_at": "2017-12-03T12:01:26.685Z",
+            "updated_at": "2017-12-03T12:01:26.685Z",
+            "actor": {
+                "username": "oubs",
+                "cleared": false,
+                "verified": true,
+                "url": "/oubs",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/lckmpcin8xqs2fm27skhkexbq5z0/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22448ee4ecd2cc8f11198e61dd3ea26828.jpg%22%3B%20filename%2A%3DUTF-8%27%27448ee4ecd2cc8f11198e61dd3ea26828.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073824Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d54e3f9e848b3829e5eef4fc1b51ce7b9346ac57efcb18599dea9dc5c253588"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2202788,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@dd32: exclusively in order to avoid confusion—this is not eligible for a bounty, correct?",
+            "automated_response": false,
+            "created_at": "2017-12-05T21:07:46.686Z",
+            "updated_at": "2017-12-05T21:07:46.686Z",
+            "actor": {
+                "username": "europa",
+                "cleared": true,
+                "verified": true,
+                "url": "/europa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2204621,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We've got a large backlog of reports that we're working through, which also delays the determination of bounties, but we've started discussing this one. We'll post an update here once we wrap up that conversation.",
+            "automated_response": false,
+            "created_at": "2017-12-06T17:39:30.583Z",
+            "updated_at": "2017-12-06T17:39:30.583Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2269872,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @iandunn! Hopefully you and the team will have enjoyed the holidays; have you got any update on this one? Cheers!",
+            "automated_response": false,
+            "created_at": "2018-01-08T13:46:51.752Z",
+            "updated_at": "2018-01-08T13:46:51.752Z",
+            "actor": {
+                "username": "europa",
+                "cleared": true,
+                "verified": true,
+                "url": "/europa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2270808,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Not yet, I'm sorry for the delay, we're still working on our backlog of issues and bounty determinations. This is still in our queue for determination, though. I appreciate your patience :)",
+            "automated_response": false,
+            "created_at": "2018-01-08T20:29:20.981Z",
+            "updated_at": "2018-01-08T20:29:20.981Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2339370,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::SwagAwarded",
+            "message": "Hey @europa,\n\nIt looks like there wasn't actually much of a security implication here, but we'd like to say thank you anyway and send you some swag. Please make sure that your address and shirt size are filled out in your hacker profile here.\n\nThanks,\nAaron",
+            "automated_response": false,
+            "created_at": "2018-01-31T18:09:13.983Z",
+            "updated_at": "2018-01-31T18:09:13.983Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "reporter": {
+                "username": "europa",
+                "url": "/europa"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2339386,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey Aaron, thanks for reaching out!\nI agree with your decision, and I confirm my home address and shirt size\nThanks for the swag, and have a nice day, cheers!",
+            "automated_response": false,
+            "created_at": "2018-01-31T18:14:47.540Z",
+            "updated_at": "2018-01-31T18:14:47.540Z",
+            "actor": {
+                "username": "europa",
+                "cleared": true,
+                "verified": true,
+                "url": "/europa",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/yLAfkbEdjS5TTkov1RViumZ4/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 3084387,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-23T14:38:52.498Z",
+            "updated_at": "2018-07-23T14:38:52.498Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "aaroncampbell",
+                "cleared": false,
+                "verified": false,
+                "url": "/aaroncampbell",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/020/821/f7e6872e5cd77bbdfb5edb77e7b9b2c91bb6c0c7_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 3231034,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-08-22T14:39:06.182Z",
+            "updated_at": "2018-08-22T14:39:06.182Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

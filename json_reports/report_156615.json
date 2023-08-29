@@ -1,0 +1,293 @@
+{
+    "id": 156615,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTY2MTU=",
+    "url": "https://hackerone.com/reports/156615",
+    "title": "Attacker can smuggle a malicious domain in a URI object.",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2016-08-05T01:03:25.537Z",
+    "submitted_at": "2016-08-05T01:03:25.537Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "djspinmonkey",
+        "url": "/djspinmonkey",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-12-13T20:39:21.428Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-12-13T20:39:21.381Z",
+    "team_member_agreed_on_going_public_at": "2022-12-12T06:45:04.481Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Simple example:\n```\nuser_provided_redirect_uri = \"http:////malware.com/real/path\"\nevil_uri = URI.parse(user_provided_redirect_uri)\nevil_uri.host          # => nil\nevil_uri.to_s          # => \"http://malware.com/real/path\"\n```\n\nIn many common URI-validation scenarios, the target system will likely parse a user provided URI, and then check the host against some internal validation criteria, eg, that it's a host owned by that system. Seeing a blank hostname will often cause the system to assume that the link only contains a path, not a domain,  so any validation or checking of that domain won't happen.\n\nHowever, if the URI object is turned back into a string, the resulting URI contains the malicious domain, as you can see above. The actual behavior is to remove two of the leading slashes, so starting with 4 leading slashes will give you 2 leading slashes in the output, which is a well-formed (and in this case malicious) URL.\n\nIn addition, most browsers (all that I checked on) will allow multiple slashes before the domain name -- type \"http:////google.com\" in to your browser, and you will go to google. So, using the original string will also result in a redirection to the malicious host.\n\nBottom line, this bug is almost certainly the cause of a large number of open redirect vulnerabilities in Ruby based web apps. The most obvious use would be to craft malicious URIs for phishing purposes, but it could be used to potentially circumvent any host-checking logic in a URI validator.\n\nThe cause of the bug can be seen here: https://github.com/ruby/ruby/blob/trunk/lib/uri/rfc3986_parser.rb#L6 (if you can spot it in there). The real smoking gun is comment on the line above it that says the regex is modified from the RFC to allow empty host names. A little consideration will show why this causes the above behavior, and why it ends up stripping the initial two leading slashes.",
+    "weakness": {
+        "id": 53,
+        "name": "Open Redirect"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 6,
+    "voters": [
+        "jumpydata",
+        "zy9ard3",
+        "alishah",
+        "shivammusic",
+        "meispi",
+        "annonymoushack"
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1113365,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "As a side note, I understand that this vulnerability is not in scope for a bounty. That's totally fine by me. I'm just trying to responsibly disclose the issue, and this seemed like the appropriate channel to do so.",
+            "automated_response": false,
+            "created_at": "2016-08-08T19:08:36.371Z",
+            "updated_at": "2016-08-08T19:08:36.371Z",
+            "actor": {
+                "username": "djspinmonkey",
+                "cleared": false,
+                "verified": false,
+                "url": "/djspinmonkey",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1129042,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "At first it's definitely a bug. Thank you for reporting!\n\nBut this issue is just a issue of URI#to_s's issue because:\n\n* open redirectors with blacklists are generally vulnerable; they should use whitelists.\n* even if uri library correctly works web browsers will redirect URIs with extra slashes.\n\n> The real smoking gun is comment on the line above it that says the regex is modified from the RFC to allow empty host names.\n\nAs far as I remember, the modification is to return nil instead of empty string as hostname.\nEmpty string itself is allowed by RFC3986 as below\n\n>   hier-part     = \"//\" authority path-abempty\n>   authority     = [ userinfo \"@\" ] host [ \":\" port ]\n>   host          = IP-literal / IPv4address / reg-name\n>   reg-name      = *( unreserved / pct-encoded / sub-delims )\n",
+            "automated_response": false,
+            "created_at": "2016-08-16T10:52:45.972Z",
+            "updated_at": "2016-08-16T10:52:45.972Z",
+            "actor": {
+                "username": "naruse",
+                "cleared": false,
+                "verified": false,
+                "url": "/naruse",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/084/606/edb9423e5c15557306e32721089996506ffbcf02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 1131181,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I do agree that blacklists are not good, but this issue would allow a malicious hostname to bypass a whitelist, as well, if the whitelist were written to allow relative links with no hostname. Many URI validation libraries are written this way -- I found this bug by tracking down a problem in a URI validation library which did use a whitelist.\n\nI see that you're right about an empty hostname being valid, though. I misread the RFC initially. It seems that the real flaw is in how most browsers interpret such a URI. Thank you for taking the time to reply and explain this!",
+            "automated_response": false,
+            "created_at": "2016-08-17T06:30:42.276Z",
+            "updated_at": "2016-08-17T06:30:42.276Z",
+            "actor": {
+                "username": "djspinmonkey",
+                "cleared": false,
+                "verified": false,
+                "url": "/djspinmonkey",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 3967193,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-13T00:09:06.110Z",
+            "updated_at": "2019-01-13T00:09:06.110Z",
+            "actor": {
+                "username": "naruse",
+                "cleared": false,
+                "verified": false,
+                "url": "/naruse",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/084/606/edb9423e5c15557306e32721089996506ffbcf02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 18759656,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "We fixed this report as normal bug at https://github.com/ruby/ruby/commit/dd5118f8524c425894d4716b787837ad7380bb0d.\n\nThanks for your report.",
+            "automated_response": false,
+            "created_at": "2022-10-13T02:08:53.138Z",
+            "updated_at": "2022-10-13T02:08:53.138Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQROJOVPFL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=1513&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICX1S0D5SMLgiPvORN3zlmfrns9JKWQtk9MJRlhvMezvAiBgvduMK4N7dmjhKtiUrWWz%2FZla7zbdJCx3awGzpOAQJCq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMJam9CAjZs%2BrPkOATKo4FmJDN1QP9pB7B6iysNUIy6IJm%2F5Iu3eJ6lWQpZd0Bt1FZ%2BUdE75e4vj6GC0bf0CJDLkSAQ%2BZ7wXp%2FwbSMmzsPi4FuOhQ1PLpaFZwlV4gElpEWOXET1wLrXbqAL2V5FjsYerq9MPcopd2FOwSPYSBALuChL95kyCcstcfooGRs8PXvN6wwJNsRruoHl8ELQJEGarQhwWdZQpeQSvfsV7UOFY2VPNaPJ3o%2FSqJ866CLcC%2Bhbd%2BjGVlw4ILuqTle8GsHEOy5AMocJVwNAHxEjf2zzw15SPauTREH4%2B22YgZGosHhUAnu2SBcKLhbgj%2BIzmMy0uW8URNWyDXfMoyVk0LLP0%2FjgcH13ofYX6AHR%2F7peN2CK%2Fn8gWxbbtrCZgPMQlD9xFb5OXGEEUKiwlGy1idwtLvLmFPbzOovFe5hH0mAAogieKIcOMEPhT%2Bdod2yFpRNj%2BsWTxUmgT6u8u5uaCyq7hFq7ULsnKKXZKrLoYyQf8%2BHB3aS4NAgGe3R3MUpS7oj3svJWR4wac8nq6fgnaTxZ0RPLPuE6geZdnAD9p1aJTqYeHg5JejneJRFTipYbM6Sg4iZRWxfRSfJFO1PrXmqjAgb3p1NjDze6c92habcqaFfsSudxVuDeznV9QSlv6llj%2FAjdP2CoLcY9LJ42diuSd9thHAnK3TljcXthPB%2BtmCLVnW1O5eVgDu8qaAqba%2F2ADS2v%2FX%2FKCBR1GpfVs3e%2FpolIN5GnT%2B0pYRrb2D4zElFxXpnzlg8EqFLF0UZpH1%2Ba4WxhYp%2BABorCY6ELWhlw%2F24Gu%2BQP%2BjZMQ%2F02Whug2IUtq9QlBOtr5feU7uTm9NZuqP29hN3ZuA9QYAwLE3Ijc1rlwBHGe5MHdKN5Bd8MOeEtacGOrIBtQ8cqFhL3rEF9SDm%2Fw4OJF1sENqxKGsWyBAKU7QHyAk2n184bFV9jYPkTA0mlBqPlMZY2Vp0QqgON0aX6TNI17PhgkEmDxFcLjL10rUwaEB1oE7zRvXxkXdy39TzX%2FTVPm%2F0riwvaurvK%2FaQyOZkDqT58UvOEhY7KTlnCRO79bm2w%2BhzKPTPpIFv79vf7Hhby5%2BXACCYiySew4JINYPai8T5nuCiGm9CzTD1zSINnP6S8Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5b466382904b2b9d7a0eb85109ca91b8c8fb1806212f55c6b4ddacdef2628b8e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 19522334,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-12T06:45:04.511Z",
+            "updated_at": "2022-12-12T06:45:04.511Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQROJOVPFL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T065812Z&X-Amz-Expires=1513&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICX1S0D5SMLgiPvORN3zlmfrns9JKWQtk9MJRlhvMezvAiBgvduMK4N7dmjhKtiUrWWz%2FZla7zbdJCx3awGzpOAQJCq6BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMJam9CAjZs%2BrPkOATKo4FmJDN1QP9pB7B6iysNUIy6IJm%2F5Iu3eJ6lWQpZd0Bt1FZ%2BUdE75e4vj6GC0bf0CJDLkSAQ%2BZ7wXp%2FwbSMmzsPi4FuOhQ1PLpaFZwlV4gElpEWOXET1wLrXbqAL2V5FjsYerq9MPcopd2FOwSPYSBALuChL95kyCcstcfooGRs8PXvN6wwJNsRruoHl8ELQJEGarQhwWdZQpeQSvfsV7UOFY2VPNaPJ3o%2FSqJ866CLcC%2Bhbd%2BjGVlw4ILuqTle8GsHEOy5AMocJVwNAHxEjf2zzw15SPauTREH4%2B22YgZGosHhUAnu2SBcKLhbgj%2BIzmMy0uW8URNWyDXfMoyVk0LLP0%2FjgcH13ofYX6AHR%2F7peN2CK%2Fn8gWxbbtrCZgPMQlD9xFb5OXGEEUKiwlGy1idwtLvLmFPbzOovFe5hH0mAAogieKIcOMEPhT%2Bdod2yFpRNj%2BsWTxUmgT6u8u5uaCyq7hFq7ULsnKKXZKrLoYyQf8%2BHB3aS4NAgGe3R3MUpS7oj3svJWR4wac8nq6fgnaTxZ0RPLPuE6geZdnAD9p1aJTqYeHg5JejneJRFTipYbM6Sg4iZRWxfRSfJFO1PrXmqjAgb3p1NjDze6c92habcqaFfsSudxVuDeznV9QSlv6llj%2FAjdP2CoLcY9LJ42diuSd9thHAnK3TljcXthPB%2BtmCLVnW1O5eVgDu8qaAqba%2F2ADS2v%2FX%2FKCBR1GpfVs3e%2FpolIN5GnT%2B0pYRrb2D4zElFxXpnzlg8EqFLF0UZpH1%2Ba4WxhYp%2BABorCY6ELWhlw%2F24Gu%2BQP%2BjZMQ%2F02Whug2IUtq9QlBOtr5feU7uTm9NZuqP29hN3ZuA9QYAwLE3Ijc1rlwBHGe5MHdKN5Bd8MOeEtacGOrIBtQ8cqFhL3rEF9SDm%2Fw4OJF1sENqxKGsWyBAKU7QHyAk2n184bFV9jYPkTA0mlBqPlMZY2Vp0QqgON0aX6TNI17PhgkEmDxFcLjL10rUwaEB1oE7zRvXxkXdy39TzX%2FTVPm%2F0riwvaurvK%2FaQyOZkDqT58UvOEhY7KTlnCRO79bm2w%2BhzKPTPpIFv79vf7Hhby5%2BXACCYiySew4JINYPai8T5nuCiGm9CzTD1zSINnP6S8Q%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5b466382904b2b9d7a0eb85109ca91b8c8fb1806212f55c6b4ddacdef2628b8e"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 19557774,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-13T20:39:21.411Z",
+            "updated_at": "2022-12-13T20:39:21.411Z",
+            "actor": {
+                "username": "djspinmonkey",
+                "cleared": false,
+                "verified": false,
+                "url": "/djspinmonkey",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 19557775,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-12-13T20:39:21.479Z",
+            "updated_at": "2022-12-13T20:39:21.479Z",
+            "actor": {
+                "username": "djspinmonkey",
+                "cleared": false,
+                "verified": false,
+                "url": "/djspinmonkey",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

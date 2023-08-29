@@ -1,0 +1,275 @@
+{
+    "id": 1468962,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDY4OTYy",
+    "url": "https://hackerone.com/reports/1468962",
+    "title": "Binary output bypass",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "low",
+    "readable_substate": "N/A",
+    "created_at": "2022-02-03T02:22:00.637Z",
+    "submitted_at": "2022-02-03T02:22:00.749Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "eliasknudsen",
+        "url": "/eliasknudsen",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-03-09T21:48:03.526Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2022-02-08T13:36:37.592Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Binary output check bypass\n\n## Summary:\nWhen curl outputs content, it checks for binary output. If the output is large enough, it bypasses the check for binary output. This can mess with the terminal.\n\n## Steps To Reproduce:\n1. Setup a server of your choice.\n2. Create a function f with these arguments: char and num. Num is number of characters repeating.\n3. Before serving at a given endpoint, create an offset f(\".\", 16384)\n4. Create the payload with unicode 0x0 like this f(\"unicode 0x0\", 1)\n5. Make the server serve this at a given endpoint.\n6. Run this command: curl \"Accept: application/xml\" -H \"Content-Type: application/xml\" http://localhost:8080/yourendpoint\n7. Change the offset f(\".\", 16384) to f(\".\", 16383) to check if it worked.\n\n\n curlpayload.png is the code\nexecution.png is output for when it worked\nfailed.png is when it failed, when I changed the offset to 16383\n\n## Impact\n\nThere could be some further impact by this exploit. As of now it can make the terminal really buggy at times, but further implementations could lead to something else.",
+    "weakness": {
+        "id": 3,
+        "name": "Classic Buffer Overflow"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1603529,
+            "file_name": "curlpayload.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/jhidt97d963cr5gyunq92gkw83o7?response-content-disposition=attachment%3B%20filename%3D%22curlpayload.png%22%3B%20filename%2A%3DUTF-8%27%27curlpayload.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=1c01965f6e40b17983c6bfcb55a3ec02b8261bdb135c4892d4292ec9bb1fea7d",
+            "file_size": 39170,
+            "type": "image/png"
+        },
+        {
+            "id": 1603530,
+            "file_name": "execution.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gx9tslhlnwnbg62p9b59ulttwmxx?response-content-disposition=attachment%3B%20filename%3D%22execution.png%22%3B%20filename%2A%3DUTF-8%27%27execution.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=370c8753da7d25b217dee235eaf34778b2b187ddf274d0ae3e5998e1e6d409ce",
+            "file_size": 10256,
+            "type": "image/png"
+        },
+        {
+            "id": 1603531,
+            "file_name": "failed.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/zeaot3510rir1ijh3atoxk8xuwol?response-content-disposition=attachment%3B%20filename%3D%22failed.png%22%3B%20filename%2A%3DUTF-8%27%27failed.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=71ff37b79732895c6bc9745448df215244703d87fe51ef64e5a5eaa7dcf142c3",
+            "file_size": 30873,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 2,
+    "voters": [
+        "narexsh",
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 15308511,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for your report.\n\nThe inhibiting of binary output is a \"best effort\" that is far from guaranteed to work in all cases. I don't think we make any such promises anywhere - on the contrary such a command line does *ask* for the output to get sent to the terminal. Therefore I don't think this can be seen as a security vulnerability even if you could make it trigger something more nasty than just weird output.",
+            "automated_response": false,
+            "created_at": "2022-02-03T07:54:00.848Z",
+            "updated_at": "2022-02-03T07:54:00.848Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=80ec8938175c68fb92153975c304a293935f738a4b3faf7a4551d172ed4128e4"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15314508,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I understand. Do you know the path for the source code handling output?",
+            "automated_response": false,
+            "created_at": "2022-02-03T13:30:38.983Z",
+            "updated_at": "2022-02-03T13:30:38.983Z",
+            "actor": {
+                "username": "eliasknudsen",
+                "cleared": false,
+                "verified": false,
+                "url": "/eliasknudsen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15315323,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The binary content detection is done here:\n\nhttps://github.com/curl/curl/blob/a121e8dac644d34f0f3118ac5a39b30e65c15640/src/tool_cb_wrt.c#L184-L193",
+            "automated_response": false,
+            "created_at": "2022-02-03T13:56:21.688Z",
+            "updated_at": "2022-02-03T13:56:21.688Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=80ec8938175c68fb92153975c304a293935f738a4b3faf7a4551d172ed4128e4"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15383108,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-08T13:36:21.531Z",
+            "updated_at": "2022-02-08T13:36:21.531Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=80ec8938175c68fb92153975c304a293935f738a4b3faf7a4551d172ed4128e4"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15383112,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Nothing to hide here.",
+            "automated_response": false,
+            "created_at": "2022-02-08T13:36:37.614Z",
+            "updated_at": "2022-02-08T13:36:37.614Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=80ec8938175c68fb92153975c304a293935f738a4b3faf7a4551d172ed4128e4"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 15814945,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-03-09T21:48:03.400Z",
+            "updated_at": "2022-03-09T21:48:03.400Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJOTSA3A%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070331Z&X-Amz-Expires=402&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBoV20obGAJNEUzT9%2BNCZi4BzOqzwzcOPOUTeKZbmpyaAiAajgHs6bs8zOhp4DAnYOdWg%2BraHXWSuNo6jYMwuN7RcSq5BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIM4osjXoSinMB0BYr0Ko0FRZs5xCx%2B9YCc8fb2KK4e%2B76kpvgelGsIR0VZg%2BMyP3DxZM4hbf29ENluxoylQ6P1RQjbJrzChD7gM8oZjDj7Hpx95OKuaCFKHkEGh9cSJGLUokibcQcnkZ5Rcg5J33wdFJd3%2FJZ%2BuzM5KKEmO8VUir9Qv748WuiO8LwJ%2BWzAXHVKxSr2Y%2F1KYALoJlQm5Ucvidyz2lok08uMKdQhoLMacFy0gwcF4wdR2OFjpEd0%2FGjWQQOlGIYUL4pUM09PZZ9ScEdX2E4%2Bjmg8V6BRXjYN9wzSLbGuxDHJCqaJj1d2TAj4YL1q2ljYDmIUCc6qFiGXtdRQnCcNu4pQrgZzu9CBfC9DFLhxfwFtEEzza3YS0Q6am9nk1B2tJlJxCBwTyuT%2B6M9YINul9VNyb6QUR%2BMjdmR7YE%2BM8Ls%2FaBYl74%2BUb52WsJSca%2FxRPeDX0j9OZcUnZnfURiGNQ%2B4Je%2FMTBtmXQ%2BNkhd3T7f8VgKHPq7YmAjKbPCXcFp0oST2ja52OwfcWUuEtby%2BJPYZ1DMtdplSF4XP8DktBMWExP9y2IRQVWtkILrHz0AVNUCJE6NVYRYcLQ5kWMN8MiRKWAaECf7fWPykocWKY4IvToQy0Vvqi%2F8f4gVQCWbgNXbhqIlrjXz78vvmexkrRqflEY3Bm7Cpp2JDhKpJpCxlUmc%2FBwmaCgDtdRIuogyPUgkbjWLzoev%2BsAEBAqzkpSRe50iz2Jqqm6zELzv%2F7MAXVqTwSvYs%2FV%2FSt75zx%2Fn3Fa0qBXNr6NdR7ksTH1uhpcCK2S0Cq9cb%2BJ4rKmJJ35HZoRLGNbCOOreyCIKepyJhgjQWee%2Bbrg3DMxc4fN33ulIfdILqxsZBgNtZ6U1oUJUMbcLMtbqIw44W1pwY6sgHkTfEYhn15tDODnENz23ZwyKh2Qupe%2FxI8152twqcrvtBIWaQBYPRIgX7IRMCclQ3aqDDb3ynn6pfMdBG%2FOxVha1FG6JEX3lKGRLGA%2FNP1WczWaca%2BaPJ23cLcbZAyAzKzckvI1%2BmE1pH6%2BbFLVSiK0Go1FBqAvipHyJdIMaOhpQZrnD4u0xJ%2BT4IHx0enLGl0koBQrdojfD5OnlBt8MRf%2B6qJ462EK5YTOaPU4u59H1QO&X-Amz-SignedHeaders=host&X-Amz-Signature=80ec8938175c68fb92153975c304a293935f738a4b3faf7a4551d172ed4128e4"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

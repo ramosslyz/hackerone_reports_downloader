@@ -1,0 +1,306 @@
+{
+    "id": 1113212,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTEzMjEy",
+    "url": "https://hackerone.com/reports/1113212",
+    "title": "gifts.flocktory.com/phpmyadmin is vulnerable csrf",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2021-02-28T10:10:41.504Z",
+    "submitted_at": "2021-02-28T10:10:41.574Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ganofins",
+        "url": "/ganofins",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/DLYrMU1d3oy1E4vAxd1reZES/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 215,
+        "url": "https://hackerone.com/qiwi",
+        "handle": "qiwi",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "QIWI",
+            "twitter_handle": "QiwiRussia",
+            "website": "https://qiwi.com",
+            "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2019-12616",
+        "CVE-2019-12922"
+    ],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-04-14T08:36:02.931Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-04-03T18:09:35.297Z",
+    "team_member_agreed_on_going_public_at": "2021-04-14T08:36:02.810Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Summary:\nHello Team,\nI found that the PHPMyAdmin login panel is publicly accessible on https://gifts.flocktory.com and it is using the 4.6.6 version of PHPMyAdmin, which is vulnerable to several CVEs\nhttps://www.cvedetails.com/vulnerability-list/vendor_id-784/product_id-1341/version_id-251928/Phpmyadmin-Phpmyadmin-4.6.6.html\nhttps://www.cybersecurity-help.cz/vdb/phpmyadmin/phpmyadmin/4.6.6/\n{F1212091}\nOut of which 2 of them are CSRF vulnerability in it.\n\n\n# Description:\n**CVE-2019-12616:**\n## Details:\nThe vulnerability exists due to insufficient validation of the HTTP request origin in \"tbl_sql.php\" script. A remote attacker can trick the victim to visit a specially crafted web page and perform arbitrary actions on behalf of the victim on the vulnerable website, such as execute arbitrary INSERT or DELETE statements.\n\n## Steps to reproduce/POC:\nhttps://gifts.flocktory.com/tbl_sql.php?sql_query=INSERT+INTO+%60pma__bookmark%60+(%60id%60%2C+%60dbase%60%2C+%60user%60%2C+%60label%60%2C+%60query%60)+VALUES+(DAYOFWEEK(%27%27)%2C+%27%27%2C+%27%27%2C+%27%27%2C+%27%27)&show_query=1&db=phpmyadmin&table=pma__bookmark\n\nAn attacker can create a CSRF HTML page using the above URL, and when the victim visits any such page. Then an insert query will be fired created by the attacker\n\n## Impact:\nAn attacker can perform arbitrary actions on behalf of the victim, such as execute arbitrary INSERT or DELETE statements.\n\n## References:\nhttps://www.cybersecurity-help.cz/vdb/SB2019060501\nhttps://nvd.nist.gov/vuln/detail/CVE-2019-12616\n\n\n**CVE-2019-12922:**\n## Details:\nThe vulnerability exists due to insufficient validation of the HTTP request origin. A remote attacker can trick the victim to visit a specially crafted web page and perform arbitrary actions on behalf of the victim on the vulnerable website, such as delete an arbitrary server on the Setup page.\n\n## Steps to reproduce/POC:\n```html\n<p>Deleting Server 1</p>\n<img src=\"\nhttps://gifts.flocktory.com/phpmyadmin/setup/index.php?page=servers&mode=remove&id=1\"\nstyle=\"display:none;\" />\n```\nAn attacker can create a CSRF HTML page using the above HTML code, and when the victim visits any such page. Then an server will be deleted with id=1\n\n## Impact:\nAn attacker can perform arbitrary actions on behalf of the victim, such as delete an arbitrary server on the Setup page.\n\n## References:\nhttps://www.exploit-db.com/exploits/47385\nhttps://nvd.nist.gov/vuln/detail/CVE-2019-12922\n\n\nThanks and regards,\n@ganofins\n\n## Impact\n\nAn attacker can perform arbitrary actions on behalf of the victim, such as execute arbitrary INSERT or DELETE statements, delete an arbitrary server on the Setup page.",
+    "weakness": {
+        "id": 45,
+        "name": "Cross-Site Request Forgery (CSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1212091,
+            "file_name": "flocktory_phpmyadmin1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tewweul4787fogb5et5hxmlgma05?response-content-disposition=attachment%3B%20filename%3D%22flocktory_phpmyadmin1.png%22%3B%20filename%2A%3DUTF-8%27%27flocktory_phpmyadmin1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4N3L6HVK%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071129Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEt4ffSVAwnkR7Gt9YHrh2mIYz2YHZKnL1I%2FxRODgQIJAiEAhqrstVpa8vzaI37yef%2FkTFlYpzB9%2BUB%2FeR%2FQRtP%2BH2squgUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDMO5QUZmlOhJgruQOyqOBQtDUp3uDHv2jY6x0yE0OADdY1ooh28osZSuWI7OuePExEgOiw7z8uNp%2BRvZJ75q%2FJ7cG2CMMlV2SncTPeStOQTR7nCQydCl7iTiYDK8cxNqm30yTAFHrKq%2FBYstOkzo0BEUqmTqeLMAgZzUpprsA%2Bq8%2BqwyxN79JwG4OH3bUyjp7Rip33VeFRZFgv18Cc7kN3M4G4LsNYA20k1oL9QN9MI4z5%2Bkqri6Wtn1pJAw6IK9ApXr2uUB3HiRpxQxPT2jgscFdVTTtvnz6u7IHYVUtLfgzKNZdOA0FluiFpflfo217pIzGcZzI41isFU%2BABYu3ccUGmZNnCljTxmTtMxDkATbwY5BQdVVVy7s7nI1oaWL69va0fsaf5t8%2BZtCgE7IVK%2B69s4pnTYiPi9XPJzErs27S6RGtkHmkcxIj2zhTR6YpYUUWKiNelS2tCNQBIhUAJHbj2TEnuGN%2B0mFdojuGhulUnHHJ5Mo8GPgSbtK4h4VIocXITtGf%2F2Ilr%2BORY%2FJublfnM%2Bxze0THnPuQIFbySXgQ0OytUijrH%2FPIM70li%2FLiFZYOs2GOvqIAcPVICmF1tV8VaDtc4UHvfB3sHogmsLsVGEsqv%2BZhnFFkXkBPzfFL3JoSk%2FBn%2BRzVamXhI%2BUoPWuENj%2BFAJE397SYp3tyj0hiL3euwcEmSnfym3bMyfKA1KKkk%2FhSbOQ0%2FMvQzjgDjygrTh1fZnRcyFaWWlUVq89ngeMXNUQhAa4W%2BBU9cIp28iMYL5f8FY4dS1RHnh7d1E7qGa%2FuSWlfO0vW0C400gwAltilckIWBmgPNAkl6TPqRgx0MtoDdoLCSaKdB%2BpNa%2F0q5n3y7dzn8Ev8%2F8Fcd0G2xdYsOpUXeug96KhxDCHpbanBjqxAfI5U%2BnCoiaHfEl5Rs64icg5LllDgheE%2B%2BO4VpE6nN2q1YoMjNWLoeinCHZazaS9Q0XVN9QhluG25BFy172zKjBnv6faSMvFq69uXL9SlLa1tQEsjWqg3YlalreBmKsB1Yc6G5csbu5x5PpYWSwEe1%2B6b4N9LyDeM3lYe5aY4l9uDJ0Mf7bRWv8ZGhiyXIOXv3alyq8zuaz4Cqfk0ADUAChIqZIR0ylybsR8nt%2BSw3L8EQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0f37f67ea58a27703ad017bcec0ba3c255c10323ae832252442cd7ff2e2233cc",
+            "file_size": 67847,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-05-03T18:09:35.382Z",
+    "allow_singular_disclosure_after": -73227714.00861868,
+    "singular_disclosure_allowed": true,
+    "vote_count": 31,
+    "voters": [
+        "shino001",
+        "shuvam321",
+        "battle_angel",
+        "thaivu",
+        "prakash142",
+        "ali",
+        "xsstestov",
+        "0nlymohammed",
+        "f_m",
+        "h4x0r_dz",
+        "and 21 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18739,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.flocktory.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10830149,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hello!\nThank you for your report.",
+            "automated_response": false,
+            "created_at": "2021-02-28T10:44:05.295Z",
+            "updated_at": "2021-02-28T10:44:05.295Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 10889424,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thank you for your help!",
+            "automated_response": false,
+            "created_at": "2021-03-05T11:20:44.360Z",
+            "updated_at": "2021-03-05T11:20:44.360Z",
+            "actor": {
+                "url": "/qiwi",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "QIWI"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "qiwi",
+            "collaborator": {
+                "username": "ganofins",
+                "url": "/ganofins"
+            }
+        },
+        {
+            "id": 10889426,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-05T11:20:52.451Z",
+            "updated_at": "2021-03-05T11:20:52.451Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "ganofins",
+                "url": "/ganofins"
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 10893291,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you so much for the triage and bounty @vankyver and team @QIWI!\n\nI also confirm that I can't reproduce it again.\n\nThanks once again :)",
+            "automated_response": false,
+            "created_at": "2021-03-05T16:11:38.875Z",
+            "updated_at": "2021-03-05T16:11:38.875Z",
+            "actor": {
+                "username": "ganofins",
+                "cleared": false,
+                "verified": false,
+                "url": "/ganofins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/DLYrMU1d3oy1E4vAxd1reZES/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 11242053,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose this?\nThanks",
+            "automated_response": false,
+            "created_at": "2021-04-03T18:09:35.333Z",
+            "updated_at": "2021-04-03T18:09:35.333Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ganofins",
+                "cleared": false,
+                "verified": false,
+                "url": "/ganofins",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/DLYrMU1d3oy1E4vAxd1reZES/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 11389429,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-14T08:36:02.840Z",
+            "updated_at": "2021-04-14T08:36:02.840Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 11389430,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-14T08:36:02.968Z",
+            "updated_at": "2021-04-14T08:36:02.968Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

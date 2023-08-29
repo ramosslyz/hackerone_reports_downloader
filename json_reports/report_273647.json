@@ -1,0 +1,562 @@
+{
+    "id": 273647,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzM2NDc=",
+    "url": "https://hackerone.com/reports/273647",
+    "title": "Adding Used Primary Email Address to attacker account and Account takeover",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "none",
+    "readable_substate": "Informative",
+    "created_at": "2017-10-01T19:24:07.343Z",
+    "submitted_at": "2017-10-01T19:24:07.343Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sandeepl337",
+        "url": "/sandeepl337",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1868,
+        "url": "https://hackerone.com/gratipay",
+        "handle": "gratipay",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Gratipay",
+            "twitter_handle": "Gratipay",
+            "website": "https://gratipay.com/",
+            "about": "Gratitude? Gratipay! The easiest way for your company to pay for open source."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-10-05T14:38:00.608Z",
+    "bug_reporter_agreed_on_going_public_at": null,
+    "team_member_agreed_on_going_public_at": "2017-10-01T20:01:26.372Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "# Summary\n\nI just found that the Gratipay is vulnerable for adding used Primary Email Address to attacker account and Account takeover of the Gratipay. \n\n# Description\n\nI was looking at the source code of the application and I found that, \"If the email address `test@test.com` is already added in the `X` Gratipay account as primary email address, then the attacker can also add the `test@test.com` in the `Y` Gratipay account\". \n\nThe above attack can be achieved by using the `add-email` action and updating the `address` parameter with payload once you login to the account. \n\n# Steps To Reproduce\n\nAs you can see the line number 123 which is looking for the email address if it exists in the database.\n\nhttps://github.com/gratipay/gratipay.com/blob/04b85c20c681eab433e021fb9ce7d7a4258c7202/gratipay/models/participant/email.py#L123\n\nNormal behavior - When user will use the sandeepk.l337@gmail.com it is exists in the database it will not allow you add the email address in the different account, according the Line number 123.  \n\nAttack  - When the attacker try to add the sandeepk.1337@gmail.com which is already added into the other user's Gratipay account, however he can still add the other account's primary email into the attacker's  Gratipay account as primary email.\n\n`Payload:  action=add-email&address=sandeepk.l337@gmail.com%20` all you need to append the %20 (%20 is treated as the space but below line 123 is considering as new email address)\nhttps://github.com/gratipay/gratipay.com/blob/04b85c20c681eab433e021fb9ce7d7a4258c7202/gratipay/models/participant/email.py#L123\n\nOnce the above line executed then line number 131 and the application will send verification link to the email address. \n\nhttps://github.com/gratipay/gratipay.com/blob/04b85c20c681eab433e021fb9ce7d7a4258c7202/gratipay/models/participant/email.py#L131\n\nIf the Victim's email address is stolen or the attacker have temporary access to the email, then attacker can create new account on the Gratipay and add the Victim's email address into this Gratipay account. The attacker will receive all the Payment related emails and using forgot my password attacker can takeover the account. \n\n# PoC \nKindly find the attached screen shot. \n\n# Patch\nOn the line number 314 the application updating the table without verifying that, \"the requested email address is already exists in the database and assigned to other account\".  \n\nhttps://github.com/gratipay/gratipay.com/blob/04b85c20c681eab433e021fb9ce7d7a4258c7202/gratipay/models/participant/email.py#L314\n\nThe simple patch would be verifying the space encoding characters and also verifying the account is already exists in the database and assigned to the other account. \n\nIf you have any question or you need video PoC then let me know I'll prepare it separately. \n\n\nCheers. ",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 225580,
+            "file_name": "Same_Email_address_into_two_different_account_as_primary_email.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/225/580/44ec99c5d2228c94d8bd89ee7b516a3e5da582c0/Same_Email_address_into_two_different_account_as_primary_email.png?response-content-disposition=attachment%3B%20filename%3D%22Same_Email_address_into_two_different_account_as_primary_email.png%22%3B%20filename%2A%3DUTF-8%27%27Same_Email_address_into_two_different_account_as_primary_email.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075833Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=458dcfbf61180bac8c18845e19ff9985e3a0bb880c5be87b3d8079374e8274f3",
+            "file_size": 1228944,
+            "type": "image/png"
+        },
+        {
+            "id": 225581,
+            "file_name": "Payload.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/225/581/5e00a63ff6c7ff65361dd9f46c026564b74a0fda/Payload.png?response-content-disposition=attachment%3B%20filename%3D%22Payload.png%22%3B%20filename%2A%3DUTF-8%27%27Payload.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075833Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e4e2d0049f5bbf8f2161190b8f9ce0bf702bfd66c236b88eebb4052314fa3778",
+            "file_size": 145152,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 1,
+    "voters": [
+        "sandeepl337"
+    ],
+    "severity": {
+        "rating": "none",
+        "author_type": "Team"
+    },
+    "structured_scope": {
+        "databaseId": 371,
+        "asset_type": "URL",
+        "asset_identifier": "https://gratipay.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2036702,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nThank you for your report, the receipt of which we herewith confirm. We are currently verifying the issue you reported.\n\nPlease expect additional feedback from us within the next couple of days. The \"INFORMATION SECURITY\" section of the following page has additional, useful information regarding our platform's security: http://inside.gratipay.com/howto/manage-risk\n\nWe appreciate your interest in securing our platform and look forward to working with you.\n\nYours sincerely,\nThe Gratipay Security Team",
+            "automated_response": true,
+            "created_at": "2017-10-01T19:24:07.532Z",
+            "updated_at": "2017-10-01T19:24:07.532Z",
+            "actor": {
+                "url": "/gratipay",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "Gratipay"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036724,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @sandeepl337,\n\nThanks for the report, we are currently investigating and will get back to you.\n\nBest regards,\nCorben Douglas\n",
+            "automated_response": false,
+            "created_at": "2017-10-01T19:57:28.355Z",
+            "updated_at": "2017-10-01T19:57:28.355Z",
+            "actor": {
+                "username": "cdl",
+                "cleared": true,
+                "verified": true,
+                "url": "/cdl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pjn96wngvyyvquwg2vukftoern72/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036726,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-01T19:57:53.010Z",
+            "updated_at": "2017-10-01T19:57:53.010Z",
+            "additional_data": {
+                "old_severity": "Critical (10.0)",
+                "new_severity": "Low",
+                "old_severity_id": 80010,
+                "new_severity_id": 80017
+            },
+            "actor": {
+                "username": "cdl",
+                "cleared": true,
+                "verified": true,
+                "url": "/cdl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pjn96wngvyyvquwg2vukftoern72/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036730,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @sandeepl337,\n\nBased on your initial description, this appears to be functioning as intended. By adding a primary email address the attacker's account cannot actually access the victim's account, hence this is not an account takeover vulnerability. I am closing this as `Informative` instead of `N/A`, because you took the time to read our source code and demonstrated a good understanding of how the code works.\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:01:20.043Z",
+            "updated_at": "2017-10-01T20:01:20.043Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036732,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:01:26.397Z",
+            "updated_at": "2017-10-01T20:01:26.397Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036733,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:02:04.188Z",
+            "updated_at": "2017-10-01T20:02:04.188Z",
+            "additional_data": {
+                "old_severity": "Low",
+                "new_severity": "None",
+                "old_severity_id": 80017,
+                "new_severity_id": 80018
+            },
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036741,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Edio, \n\nThank you for the quick investigation. Just the quick question - is it allowed to add the same email account in two different accounts ?",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:07:09.266Z",
+            "updated_at": "2017-10-01T20:07:09.266Z",
+            "actor": {
+                "username": "sandeepl337",
+                "cleared": false,
+                "verified": false,
+                "url": "/sandeepl337",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036744,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @sandeepl337,\n\nYep, in our case this is an intended feature.",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:08:40.206Z",
+            "updated_at": "2017-10-01T20:08:40.206Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036751,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for the update. I'm just trying to understand the code actually. So one more quick question. The code is actually is not allowing to set the `test@test.com` email in two different Gratipay accounts as you can see https://github.com/gratipay/gratipay.com/blob/04b85c20c681eab433e021fb9ce7d7a4258c7202/gratipay/models/participant/email.py#L123\n\nEven I've tried to execute using your website, it is not allowing to add same email in two different account. Correct me if I'm wrong. If it feature, never mind  :)  . \n\nThanks ",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:14:43.568Z",
+            "updated_at": "2017-10-01T20:14:43.568Z",
+            "actor": {
+                "username": "sandeepl337",
+                "cleared": false,
+                "verified": false,
+                "url": "/sandeepl337",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036771,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@sandeepl337: You are right. I just tested and was unable to add the same email address to two separate accounts. I apologize for responding without double checking and thank you for verifying.\n\n{F225588}",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:32:24.671Z",
+            "updated_at": "2017-10-01T20:32:24.671Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 225588,
+                    "filename": "Screenshot_from_2017-10-01_22-30-44.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/225/588/d5bef3d985a1db907b89410c5afc544c7e5ff880/Screenshot_from_2017-10-01_22-30-44.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2017-10-01_22-30-44.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2017-10-01_22-30-44.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075834Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=301243f9a38f97776f5403fb79ae9fb7698c807366811a02f77df7f0c1aec37c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036777,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We still believe that this bug does not present any security implications.",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:37:28.497Z",
+            "updated_at": "2017-10-01T20:37:28.497Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036780,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for verifying at your end. So I believe now, we have a case where attacker can add the same email address to the multiple accounts. If the attacker add the email account, the attacker can receive the sensitive or user activity information like \"When my credit card is charged:\". \n\nThis is considered as business logic vulnerability which might not be directly executed but it has the impact. If you accept this bug(You may need to change Severity), then you can push the above mentioned fix.\n\n\nCheers  \n",
+            "automated_response": false,
+            "created_at": "2017-10-01T20:40:55.575Z",
+            "updated_at": "2017-10-01T20:40:55.575Z",
+            "actor": {
+                "username": "sandeepl337",
+                "cleared": false,
+                "verified": false,
+                "url": "/sandeepl337",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2036874,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@sandeepl337,\nCan you please explain why adding the same email address to multiple accounts is a security issue?\nBased on your comments, it seems like the attacker would be able to add the victim's email address to his own account (correct me if I am wrong). How would that lead to account takeover, based on your initial report?",
+            "automated_response": false,
+            "created_at": "2017-10-01T23:58:52.273Z",
+            "updated_at": "2017-10-01T23:58:52.273Z",
+            "actor": {
+                "username": "ibram",
+                "cleared": true,
+                "verified": true,
+                "url": "/ibram",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/nJZUYz8t1CKkGNn1FkFzioFK/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2037075,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "First, the account take over is not problem with this code and I had thought processing on the Same email can be used in multiple accounts. However, I found that this issue do not lead any security issue. \n\nLets close this ticket and Thank you for the brainstorming on this issue. ",
+            "automated_response": false,
+            "created_at": "2017-10-02T05:37:18.555Z",
+            "updated_at": "2017-10-02T05:37:18.555Z",
+            "actor": {
+                "username": "sandeepl337",
+                "cleared": false,
+                "verified": false,
+                "url": "/sandeepl337",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2037079,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @sandeepl337 thanks for taking time and reading through our code, we're happy to see you're thinking of our security. Best of luck with future bug hunting!\nRegards,\nCorben Douglas",
+            "automated_response": false,
+            "created_at": "2017-10-02T05:48:01.490Z",
+            "updated_at": "2017-10-02T05:48:01.490Z",
+            "actor": {
+                "username": "cdl",
+                "cleared": true,
+                "verified": true,
+                "url": "/cdl",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/pjn96wngvyyvquwg2vukftoern72/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2046237,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Kindly make the visibility public. ",
+            "automated_response": false,
+            "created_at": "2017-10-05T14:30:36.999Z",
+            "updated_at": "2017-10-05T14:30:36.999Z",
+            "actor": {
+                "username": "sandeepl337",
+                "cleared": false,
+                "verified": false,
+                "url": "/sandeepl337",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        },
+        {
+            "id": 2046258,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ManuallyDisclosed",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-10-05T14:38:00.571Z",
+            "updated_at": "2017-10-05T14:38:00.571Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gratipay"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 5486,
+            "category": "researcher",
+            "content": "tl;dr: This bug is informational and has low severity.   ",
+            "user": {
+                "id": 273,
+                "username": "sandeepl337",
+                "name": "[S]",
+                "bio": "Find bugs which other can not. ",
+                "cleared": false,
+                "verified": false,
+                "website": "http://sandeepkamble.com",
+                "location": "India",
+                "created_at": "2013-11-07T05:22:42.631Z",
+                "url": "https://hackerone.com/sandeepl337",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/000/273/e15e8bfb4e512c9469fa52277eea55a2f33fc8b8_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

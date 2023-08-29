@@ -1,0 +1,385 @@
+{
+    "id": 1110229,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTEwMjI5",
+    "url": "https://hackerone.com/reports/1110229",
+    "title": "Reflected/Stored XSS on duckduckgo.com",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2021-02-24T15:19:33.392Z",
+    "submitted_at": "2021-02-24T15:19:33.483Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "monke",
+        "url": "/monke",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 10995,
+        "url": "https://hackerone.com/duckduckgo",
+        "handle": "duckduckgo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/4mpaehke5u0ubioeqvys0hcesjle/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/4mpaehke5u0ubioeqvys0hcesjle/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "DuckDuckGo",
+            "twitter_handle": "duckduckgo",
+            "website": "https://duckduckgo.com",
+            "about": "DuckDuckGo is the Internet privacy company for everyone who wants to take back their privacy online now. "
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2021-04-10T18:15:50.202Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-03-11T18:15:47.180Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi DuckDuckGo,\n\nWhile browsing normally (since I use DuckDuckGo on a daily basis), I discovered an interesting stored XSS on the duckduckgo main search engine. A payload that somebody had left on urbandictionary.com had triggered a HTML injection, and a stored XSS as a result. \n\n**Steps to Reproduce**\n1. Search the following in the searchbar of DuckDuckGo: `urban dictionary \"><img src=x<`\n2. A payload left by someone else will render itself and fire in the main DuckDuckGo page.\n3. It is also possible to visit the page via the DuckDuckGo URL as [such](https://duckduckgo.com/?q=urban+dictionary+%22%3E%3Cimg+src%3Dx%3C&t=ffab&atb=v1-1&ia=web) and the XSS will trigger.\n\n**POC**\n- The page itself renders HTML. The payload fires.\n- {F1207848}\n- {F1207849}\n\n## Impact\n\nThere are several impacts here.\n- Firstly, the DuckDuckGo URL serves as a payload, because simply visiting the page with the right search parameter triggers the XSS, although the search parameters themselves do not directly trigger it. \n- Secondly, the XSS is stored in the search results, so this can be considered to be Stored XSS.\n- It is possible to execute any Javascript via the main DuckDuckGo page.\n\nIf you have any questions or require clarification, I am happy to help.\nCheers,\nPMOC",
+    "weakness": {
+        "id": 61,
+        "name": "Cross-site Scripting (XSS) - Reflected"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1207848,
+            "file_name": "evidence1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1qczw455eaugs2kje5mq8gukvav2?response-content-disposition=attachment%3B%20filename%3D%22evidence1.png%22%3B%20filename%2A%3DUTF-8%27%27evidence1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071131Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f67a2341e510a9343d672463f39c3dcd32b17ae2cd2ef617f27e96f7aa8a2ed2",
+            "file_size": 98112,
+            "type": "image/png"
+        },
+        {
+            "id": 1207849,
+            "file_name": "evidence2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/n68rsholhfbi9mholswrpdy0cri0?response-content-disposition=attachment%3B%20filename%3D%22evidence2.png%22%3B%20filename%2A%3DUTF-8%27%27evidence2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071131Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d0eb590c519cfcccb53ab3e088bc6e8a81ecb891e61c8117a17c1109719fe7fc",
+            "file_size": 102681,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-04-10T18:15:47.252Z",
+    "allow_singular_disclosure_after": -75214544.26959038,
+    "singular_disclosure_allowed": true,
+    "vote_count": 129,
+    "voters": [
+        "pretorian",
+        "monke",
+        "pmnh",
+        "castilho",
+        "bigmac4life",
+        "rootz491",
+        "alexandrio",
+        "primeministerofcats",
+        "mass0ma",
+        "bendtheory",
+        "and 119 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 8671,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.duckduckgo.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10785919,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @pmoc,\n\nThanks for your submission! This appears to be reproducible, but we need to check further with the product team to see if this is an issue they intend to fix. If not, it's possible this issue will be closed accordingly.\n\nYour patience is much appreciated.\n\nBest regards,\n@lugtag",
+            "automated_response": false,
+            "created_at": "2021-02-25T11:20:47.153Z",
+            "updated_at": "2021-02-25T11:20:47.153Z",
+            "actor": {
+                "username": "h1_analyst_jake",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_jake",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/gKtXsNkprE7ekgjBwpwWpTzX/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10801842,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-25T22:44:51.922Z",
+            "updated_at": "2021-02-25T22:44:51.922Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1110696
+            },
+            "actor": {
+                "username": "r1ngl0cked",
+                "cleared": false,
+                "verified": false,
+                "url": "/r1ngl0cked",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10826355,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-27T16:45:29.482Z",
+            "updated_at": "2021-02-27T16:45:29.482Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 1112263
+            },
+            "actor": {
+                "username": "focs",
+                "cleared": false,
+                "verified": false,
+                "url": "/focs",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/04yyx656lxml49aogtm2szrku81y/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%2235631729.png%22%3B%20filename%2A%3DUTF-8%27%2735631729.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071131Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ccd3f6fd7989377cf4dab10de6e52f637ab94057847b24dc5b8253ec3c0bdc3f"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10933823,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, \n\nIt seems that this bug has been fixed - any update on your end?\n\nCheers, \nPMOC",
+            "automated_response": false,
+            "created_at": "2021-03-09T15:35:11.469Z",
+            "updated_at": "2021-03-09T15:35:11.469Z",
+            "actor": {
+                "username": "monke",
+                "cleared": true,
+                "verified": true,
+                "url": "/monke",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10959001,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @pmoc,\n\nDespite the behavior is no longer reproducible, the team didn't take any actions as a result of this submission. Apparently, the same behavior was previously reported by another researcher and, likewise, it was no longer reproducible when the team picked up the report. On the other side, I was instead able to verify the issue.\n\nI highlighted what described above internally and I will ping the team once to make sure my comment didn't slip through their queue. I will be back as soon as there's more information to share.\n\nBest,\n@lugtag ",
+            "automated_response": false,
+            "created_at": "2021-03-11T15:08:17.676Z",
+            "updated_at": "2021-03-11T15:08:17.676Z",
+            "actor": {
+                "username": "h1_analyst_jake",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_jake",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/gKtXsNkprE7ekgjBwpwWpTzX/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10959279,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "@pmoc thanks for the report. This is not reproducible anymore, so we'll mark it as resolved and award you some swag.\n",
+            "automated_response": false,
+            "created_at": "2021-03-11T15:33:12.364Z",
+            "updated_at": "2021-03-11T15:33:12.364Z",
+            "actor": {
+                "username": "mariag",
+                "cleared": false,
+                "verified": false,
+                "url": "/mariag",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "monke",
+                "url": "/monke"
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10959285,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::SwagAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-03-11T15:33:23.952Z",
+            "updated_at": "2021-03-11T15:33:23.952Z",
+            "actor": {
+                "url": "/duckduckgo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/4mpaehke5u0ubioeqvys0hcesjle/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "DuckDuckGo"
+                }
+            },
+            "reporter": {
+                "username": "monke",
+                "url": "/monke"
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 10960864,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I'd like to add this to my blog, so could we disclose this?\nThank you for the swag!\n\nCheers,\nPMOC",
+            "automated_response": false,
+            "created_at": "2021-03-11T18:15:47.198Z",
+            "updated_at": "2021-03-11T18:15:47.198Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "monke",
+                "cleared": true,
+                "verified": true,
+                "url": "/monke",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        },
+        {
+            "id": 11349403,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-10T18:15:50.248Z",
+            "updated_at": "2021-04-10T18:15:50.248Z",
+            "actor": {
+                "url": "/duckduckgo",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/4mpaehke5u0ubioeqvys0hcesjle/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "DuckDuckGo"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "duckduckgo"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 42959,
+            "category": "researcher",
+            "content": "Writeup here: https://monke.ie/duckduckgoxss/",
+            "user": {
+                "id": 1480601,
+                "username": "monke",
+                "name": "Monke",
+                "bio": "Security Researcher at AppOmni, Computer Science student.",
+                "cleared": true,
+                "verified": true,
+                "website": "https://monke.ie",
+                "location": "Cork, Ireland",
+                "created_at": "2021-01-21T04:15:11.250Z",
+                "url": "https://hackerone.com/monke",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/outhhcxc4cqhmx3mysl6bcjts0ot/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

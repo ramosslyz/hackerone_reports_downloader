@@ -1,0 +1,418 @@
+{
+    "id": 1040047,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDQwMDQ3",
+    "url": "https://hackerone.com/reports/1040047",
+    "title": "Email Verification bypass on signup",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2020-11-21T09:29:57.927Z",
+    "submitted_at": "2020-11-21T09:29:57.967Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "haqsek2",
+        "url": "/haqsek2",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 111,
+        "url": "https://hackerone.com/automattic",
+        "handle": "automattic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Automattic",
+            "twitter_handle": "",
+            "website": "https://automattic.com",
+            "about": "WordPress.com, VaultPress, Akismet, Gravatar, WooCommerce, Polldaddy, Tumblr and more!"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-12-03T08:43:26.221Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-12-01T11:39:41.323Z",
+    "team_member_agreed_on_going_public_at": "2020-12-03T08:43:26.125Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nThis bug is related to wordpress.com. There is feature in wordpress.com which allow users to invite people. We have to enter email address to invite that particular person but the invite link and invite key is also available to the person who invited. This allow attackers to create the profile without having access to the email address and they can make account on behalf of any people who  is not already signed up in wordpress.com\n\n## Platform(s) Affected:\nwordpress.com\npublic-api.wordpress.com\n\n## Steps To Reproduce:\nThis issue can be reproduced by following these easy steps: \n* Login to your account on wordpress.com\n* Setup burpsuite proxy with browser.\n* Select your site and navigate to manage>people\n* Enter any email address which is not already registered in wordpress.com and invite\n* Open this url in browser: https://wordpress.com/people/invites/yoursite.wordpress.com   [change yoursite.wordpress.com with your site]\n* See the burp suite proxy tab and find the GET request to this endpoint [https://public-api.wordpress.com/rest/v1.1/sites/siteId_here/invites?http_envelope=1&status=all&number=100]     [there will be a number instead of siteId_here]\n* In response of this GET request you will see JSON which will be consisting of the details about the invitations sent and there you will find \"invite_key\" and \"link\".\n* Copy the link and open this in another browser.\n* You can create account on behalf of this email without having access to the email and email verification is bypassed :)\n\n**See the attached video for POC**\n\n## Mitigation:\nThis is the pure violation of secure design principles, this can be mitigated by just removing the [invite_key] and [link] from the response in [https://public-api.wordpress.com/rest/v1.1/sites/siteId_here/invites?http_envelope=1&status=all&number=100]. Because this invite key and link is the property of the person being invited, showing these creds to other people will result this type of issue.\n\n## Impact\n\nThis issue can be used to bypass email verification on signup. Attackers can create account on behalf on any person without having access to the email account. This issue is affecting integrity of the wordpress.com",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1088626,
+            "file_name": "wordpresscom-2020-11-21_01.21.40.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/yqqnv8ni0se62te3yyxnmot4ef2x?response-content-disposition=attachment%3B%20filename%3D%22wordpresscom-2020-11-21_01.21.40.mp4%22%3B%20filename%2A%3DUTF-8%27%27wordpresscom-2020-11-21_01.21.40.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRBXMBUE6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071638Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCi%2Fn6Cuuxp8BfcjTDd0Y9WigKVjgyi8j4AO7gsBX4FkgIgM1DkBhRrbtZdh9zvama2O2%2BFkhu4R3JfNLeArgwjhOAqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDiZPbgxzHZzAExCLSqOBctgXCfx1Fa7AX6HsYswOvCc35utfZkDrc7UQKSKOObn33qUOHImqsmg1wBfGgt0Bf4Ld2KhcHDX5WmiV5wKZRxm2jyLLjaFeM7AY0qNUCpekBDnmej55N%2Bx2itZfrdp06kGXTLFqxQJqR%2F7fw4L7HgYS6R2Vbkvy%2Fin1mfZP53zj2NFZI0gU9UoDAXAXxPYrgcn%2FX3he5T3kNoKtmAwh7yZ7TJK3FnqKTf1ldJtVEkzkV4Gpt1p2WgnICaNOccEVTIapnoEdqrATCq425iwMn2odQ9pvPuCKdorhmrrgf%2Bii5aedaaXwKafxmzCNESo9saERi1IaigwHAgWvgMgQELHLSB6%2FAwE9nTcpNYbfqGQsWgM8MElgGaWLAvPThcAG96px99ws1oxTn%2BccSHae1P17vTvPjU47N1VJDvsnvT4MUtSKlO3zF%2BwlPSLFMEJkSnMQcbVJaryZ9bCZj4TPK8AgyEk7NrGfDN0OY7o4ospMjqVeDm2uG97qtQMawHik7TRI1uf50GuJoF5ae6hZX%2BkS7M%2FwrOoHKpjcRvom4OAmjA2aORQX2p7z5PULOCogNHumNZc0ItMuq3Gr4tkbWhkKbOhj3tkrkh8Z1N%2BSvAgH5ivb7uDpbJ4kYF8eMcd8W31vOiHXyLHfL6t2VcshH4TSWC5CzJMpP4t1RAZXBbpMcSQGpMmYwtnRG%2FQ5dna7ontKbsvZmfhAH2mrw%2Fu%2BD5J6womLkE%2BHlh70m0Q7WNMnmUVWk%2FLw10aiAGYM5eGkWyM0XKUPw42b8UGbkGEuYvt7jDypeJSGBTbSOAv7i04kc0LbvXl1ZTdxuCdI1v%2BA0Tsfg43RPylGdoYcwqkOnIEJtLk6LYRzawXkV0pKjDhsLanBjqxAbQsXE60gBC8f3kMM4sUI9nub28aKMZYhJ8Cu5NYpheRyStUS1ow996%2BG5KR7E7oTS%2FC1WnM6eF%2F%2FY5k%2Bjy%2BflQr2erEsM06u4ahe%2BWCmsFT6l1jMLR6qOgKu%2BtGze%2FKfNgwH5Qe059Kz9enTuUPfZGgKn2aSyoRr7hexI6oTaN%2FEmzyQroXrurH6MYRtTID3oiBLMQ7F%2FyLfZF%2B4X%2BLRiNHZA8cnpiBq4JPKbRfceBIdA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=166030fb4ca128d42b8d445b3a477c25eb819629c6971f780994568f976cf636",
+            "file_size": 7223798,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-12-31T11:39:41.410Z",
+    "allow_singular_disclosure_after": -83878617.35766761,
+    "singular_disclosure_allowed": true,
+    "vote_count": 114,
+    "voters": [
+        "sw33tlie",
+        "bombon",
+        "mashoud1122",
+        "rook1337",
+        "ayman3os",
+        "yassinek3ch",
+        "bibekshah",
+        "dhakal_ananda",
+        "ali",
+        "1trick",
+        "and 104 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 42402,
+        "asset_type": "WILDCARD",
+        "asset_identifier": "*.tumblr.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9894440,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\nIs this program really dead? or just pretending to be dead. Anyone out there?",
+            "automated_response": false,
+            "created_at": "2020-11-23T06:46:40.900Z",
+            "updated_at": "2020-11-23T06:46:40.900Z",
+            "actor": {
+                "username": "haqsek2",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqsek2",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9895650,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your submission. Your report will be reviewed and we'll get back to you shortly.",
+            "automated_response": false,
+            "created_at": "2020-11-23T09:08:05.402Z",
+            "updated_at": "2020-11-23T09:08:05.402Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9900081,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @haqsek2. I confirmed this issue. We will start working on a fix. I'll let you know once this will be deployed to production.",
+            "automated_response": false,
+            "created_at": "2020-11-23T15:08:32.144Z",
+            "updated_at": "2020-11-23T15:08:32.144Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9901678,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the acknowledgement.",
+            "automated_response": false,
+            "created_at": "2020-11-23T17:07:00.439Z",
+            "updated_at": "2020-11-23T17:07:00.439Z",
+            "actor": {
+                "username": "haqsek2",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqsek2",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9924991,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "any update?",
+            "automated_response": false,
+            "created_at": "2020-11-25T14:27:46.024Z",
+            "updated_at": "2020-11-25T14:27:46.024Z",
+            "actor": {
+                "username": "haqsek2",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqsek2",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9959360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @haqsek2, this should be now fixed for new invitations. Can you please see if you are still able to reproduce this issue?",
+            "automated_response": false,
+            "created_at": "2020-11-30T09:12:22.452Z",
+            "updated_at": "2020-11-30T09:12:22.452Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9959436,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, I have tried to reproduce it and I confirm that this issue has been fixed.\nThanks",
+            "automated_response": false,
+            "created_at": "2020-11-30T09:22:14.029Z",
+            "updated_at": "2020-11-30T09:22:14.029Z",
+            "actor": {
+                "username": "haqsek2",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqsek2",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9972470,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-01T10:33:20.171Z",
+            "updated_at": "2020-12-01T10:33:20.171Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "haqsek2",
+                "url": "/haqsek2"
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9972475,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hi, we would like thank you again for your submission and helping make Automattic a safer place. We look forward to more reports from you in the future.",
+            "automated_response": false,
+            "created_at": "2020-12-01T10:33:45.332Z",
+            "updated_at": "2020-12-01T10:33:59.175Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "automattic",
+            "collaborator": {
+                "username": "haqsek2",
+                "url": "/haqsek2"
+            }
+        },
+        {
+            "id": 9972988,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Can we disclose this report?",
+            "automated_response": false,
+            "created_at": "2020-12-01T11:39:41.340Z",
+            "updated_at": "2020-12-01T11:39:41.340Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "haqsek2",
+                "cleared": false,
+                "verified": false,
+                "url": "/haqsek2",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/6ss4uqxpssn8s8p6swjazu6mhm0z/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9991913,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-03T08:43:26.145Z",
+            "updated_at": "2020-12-03T08:43:26.145Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 9991914,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-03T08:43:26.247Z",
+            "updated_at": "2020-12-03T08:43:26.247Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

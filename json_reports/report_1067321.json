@@ -1,0 +1,668 @@
+{
+    "id": 1067321,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDY3MzIx",
+    "url": "https://hackerone.com/reports/1067321",
+    "title": "Stored XSS via malicious key value of Synthetics monitor tag when visiting an Insights dashboard with filtering enabled",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2020-12-28T07:34:17.728Z",
+    "submitted_at": "2020-12-28T07:34:17.788Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "jon_bottarini",
+        "url": "/jon_bottarini",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 17011,
+        "url": "https://hackerone.com/newrelic",
+        "handle": "newrelic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "New Relic",
+            "twitter_handle": "newrelic",
+            "website": "https://newrelic.com",
+            "about": "New Relic's Coordinated Disclosure Program"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-04-20T15:30:25.747Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-04-13T15:17:33.234Z",
+    "team_member_agreed_on_going_public_at": "2021-04-20T15:30:25.603Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Introduction & Context\n\nThis is a complex XSS that requires multiple steps in order to setup. It also requires you to have a good understanding of both New Relic Insights, New Relic Synthetics monitors, and the NerdGraph API explorer. \n\n**Background Context:** New Relic Synthetics and the history of tags for monitors (formerly known as labels) \nNew Relic allows you to define specific tags associated with a Synthetics monitor. Once you create a monitor, you can add *tags* to the monitor itself. Back in 2018/2019 you had the ability to add tags with special characters, such as just simply: `malicious\"><img>\"`. Fast forward to 2020, and the ability to add special characters is not possible anymore... so I had to get creative. After a bit of looking around, I realized that there is another way to add tags to a Synthetics monitor instead of just the UI: using the NerdGraph API explorer. \n\n## The Vulnerability\nWhen you are editing an Insights dashboard, there is the option to enable filtering. Within the filtering options, you can specify event types that are related to Synthetics monitors. If you choose an event type of \"SyntheticCheck\" and select an attribute that is a tag with an XSS payload, the XSS payload will fire on the page. If you save the dashboard with the filter enabled, the XSS payload will fire on any user who views the dashboard in the future as well.  \n\n## Steps to Reproduce\n1. Create a new Synthetics monitor, write down the `Entity guid` of the monitor you created, we will need this later\n2. Navigate to [NerdGraph API ](https://api.newrelic.com/graphiql?)\n3. If you haven't already, create an API key \n4. Run the following query, replacing `ENTITY_GUID` with the Entity guid of the Synthetics monitor you created\n\n```\nmutation {\n    taggingAddTagsToEntity(\n        guid: \"ENTITY_GUID\",\n        tags: { key: \"tags.new\\\"><img src=x onerror=alert(`new`)\", values: [\"anything\"]}) {\n            errors {\n                message\n            }\n        }\n}\n```\n\n1. Wait about 15-20 minutes, there is a weird delay from the time that a new tag is added to a monitor, and when the tag appears within the dropdown selector of a dashboard in New Relic Insights (you can imagine how incredibly frustrating this was when trying to get the escaping correct on the XSS payload)\n2. Navigate to New Relic Insights, create a new Dashboard\n3. With the dashboard, click on the \"Edit\" button\n4.  Click on the gear icon next to \"Filter Disabled\", select \"Enable Filter\" \n5. Select the \"SyntheticsCheck\" event type \n6. In \"Attributes\" you should see the tag with the malicious XSS payload you entered earlier\n7. Select that tag, the payload should fire, but you're just looking at a self-XSS right now. Save the dashboard with the tag filter enabled. \n8. Refresh the page, the self-xss is now turned into a stored XSS for any person who views this dashboard. \n\n█████\n\n## Impact\n\nStored XSS for any user that views the malicious Insights dashboard",
+    "bounty_amount": "2123.0",
+    "formatted_bounty": "$2,123",
+    "weakness": {
+        "id": 62,
+        "name": "Cross-site Scripting (XSS) - Stored"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": "2021-05-13T15:17:33.323Z",
+    "allow_singular_disclosure_after": -72374034.50865531,
+    "singular_disclosure_allowed": true,
+    "vote_count": 85,
+    "voters": [
+        "m4t35z",
+        "jeti",
+        "wi11",
+        "n1m0",
+        "drsniper",
+        "arthuraires",
+        "bombon",
+        "battle_angel",
+        "wh0ru",
+        "m0chan",
+        "and 75 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 12650,
+        "asset_type": "URL",
+        "asset_identifier": "insights.newrelic.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 10219636,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jon_bottarini , sounds like you had a productive holiday break :) I'm going to fire up Burp shortly and work on reproducing this. In case you see this before I'm done, do you happen to know if the dashboard is visible to *any* new relic user who views the link, or only those linked to that account? i.e. is this a cross-account XSS ?",
+            "automated_response": false,
+            "created_at": "2020-12-28T16:10:55.703Z",
+            "updated_at": "2020-12-28T16:10:55.703Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10219977,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Since entire dashboards cannot be shared publicly yet (just embeddables from the dashboards themselves), this is a cross-account XSS. ",
+            "automated_response": false,
+            "created_at": "2020-12-28T16:52:57.782Z",
+            "updated_at": "2020-12-28T16:52:57.782Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222383,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "I got it to work on my end. I was unsure about medium vs high severity, but I think an auto-firing stored XSS is pretty bad, even if its not publicly viewable.",
+            "automated_response": false,
+            "created_at": "2020-12-28T18:50:02.205Z",
+            "updated_at": "2020-12-28T18:50:02.205Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222386,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-28T18:50:07.545Z",
+            "updated_at": "2020-12-28T18:50:07.545Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222390,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Sorry, (sigh) pressed wrong button. ",
+            "automated_response": false,
+            "created_at": "2020-12-28T18:50:43.014Z",
+            "updated_at": "2020-12-28T18:50:43.014Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222402,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I rated it high because it's the same impact as this one: https://hackerone.com/reports/626082",
+            "automated_response": false,
+            "created_at": "2020-12-28T18:51:42.789Z",
+            "updated_at": "2020-12-28T18:51:42.789Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222443,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "{F1132900}",
+            "automated_response": false,
+            "created_at": "2020-12-28T19:00:46.203Z",
+            "updated_at": "2020-12-28T19:00:46.203Z",
+            "actor": {
+                "url": "/newrelic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "New Relic"
+                }
+            },
+            "bounty_amount": "2000.0",
+            "bonus_amount": "123.0",
+            "bounty_currency": "usd",
+            "attachments": [
+                {
+                    "id": 1132900,
+                    "filename": "4rutdq.jpg",
+                    "type": "image/jpeg",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/fy7ose39gcal5u2c4pn05w32rmah?response-content-disposition=attachment%3B%20filename%3D%224rutdq.jpg%22%3B%20filename%2A%3DUTF-8%27%274rutdq.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071127Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=34b4d1a05f6607c17fda3e726682f6a5cea49206cc279dcc7f5d30a9ecd4e2b6"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic",
+            "collaborator": {
+                "username": "jon_bottarini",
+                "url": "/jon_bottarini"
+            }
+        },
+        {
+            "id": 10222444,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yep, I awarded and filed as a high :)",
+            "automated_response": false,
+            "created_at": "2020-12-28T19:01:13.277Z",
+            "updated_at": "2020-12-28T19:01:13.277Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222451,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "LOL ^ 😂\n\n███████",
+            "automated_response": false,
+            "created_at": "2020-12-28T19:03:06.039Z",
+            "updated_at": "2021-04-20T15:21:11.676Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222461,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "█████",
+            "automated_response": false,
+            "created_at": "2020-12-28T19:06:14.856Z",
+            "updated_at": "2021-04-20T15:20:48.583Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10222469,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Good stuff - thanks Scott! ",
+            "automated_response": false,
+            "created_at": "2020-12-28T19:06:55.099Z",
+            "updated_at": "2020-12-28T19:06:55.099Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10238614,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jon_bottarini ! It sounds like the engineers wanted to keep the API call around, so they implemented a filter on it █████████████",
+            "automated_response": false,
+            "created_at": "2020-12-30T16:37:34.077Z",
+            "updated_at": "2021-04-21T11:31:41.938Z",
+            "actor": {
+                "username": "scutler",
+                "cleared": false,
+                "verified": false,
+                "url": "/scutler",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/460/179/2c3ae155f2d3e021cae9e7e75456335c3c5514cd_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10270488,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Checking this out tomorrow! ^ ",
+            "automated_response": false,
+            "created_at": "2021-01-05T04:25:24.030Z",
+            "updated_at": "2021-01-05T04:25:24.030Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 10545584,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@scutler - I think they might have broken something when they made this change - I'm getting the following error in terminal and can't save any options from the dropdown in the filter selector:\n\n```html\nangular.js:11655 TypeError: Cannot read property 'value' of undefined\n    at common-bundle-8c5cc534126a6df9a827.js:128\n    at Array.map (<anonymous>)\n    at common-bundle-8c5cc534126a6df9a827.js:128\n    at n.$eval (angular.js:14466)\n    at n.$apply (angular.js:14565)\n    at Object.a.select (common-bundle-8c5cc534126a6df9a827.js:128)\n    at common-bundle-8c5cc534126a6df9a827.js:128\n    at n.$digest (angular.js:14358)\n    at n.$apply (angular.js:14571)\n    at HTMLAnchorElement.<anonymous> (angular.js:21571)\n```",
+            "automated_response": false,
+            "created_at": "2021-02-02T04:19:33.019Z",
+            "updated_at": "2021-02-02T04:19:33.019Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11283995,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @scutler - Just checking in on the comment above if there was anyone planning on fixing this since the old Insights UI will be turned down in a couple weeks ",
+            "automated_response": false,
+            "created_at": "2021-04-06T16:51:42.650Z",
+            "updated_at": "2021-04-06T16:51:42.650Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11284801,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @jon_bottarini,\n\nAny issues unique to the `insights.newrelic.com` subdomain will not be resolved as it will be [going away completely](https://discuss.newrelic.com/t/important-insights-upgrade-to-new-relic-one-dashboards/127823) next week. I believe that's the last piece of the old UI that hasn't been integrated into NR1.\n\nSince a filter was implemented for the XSS reported here, I'll mark this as Resolved. If you see any issues persist into NR1, please let us know and we can address that in a new report.\n\nRegarding the breakage you reported, let me know if you still run into issues on the NR1 side and we can file that with the team to get it resolved. Alternatively, if this is an issue unique to your account, I can see about getting it back into a working state for you.",
+            "automated_response": false,
+            "created_at": "2021-04-06T17:26:09.758Z",
+            "updated_at": "2021-04-06T17:26:09.758Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "jon_bottarini",
+                "url": "/jon_bottarini"
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11343968,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "{F1260075} ",
+            "automated_response": false,
+            "created_at": "2021-04-09T21:34:52.852Z",
+            "updated_at": "2021-04-09T21:34:52.852Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1260075,
+                    "filename": "ducksboard_rip.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8sm2ltqinlqz52jblvs28xbf9x4x?response-content-disposition=attachment%3B%20filename%3D%22ducksboard_rip.png%22%3B%20filename%2A%3DUTF-8%27%27ducksboard_rip.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071127Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2a629d9def0ff7a8cc1da2de2a1a9b4609ba56703ecfba4fad93995e8fa2bf2c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11379469,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-13T15:17:33.270Z",
+            "updated_at": "2021-04-13T15:17:33.270Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11441733,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@dmcmahon any issue with disclosure? Thanks! ",
+            "automated_response": false,
+            "created_at": "2021-04-19T16:15:27.800Z",
+            "updated_at": "2021-04-19T16:15:27.800Z",
+            "actor": {
+                "username": "jon_bottarini",
+                "cleared": true,
+                "verified": true,
+                "url": "/jon_bottarini",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11454802,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "{F1272451}",
+            "automated_response": false,
+            "created_at": "2021-04-20T15:30:25.633Z",
+            "updated_at": "2021-04-20T15:30:25.633Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1272451,
+                    "filename": "engage.gif",
+                    "type": "image/gif",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xrpxv93ohfyylhl6zu870hju85qu?response-content-disposition=attachment%3B%20filename%3D%22engage.gif%22%3B%20filename%2A%3DUTF-8%27%27engage.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVJW3J6EC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071127Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCWT1ruwqc2oByytevVo%2BJwP5CuUSNHvk0vuHjxZNpbLwIgOeoSnb%2FmdjXdZewytaps5XSg7IBiDxrlnkPD4i4CPYQqugUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLBJNUdbbKZCYT0C9iqOBfQku%2B5Azcmj5AdB26nMf2ktZjuwR6Yf4mPl5dRw8xv2hbew%2FoTfHwa8uWbUsVP9%2BQ665LZktOXNtzcEk9YLJjsfltqCGOMjArmHXmO7DtjVZe3bT0CMddibsG2oRFE7MeZylLi%2FFLZ0h%2FkP2bvhv3QlPoZkzCfXnpogf2P7rP%2F0GFJYUV1cisHR6KFbgfW66l2YxBzZ2V2Df9C3KnNChUUzRLCYvb7MEp4KqRsH1CLheeBdqqLc8BtygBE77gETUQ07bkoOeLsyiEpR%2FZoTIjptSkwBiumi7HuDADkKTm%2F6pA4pVvOmQpAGJX8LEjG3R0lNEknX5P2pyl%2FfQjUhY5caRl%2B5vA0schYyxRSTFl8K1qZKq3N5P8dYZGoaPL9mth2MpCbpA0sIP5P0AYL98nH8Jqj%2FWth%2Fea29XnC4psIkWAzWSPN0jZYIKoEoViHFRgO6yQHL9xCuF7ynS8W4LG4hV6L3AW%2Bwp57nG66Z5psn2lNXAFrWQ8VINXw83pZi6oX%2FPggl3B6CXC421yVsNhkVCBquvicjntQ0w0a0JyNhxZG%2BJuNFjoxgmgxcd4LjTLj4w0y8lklVezsXkk2oz%2FPzNfZ0nL7YublRW5M7zRIiVMSYxPiaLA2x9wkpm5T2HXRNb0g0DTEwU04WhLxx4s6qhC%2BNOqyzXZGnkSfurTs469C%2Ftknm5s6rloLtHob%2FmnmYTsvKGxwm8akqMvmt9Bvr8yfEipq%2BKofcRExYGv5YVdhx9YfKPpflQz%2FnkY61%2BuKWWSLYWeB%2BLuh44oQ3vSiVtc5u%2F%2FtdEHzv6REX2VBOzT4LqaXBd9rktSPvodB8%2B5xFqRdmFj%2F6E2XkiyFiX0KLK9YixTtIXOs7FnoxcjCtrLanBjqxAUPHVGDrO9%2F7ASqx4OaO99QIBf0eY2DXvMOeQvwnrwFxMpGyyzIg5MV%2F1oK4cuDnvJtz%2F3K6XMfkdEUx1qDm1nXD%2B17RHnlMaiK0PeA3%2BHeYHE7yUoNYIF6%2B8LYu4P31sIBrZXX4seXS4n1KOzFO%2Bhlx1O%2Bs4ih71Ivq0Qs%2F6ETyi7f6yaW%2B9BTt9hM5qGA0MOAHq7RTE7Txq3kubk4%2F5o5CjZ%2FqtgPwlnf0oWR9sY%2B8hw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c260178fa713d8bae0b314627dc3956322163c5b2d467a4810b31ce809e41b1c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        },
+        {
+            "id": 11454803,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-20T15:30:25.833Z",
+            "updated_at": "2021-04-20T15:30:25.833Z",
+            "actor": {
+                "username": "nr-dm",
+                "cleared": false,
+                "verified": false,
+                "url": "/nr-dm",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "newrelic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "id": 42958,
+            "category": "researcher",
+            "content": "Time it took me to find this bug: 3-4 hours\n\n## Resources used: \n\n* [New Relic Dashboards Documentation - Filtering](https://docs.newrelic.com/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/#filter-dashboards) \n> Never used the filtering feature before, so I had to look into how filters worked in the context of a dashboard. \n* [New Relic Entity Definition](https://docs.newrelic.com/docs/new-relic-one/use-new-relic-one/core-concepts/what-entity-new-relic/) \n> Had to figure out what type of entity to query during the API call (and also figure out what entity I was targeting). \n* [New Relic API Tagging Tutorial](https://docs.newrelic.com/docs/apis/nerdgraph/examples/nerdgraph-tagging-api-tutorial/) \n> This was my first time adding tags to New Relic entities using the API, so I needed to brush up on how to do this before I used the GraphQL explorer\n* [New Relic GraphQL Explorer](https://api.newrelic.com/graphiql) \n> Used to send the actual request(s) to add the malicious tag \n* [Stackoverflow escaping special characters question](https://stackoverflow.com/questions/19176024/how-to-escape-special-characters-in-building-a-json-string) \n> I sometimes have difficulty when I am escaping special characters, so I needed a reference \n",
+            "user": {
+                "id": 13784,
+                "username": "jon_bottarini",
+                "name": "Jon Bottarini",
+                "bio": "I ❤️  privilege escalation",
+                "cleared": true,
+                "verified": true,
+                "website": "https://www.jonbottarini.com",
+                "location": "Austin, TX ",
+                "created_at": "2014-11-04T21:03:50.565Z",
+                "url": "https://hackerone.com/jon_bottarini",
+                "hackerone_triager": false,
+                "hackerone_employee": false,
+                "user_type": "hacker",
+                "profile_picture_urls": {
+                    "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+                    "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+                }
+            },
+            "can_view?": true,
+            "can_create?": false,
+            "attachments": []
+        }
+    ]
+}

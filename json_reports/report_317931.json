@@ -1,0 +1,429 @@
+{
+    "id": 317931,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMTc5MzE=",
+    "url": "https://hackerone.com/reports/317931",
+    "title": "Bypassing Homograph Attack Using /@ [ Tested On Windows ]",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "low",
+    "readable_substate": "Resolved",
+    "created_at": "2018-02-20T16:51:53.302Z",
+    "submitted_at": "2018-02-20T16:51:53.302Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "apapedulimu",
+        "url": "/apapedulimu",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15688,
+        "url": "https://hackerone.com/brave",
+        "handle": "brave",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Brave Software",
+            "twitter_handle": "brave",
+            "website": "https://brave.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-02-23T06:03:51.214Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-02-21T22:40:48.563Z",
+    "team_member_agreed_on_going_public_at": "2018-02-23T06:03:51.138Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n\n__Bypassing Homograph Attack Using /@__\n\nI look at on my previous report on #268984 and see patch code in the github https://github.com/brave/browser-laptop/commit/f2e438d6158fbc62e2641458b6002a72d223c366 I look at code at \n\n```\nit('returns the punycode URL when given a valid URL', function () {\n        assert.equal(urlUtil.getPunycodeUrl('http://brave:brave@ebаy.com:1234/brave#brave'), 'http://brave:brave@xn--eby-7cd.com:1234/brave#brave')\n })\n```\nAnd i think the punycode will return to ASCII just after `@` before it is not checked. And i give the try. and got some homograph attack. ( Correct Me If I Wrong )\n\n## Products affected: \n\n * Brave\t0.20.27 ( Windows )\n\n## Steps To Reproduce:\n\nThis is punycode URL ebаy.com@ebаy.com = xn--eby-7cd.com@xn--eby-7cd.com\nAdd to homepage.\n```\nAttempt : \n- ebаy.com@ebаy.com it'll become = ebаy.com@xn--eby-7cd.com \n- ebаy.com/ebаy.com it'll become = xn--eby-7cd.xn--com/eby-7fg.com\n- ebаy.com/@ebay.com it'll become = ebаy.com/@xn--eby-7cd.com\n```\nif user input `ebаy.com/@brave.com` user will be redirect to `xn--eby-7cd.com` \npunycode failed return to ascii because brave just check after `@` not all of URL \n\n## Supporting Material/References:\n\nVideo : https://youtu.be/Zz7KV_R0Wp8\n\nSS : \n{F265262}\n\nThanks\n\n## Impact\n\nUser will be tricked by attacker to visit malicious link with punycode inside it.",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 265262,
+            "file_name": "Screenshot_307.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/265/262/31490a8c1a3071752628efa81d60f15025fb7722/Screenshot_307.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_307.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_307.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=de5e4116bea3267ae08b651ab71e4ffa7088a71bb7270940c3c638851ef49314",
+            "file_size": 7826,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2018-03-23T22:40:48.644Z",
+    "allow_singular_disclosure_after": -171450090.827547,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "apapedulimu",
+        "michan",
+        "whitesector",
+        "r3y",
+        "eveeez",
+        "rugb",
+        "japz",
+        "scraps",
+        "ghoibsec",
+        "namansahore",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2408344,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, \nThis is another video if punycode not be decoded before `@` \n\n{F265284}\n\nThanks,\nApapedulimu",
+            "automated_response": false,
+            "created_at": "2018-02-20T17:24:20.738Z",
+            "updated_at": "2018-02-20T17:24:20.738Z",
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 265284,
+                    "filename": "ezgif.com-video-to-gif.gif",
+                    "type": "image/gif",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/265/284/8a2a24cd111905c258006a22a6ddf663726c0b4f/ezgif.com-video-to-gif.gif?response-content-disposition=attachment%3B%20filename%3D%22ezgif.com-video-to-gif.gif%22%3B%20filename%2A%3DUTF-8%27%27ezgif.com-video-to-gif.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c7898d4d9bdf7e49c9475f6944454435c76e9e62b7ff1b822146141d09a04af0"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2409936,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "https://github.com/brave/browser-laptop/issues/13214",
+            "automated_response": false,
+            "created_at": "2018-02-21T03:59:33.798Z",
+            "updated_at": "2018-02-21T03:59:33.798Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2410089,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @diracdeltas,\nThanks for triaged this report. I'll wait your update in the future. \nThanks.",
+            "automated_response": false,
+            "created_at": "2018-02-21T06:30:00.378Z",
+            "updated_at": "2018-02-21T06:30:00.378Z",
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2411663,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @diracdeltas , \nI see on https://github.com/brave/browser-laptop/issues/13214 it's fixed very fast.\nCan you mark it as resolved ?\nThanks.\n",
+            "automated_response": false,
+            "created_at": "2018-02-21T15:00:16.922Z",
+            "updated_at": "2018-02-21T15:01:00.398Z",
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2412425,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-21T18:39:05.017Z",
+            "updated_at": "2018-02-21T18:39:05.017Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "apapedulimu",
+                "url": "/apapedulimu"
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2412427,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-21T18:39:18.596Z",
+            "updated_at": "2018-02-21T18:39:18.596Z",
+            "actor": {
+                "url": "/brave",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Brave Software"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "brave",
+            "collaborator": {
+                "username": "apapedulimu",
+                "url": "/apapedulimu"
+            }
+        },
+        {
+            "id": 2413551,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "hi @diracdeltas , \nThanks very much for bounty, \nCan We Disclose this report ?\nThanks.",
+            "automated_response": false,
+            "created_at": "2018-02-21T22:40:48.591Z",
+            "updated_at": "2018-02-21T22:40:48.591Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2413735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @diracdeltas ,\nThanks for awesome fixing and reply my report, \nI just want to send this just for say thanks.\n\n{F265710}",
+            "automated_response": false,
+            "created_at": "2018-02-22T00:05:32.214Z",
+            "updated_at": "2018-02-22T00:05:32.214Z",
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 265710,
+                    "filename": "thanks.gif",
+                    "type": "image/gif",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/265/710/ae776dc8aa3a6b8508837e37b0c2ec00a1e8ade5/thanks.gif?response-content-disposition=attachment%3B%20filename%3D%22thanks.gif%22%3B%20filename%2A%3DUTF-8%27%27thanks.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074219Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=56dc4e678f660e69e57bcbfb7cf3373fa25b78b292ca96869d9e08473e256a7b"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2423916,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Dear @brave ,\nJust little curious, if you don't mind, I would like to ask question.\nIs it possible to ask a CVE number from the patch that Brave made related the fixed issue?\nThanks in advance.",
+            "automated_response": false,
+            "created_at": "2018-02-23T02:50:39.067Z",
+            "updated_at": "2018-02-23T02:50:39.067Z",
+            "actor": {
+                "username": "apapedulimu",
+                "cleared": false,
+                "verified": true,
+                "url": "/apapedulimu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2424067,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "we're not doing CVE assignments at this time, except for critical issues. ",
+            "automated_response": false,
+            "created_at": "2018-02-23T06:03:39.506Z",
+            "updated_at": "2018-02-23T06:03:39.506Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2424069,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T06:03:51.165Z",
+            "updated_at": "2018-02-23T06:03:51.165Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 2424070,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-23T06:03:51.240Z",
+            "updated_at": "2018-02-23T06:03:51.240Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

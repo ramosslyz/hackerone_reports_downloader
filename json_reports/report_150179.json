@@ -1,0 +1,537 @@
+{
+    "id": 150179,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTAxNzk=",
+    "url": "https://hackerone.com/reports/150179",
+    "title": "Html Injection and Possible XSS in sms-be-vip.twitter.com",
+    "state": "Closed",
+    "substate": "resolved",
+    "readable_substate": "Resolved",
+    "created_at": "2016-07-09T04:46:26.833Z",
+    "submitted_at": "2016-07-09T04:46:26.833Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "secgeek",
+        "url": "/secgeek",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 61,
+        "url": "https://hackerone.com/x",
+        "handle": "x",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "X (Formerly Twitter)",
+            "twitter_handle": "XSecurity",
+            "website": "https://x.com",
+            "about": "X helps you create and share ideas and information instantly, without barriers."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2016-08-28T23:45:09.867Z",
+    "bug_reporter_agreed_on_going_public_at": "2016-07-29T23:44:59.844Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\nI would like to report HTML Injection and possible cross site scripting (XSS) vulnerability in **sms-be-vip.twitter.com**\n\n##Overview\n\nThe **sms-be-vip.twitter.com** 404 error page appears to be vulnerable to XSS and HTML Injection as it doesn't encode the HTML tags in the path name such as ```https://sms-be-vip.twitter.com/<h1>TEST</h1>```.\n\nBut the HTML tags have to be send without URL encoding. Most of the modern web browsers will encode the HTML tags in the request before it being sent to the webserver. However In Internet Explorer 11 and lower versions it's possible to make the browser send the request without any URL encoding.\n\n### How to make MSIE 7 - 11 send the request without URL encoding ?\n\nInternet Explorer won't encode the URL if it was sent from a 302 Redirect.\n\nSo you can use a simple PHP page like the following:\n\n```php\n<?php\n$url = $_GET['x'];\nheader(\"Location: $url\");\n?> \n```\n\nThen use the  page and perform a redirection to the endpoint which is vulenrable to XSS.\n\n``` http://secgeek.net/POC/redir.php?x=https://sms-be-vip.twitter.com/<h1>TEST</h1> ```\n\n\nNow you could notice that the friendly HTTP error messages in Internet Explorer will appear instead of showing the **<h1>TEST</h1>** in the error page.\n\nThere is a simple workaround for this issue. \nAccording to Microsoft the HTTP friendly error message will appears if it meets two criteria\n\n1.The HTTP Status code must be [400, 403, 404, 405, 406, 408, 409, 410, 500, 501, 505]\n2.The HTTP Response body’s byte length must be shorter than a threshold value\n\n```Ruby\n The default threshold value for 404 errors is 512 bytes.\n```\nSo we can add more data in the request to be returned in the server response that will overcome this issue.\n\n```http://secgeek.net/POC/redir.php?x=https://sms-be-vip.twitter.com/<h1>TEST</h1>.................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................... ```\n\n##Techincal Details\n\n##Impact:\n\nThe vulnerability allow a malicious user to inject html tags and execute Javascript in the same context of sms-be-vip.twitter.com domain which could lead to steal user's session, peform CSRF attacks or open a phishing page.\n\n##Affected Domain:\nsms-be-vip.twitter.com\n\n##Affected Insertion point:\nThe path name in the url ```https://sms-be-vip.twitter.com/<XSS Injection here>```\n\n##HTML Injection POC\nhttp://secgeek.net/POC/Twitter-HTML-POC.php\n\n##XSS POC\nhttp://secgeek.net/POC/Twitter-XSS-POC.php\n\n**Note:** This XSS POC will work only if the XSS Auditor is disabled in Internet Explorer. \n\nI've Attached Sreenshots for the two POCs.\n\nKindly check and review the issue.\nThanks in advance!\n\n\n\n\n",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 104033,
+            "file_name": "POC2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/033/1ff9b409f01a684bf532f6425fdabaf630bd27dc/POC2.png?response-content-disposition=attachment%3B%20filename%3D%22POC2.png%22%3B%20filename%2A%3DUTF-8%27%27POC2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081128Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=31c9c49686a9bfe90fadf04f5725bc30fdd8435238c1c35943e6557622f5069b",
+            "file_size": 23242,
+            "type": "image/png"
+        },
+        {
+            "id": 104034,
+            "file_name": "POC1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/034/880bad6d69af3a5ee6cf13dab564592172ff9672/POC1.png?response-content-disposition=attachment%3B%20filename%3D%22POC1.png%22%3B%20filename%2A%3DUTF-8%27%27POC1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081128Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=1babc8a7dc208c6a86690462eeb1153e0facd8da2fbb9467f10b2a6cbd6e52af",
+            "file_size": 38100,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2016-08-28T23:44:59.954Z",
+    "allow_singular_disclosure_after": -220868788.1325813,
+    "singular_disclosure_allowed": true,
+    "vote_count": 81,
+    "voters": [
+        "mizzle",
+        "ras-it",
+        "michiel",
+        "troubleshooter",
+        "spam404",
+        "bayotop",
+        "nahamsec",
+        "yaworsk",
+        "jon_bottarini",
+        "skavans",
+        "and 71 more..."
+    ],
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1063552,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Thank you for your report.\n\nPer our program rules, vulnerabilities only affecting users of outdated or unpatched browsers and platforms are not eligible for our bug bounty program.\n\nPlease see https://hackerone.com/twitter for full program rules and exclusions.\n\nThank you for thinking of Twitter Security!",
+            "automated_response": false,
+            "created_at": "2016-07-11T18:23:40.036Z",
+            "updated_at": "2016-07-11T18:23:40.036Z",
+            "actor": {
+                "username": "bugtriage-alex",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugtriage-alex",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1063753,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey,\nThanks for your reply, but i'm sorry i have to disagree and I do have some concerns regarding this.\n\nYou said the following:\n>  Per our program rules, vulnerabilities only affecting users of outdated or unpatched browsers and platforms are not eligible for our bug bounty program.\n\nI want to clarify that **Internet Explorer 11** isn't an outdated or unpatched browser. It's the latest browser version supported on **Windows  7**, **Windows 8** , **Windows 9** . i don't think these versions of windows are  considered an outdated platforms by Microsoft.\n\nStill there are millions of users who still use Windows 7 and Windows 8 and **Internet Explorer 11** is the latest version on these versions of windows platforms with latest windows updates. So obviously millions of users would be vulnerable to the attack and the vulnerability i've mentioned here.\n\nAlso if  you see Google's Vulnerability Reward Program at:\nhttps://www.google.com.eg/about/appsecurity/reward-program/\n\nYou will notice that Google Engineers says the following:\n\n>  **Non-qualifying vulnerabilities:** \nFlaws affecting the users of out-of-date browsers and plugins. The security model of the web is being constantly fine-tuned. The panel will typically not reward any problems that affect only the users of outdated or unpatched browsers. In particular, we exclude Internet Explorer prior to version 9. \n\nSo Google Security Engineers will accept any bugs that affects Internet explorer 9 , 10 , 11.\n\nI would be very glad if you can re-evaluate/re-consider the report.\n\nThanks in advance!",
+            "automated_response": false,
+            "created_at": "2016-07-11T19:59:03.418Z",
+            "updated_at": "2016-07-11T19:59:03.418Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1066997,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello, \nis there any update ? i'm still waiting your response!",
+            "automated_response": false,
+            "created_at": "2016-07-13T14:47:35.206Z",
+            "updated_at": "2016-07-13T14:47:35.206Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1072417,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @bugtriage-alex \nIt been more than 1 week waiting your reply, Have you seen this at all?",
+            "automated_response": false,
+            "created_at": "2016-07-17T03:42:01.636Z",
+            "updated_at": "2016-07-17T03:42:01.636Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1074457,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "Thanks for the follow up and your patience. We're reopening this ticket to take another look at the issue. We'll be sure to update you as soon as we have more information. \n\nThanks for thinking of Twitter security. ",
+            "automated_response": false,
+            "created_at": "2016-07-18T18:34:17.864Z",
+            "updated_at": "2016-07-18T18:34:17.864Z",
+            "actor": {
+                "username": "bugtriage-rob",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugtriage-rob",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1075907,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks @bugtriage-rob for reopening the report again. I appreciate your efforts.\nI hope to hear a good update from you soon :)\nThanks in advance!",
+            "automated_response": false,
+            "created_at": "2016-07-19T13:12:30.589Z",
+            "updated_at": "2016-07-19T13:12:30.589Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1080728,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "While this report is comprehensive and there's some concern around it, it will be closed as Informative because:\n> Note: This XSS POC will work only if the XSS Auditor is disabled in Internet Explorer.\n\nand we expect users to have a reasonable amount of protection around their devices and computers used to access Twitter.\n\nBut I do appreciate the comprehensive nature of the write-up and the depth of detail it contains! Thank you for that!",
+            "automated_response": false,
+            "created_at": "2016-07-21T17:55:01.947Z",
+            "updated_at": "2016-07-21T17:55:01.947Z",
+            "actor": {
+                "username": "bfd",
+                "cleared": false,
+                "verified": false,
+                "url": "/bfd",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/639/cb4711f9ee63746ad25d3c68fdef609f4ea84711_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1081360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks a lot @bfd  for your reply. \n\nWell i thought demonstrating the HTML injection will be considered an acceptable risk to the users ,as an attacker could trick them into a phishing web page on Twitter domain. But i do agree with you that HTML injection without executing Javascript isn't severe.\n\n**So i've made another XSS POC that works on MSIE 11 and will fully bypass the XSS Auditor.**\n\nThe POC will execute javascript on the same context of ```sms-be-vip.twitter.com```\n\n##POC:\nhttps://secgeek.net/POC/Twitter-XSS-POC.html\n\n#POC Details:\n\nThe POC will execute the following javascript code on ```sms-be-vip.twitter.com```:\n```html\n<script>eval(atob('YWxlcnQoJ1hTUyBQT0MnKTthbGVydCgnRG9tYWluOiAnK2RvY3VtZW50LmRvbWFpbik7YWxlcnQoJ1lvdXIgQ29va2llczpcbicrZG9jdW1lbnQuY29va2llKTt0b3AubG9jYXRpb24uaHJlZj0naHR0cDovL2V4YW1wbGUuY29tJzs='))<\\/script>\n```\n\nThe Base64 value of the payload is:\n```\nalert('XSS POC');alert('Domain: '+document.domain);alert('Your Cookies:\\n'+document.cookie);top.location.href='http://example.com';\n```\n\nSo the POC will execute 3 JavaScript statements in sequence .\n\n1. Alert for ``document.domain```\n2. Alert for ```document.cookie```\n3. Redirect to ```http://example.com```\n\nI've attached also the XSS POC code.\n\nKindly check and review it.\nThanks in advance!",
+            "automated_response": false,
+            "created_at": "2016-07-22T01:33:31.879Z",
+            "updated_at": "2016-07-22T01:33:31.879Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 106547,
+                    "filename": "Twitter-XSS-POC.html",
+                    "type": "text/html",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/106/547/f86f3e5db00d363ac11eb894f4256308670e4f72/Twitter-XSS-POC.html?response-content-disposition=attachment%3B%20filename%3D%22Twitter-XSS-POC.html%22%3B%20filename%2A%3DUTF-8%27%27Twitter-XSS-POC.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T081128Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=6a8181633d25a115efb455cf067435183faff1ede863f012fea2b846314cb6ce"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1082867,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugReopened",
+            "message": "Thanks for the follow up and your patience. We're reopening this ticket to take another look at the issue. We'll be sure to update you as soon as we have more information.\n\nThanks for thinking of Twitter security.",
+            "automated_response": false,
+            "created_at": "2016-07-22T20:12:41.505Z",
+            "updated_at": "2016-07-22T20:12:41.505Z",
+            "actor": {
+                "username": "bugtriage-rob",
+                "cleared": false,
+                "verified": false,
+                "url": "/bugtriage-rob",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1086286,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Thank you for your report. We believe it may be a valid security issue and will investigate it further. It could take some time to find and update the root cause for an issue, so we thank you for your patience.\n\nThank you for helping keep Twitter secure!",
+            "automated_response": false,
+            "created_at": "2016-07-25T17:44:26.000Z",
+            "updated_at": "2016-07-25T17:44:26.000Z",
+            "actor": {
+                "username": "andrewsorensen",
+                "cleared": false,
+                "verified": false,
+                "url": "/andrewsorensen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1088920,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "We consider this issue to be fixed now. Can you please confirm?\n\nThank you for helping keep Twitter secure!",
+            "automated_response": false,
+            "created_at": "2016-07-26T18:05:27.752Z",
+            "updated_at": "2016-07-26T18:05:27.752Z",
+            "actor": {
+                "username": "andrewsorensen",
+                "cleared": false,
+                "verified": false,
+                "url": "/andrewsorensen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "secgeek",
+                "url": "/secgeek"
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1089156,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\nI can confirm it's fixed and i can't reproduce it anymore.\ni want to know is it illegible for a bounty ?\nThanks! ",
+            "automated_response": false,
+            "created_at": "2016-07-26T19:08:06.476Z",
+            "updated_at": "2016-07-26T19:08:06.476Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1089560,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "We'll follow up with details about the bounty (as appropriate) later this week.",
+            "automated_response": false,
+            "created_at": "2016-07-26T22:34:07.095Z",
+            "updated_at": "2016-07-26T22:34:07.095Z",
+            "actor": {
+                "username": "andrewsorensen",
+                "cleared": false,
+                "verified": false,
+                "url": "/andrewsorensen",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1089694,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you!, i'll be waiting for it :)",
+            "automated_response": false,
+            "created_at": "2016-07-27T00:01:55.114Z",
+            "updated_at": "2016-07-27T00:01:55.114Z",
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1096050,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Thanks again for helping us keep Twitter safe and secure for our users!",
+            "automated_response": false,
+            "created_at": "2016-07-29T18:16:56.979Z",
+            "updated_at": "2016-07-29T18:16:56.979Z",
+            "actor": {
+                "url": "/x",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "X (Formerly Twitter)"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "x",
+            "collaborator": {
+                "username": "secgeek",
+                "url": "/secgeek"
+            }
+        },
+        {
+            "id": 1096610,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Thanks for the bounty!\nWould you mind if we publicly disclose this ?",
+            "automated_response": false,
+            "created_at": "2016-07-29T23:44:59.883Z",
+            "updated_at": "2016-07-29T23:44:59.883Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "secgeek",
+                "cleared": false,
+                "verified": false,
+                "url": "/secgeek",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/565/4dd20af2a2a1657bc1a6e150240fb1822a08f0fa_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        },
+        {
+            "id": 1158790,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-08-28T23:45:09.973Z",
+            "updated_at": "2016-08-28T23:45:09.973Z",
+            "actor": {
+                "url": "/x",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "X (Formerly Twitter)"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "x"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

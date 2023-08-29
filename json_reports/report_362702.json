@@ -1,0 +1,799 @@
+{
+    "id": 362702,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjI3MDI=",
+    "url": "https://hackerone.com/reports/362702",
+    "title": "XSS in express-useragent through HTTP User-Agent",
+    "state": "Closed",
+    "substate": "informative",
+    "readable_substate": "Informative",
+    "created_at": "2018-06-06T11:28:49.469Z",
+    "submitted_at": "2018-06-06T11:28:49.469Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": true,
+        "username": "b9b86c2fc8409c628fb3de6",
+        "url": "/b9b86c2fc8409c628fb3de6",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 23949,
+        "url": "https://hackerone.com/nodejs-ecosystem",
+        "handle": "nodejs-ecosystem",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "disabled",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Node.js third-party modules",
+            "twitter_handle": "",
+            "website": "https://nodejs.org/en/security/",
+            "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [
+        "CVE-2018-9863"
+    ],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-07-06T13:34:36.850Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-07-06T13:34:36.730Z",
+    "team_member_agreed_on_going_public_at": "2018-07-06T10:37:28.062Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hello, \n\nI would like to report an XSS in express-useragent  module  due  a lack of validating User-Agent header. Please note I already created an [Github issue](https://github.com/biggora/express-useragent/issues/98) and asked for CVE ( [CVE-2018-9863](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-9863)). I did not know about Node.js third-party modules on hackerone.\n\n## Description\nexpress-useragent is simple NodeJS/ExpressJS middleware exposing User-Agent details to your application and views. Basically it parses User-Agent and return it in structured JSON format.\n\n## The issue\nwhile parsing User-Agent there are no escaping or sanitization mechanism. User-Agent header is controlled by the user. An attacker can craft a malicious script and inject it through the HTTP header.\n\n## Steps to reproduce\n* git clone https://github.com/biggora/express-useragent \n* cd express-useragent\n* ```node test/http.js```  (an HTTP server should listen on 3000 tcp)\n* ```curl \"http://localhost:3000\" -H 'User-Agent: <script>alert(\"XSS\")</script>' > poc.html```\n* open poc.html with your favorite web browser\n* you should see an alertbox popup \n\n### Proof of concept (screenshots)\n{F305913}\n{F305914}\n\n### Proof of concept with a fix (video) {F305912}\n\n## Mitigation\nCorrectly escape and sanitize user input ( HTTP User-Agent ). Please note I proposed a fix in the video\n\n## Impact\n\nAn attacker could execute javascript code that could lead to XSS.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 305912,
+            "file_name": "express_useragent_xss.mkv",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/305/912/8c4e45709d9acdfbb5f4a707c76fc698192695a3/express_useragent_xss.mkv?response-content-disposition=attachment%3B%20filename%3D%22express_useragent_xss.mkv%22%3B%20filename%2A%3DUTF-8%27%27express_useragent_xss.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=36eed83a02e494ff76ad6226d13991fc6290a32d5f0d3800e2fa9e1457dd91ae",
+            "file_size": 10922503,
+            "type": "video/x-matroska"
+        },
+        {
+            "id": 305913,
+            "file_name": "Screenshot_from_2018-04-09_18-50-35_(1).png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/305/913/2cf634e9d3228e78c63df9b9457467db928168b8/Screenshot_from_2018-04-09_18-50-35_%281%29.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2018-04-09_18-50-35_%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2018-04-09_18-50-35_%25281%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4680b117fe72edfff0de772ed7bf46f6be983e9694d859f6202093b92a2dad8e",
+            "file_size": 16277,
+            "type": "image/png"
+        },
+        {
+            "id": 305914,
+            "file_name": "Screenshot_from_2018-04-09_18-51-21_(1).png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/305/914/8773f06a8e47477582c406f804456e7c06e028cd/Screenshot_from_2018-04-09_18-51-21_%281%29.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2018-04-09_18-51-21_%25281%2529.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2018-04-09_18-51-21_%25281%2529.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3b86c65ec5c9a4886b6ddb7fcc99d9f77ebdb2c198048139ff45531958529774",
+            "file_size": 49524,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 3,
+    "voters": [
+        "b9b86c2fc8409c628fb3de6",
+        "ozymanberg",
+        "0xcyber-pirate"
+    ],
+    "structured_scope": {
+        "databaseId": 11571,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "express-useragent",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2894629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-16T18:53:36.963Z",
+            "updated_at": "2018-06-16T18:53:36.963Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2894646,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @ibrahimd \n\nThanks for reporting this issue.\nI will invite the package maintainer to this issue.\n\nI'm not sure I follow the actual vulnerability. The POC happens when the useragent string is sent back to the client that requests it. The purpose of the middleware is to parse useragent data and it will be odd to escape it in the middleware.\n\nIMO it will be the responsibility of the user using this middleware to understand which context it is used and escape it properly (it can be JSON, markdown, HTML, JS, etc)",
+            "automated_response": false,
+            "created_at": "2018-06-16T18:58:57.143Z",
+            "updated_at": "2018-06-16T18:58:57.143Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2896719,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-17T15:35:10.728Z",
+            "updated_at": "2018-06-17T15:35:10.728Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2896723,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree with @lirantal.",
+            "automated_response": false,
+            "created_at": "2018-06-17T15:38:37.778Z",
+            "updated_at": "2018-06-17T15:38:37.778Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2896954,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\nSorry for the slow response. I agree with @lirantal:\n```\nIMO it will be the responsibility of the user using this middleware to understand which context it is used and escape it properly (it can be JSON, markdown, HTML, JS, etc)\n```\nBur here is the catch, I think that @bougakovgeorge should at least escape greater/less sign **<>** from the user agent value. By removing *<>* most if not all XSS vectors that require **<>** won't work. \nHere is a list of some user agents:\n* Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0\n* Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0\n* Mozilla/5.0 (TV; rv:44.0) Gecko/44.0 Firefox/44.0\n\nAs you can see on the above list none of the user agent contains **<>* *, we could use a white list of allowed characters to minimize  XSS injection. I would like to suggest to update provided examples on github showing a secure way on how to implement the middleware for both client/server side.\n\nServer side:\n\nAs we know the middleware returns a JSON so we should set this HTTP HEADER `Content-Type: application/json` to prevent an XSS to be executed in modern web browsers.\n\nClient side:\n\nHere, its more complicated because it really depends on how the developer will use the return valued. Its more about which context the value will be reflected but in any case the user should sanitize the returned value before outputting/reflecting it.\n\nIf you need more information let me know,\n@ibrahimd  ",
+            "automated_response": false,
+            "created_at": "2018-06-17T18:02:53.242Z",
+            "updated_at": "2018-06-17T18:02:53.242Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2897154,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You must be mistaken. I am NOT the maintainer of the library, I just responded to your issue. @biggora (https://github.com/biggora) is the maintainer.",
+            "automated_response": false,
+            "created_at": "2018-06-17T20:58:29.808Z",
+            "updated_at": "2018-06-17T20:58:29.808Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2897169,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @bougakovgeorge,  my apologies, I thought you were the maintainer, because @lirantal  said that he will invite the package maintainer.",
+            "automated_response": false,
+            "created_at": "2018-06-17T21:06:44.847Z",
+            "updated_at": "2018-06-17T21:06:44.847Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2897172,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bougakovgeorge  I have also invited Alexy but unfortunately he hasn't yet joined this issue. If you're able to ping him we'll appreciate it.\n\n@ibrahimd updating the examples is ok. About blacklisting the < > it's again up to the maintainer's since one can argue that it is a free text field (there's nothing that forbids those chars as far as I know).",
+            "automated_response": false,
+            "created_at": "2018-06-17T21:13:54.356Z",
+            "updated_at": "2018-06-17T21:13:54.356Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2960498,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-06-29T21:51:22.992Z",
+            "updated_at": "2018-06-29T21:51:22.992Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "useragent",
+            "new_scope": "express-useragent",
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2960499,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ibrahimd I tried inviting the author again.\nIf there will be no sign from him on this report during next week I will proceed with closing this report as informative.\n\nIf you're able to help contact him and ask him to join this conversation I will greatly appreciate it so we can check with him about adding security disclosures in the README and updating the examples.",
+            "automated_response": false,
+            "created_at": "2018-06-29T21:53:00.466Z",
+            "updated_at": "2018-06-29T21:53:00.466Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2965905,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@lirantal  thanks for the update.\n\nI'm a little bit disappointed with the idea if we can't get the module author to participate to this thread during the next week, you will close the report as `informative`. I work hard to report only valid bugs to rise my hackerone's signal and reputation. \n\nIn the end I will gladly accept your final decision.  \n\nI'll send him a PR, he seems to be responsive to pull requests, in the description section I'll explain our situation here.",
+            "automated_response": false,
+            "created_at": "2018-06-30T12:00:09.986Z",
+            "updated_at": "2018-06-30T12:00:09.986Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2966103,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ibrahimd I will follow-up and do my best to get him on the conversation. I saw already that you opened the issue in their repository and there wasn't any response from the author, only from a contributor who isn't stepping in to fill the gap so we'd need the module maintainer for this.\n\nWill definitely appreciate if you can also ping him and get him to join this conversation.",
+            "automated_response": false,
+            "created_at": "2018-06-30T15:01:16.099Z",
+            "updated_at": "2018-06-30T15:01:16.099Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2966779,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I would totally help you fix it, I just can’t imagine and/or replicate the issue with just a browser.",
+            "automated_response": false,
+            "created_at": "2018-06-30T22:06:49.877Z",
+            "updated_at": "2018-06-30T22:06:49.877Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2968349,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bougakovgeorge reproduction steps using a browser:\n1. install [User-Agent Switcher - chrome extension](https://chrome.google.com/webstore/detail/user-agent-switcher/clddifkhlkcojbojppdojfeeikdkgiae?hl=en)\n2. create a new user-agent\n3. name your new user-agent whatever you want  {F314226}\n4. set user-agent value to: `<script>alert(0)</script>`  {F314226}\n5. select the new user agent \n6. start one of the test examples: `node test/express.js`\n7. browse: `http://localhost:3000` using chrome\n8. the XSS value will be reflected but not triggered due the fact its reflected inside JSON context.\n\nFrom here we know that the user agent is not sanitized, let's edit one of the examples (express.js) simulating a scenario of developer who want to display the user agent of the visitor:\n\n1. edit test/express.js:\n\n```javascript\n...\napp.get('/', function (req, res) {\n    res.send(\"User-Agent: \" + req.useragent.source);\n});\n...\n```\n2. save changes and run again the server: `node express.js`\n3. visit `http://localhost:3000` using chrome (make sure user-agent switch is on and using custom payload)\n4. XSS window should pop up. {F314225}\n\n@lirantal I am sure you're doing your best, I'll do my best as well. If you need anything else please let me know.",
+            "automated_response": false,
+            "created_at": "2018-07-01T11:19:30.526Z",
+            "updated_at": "2018-07-01T11:19:30.526Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 314226,
+                    "filename": "User-Agent_switcher-new_user-agent.PNG",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/314/226/46a757f7678d9bc23f46fd3b502a73b8236a07af/User-Agent_switcher-new_user-agent.PNG?response-content-disposition=attachment%3B%20filename%3D%22User-Agent_switcher-new_user-agent.PNG%22%3B%20filename%2A%3DUTF-8%27%27User-Agent_switcher-new_user-agent.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7b8ad891960ee96e7eb7c5ed1b982ca2d942e597c29f948ade3f1b9dee0b804a"
+                },
+                {
+                    "id": 314225,
+                    "filename": "User-agent_XSS-popup.PNG",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/314/225/a76578c5b52dbd4944a3da8ff86fa850008bb1c3/User-agent_XSS-popup.PNG?response-content-disposition=attachment%3B%20filename%3D%22User-agent_XSS-popup.PNG%22%3B%20filename%2A%3DUTF-8%27%27User-agent_XSS-popup.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3LG6RZDL%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T073936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIEJdTZfeKApP2QS7QGiB0WEdU4pYq%2FsRbpdwPy2QyNAeAiEAmgtLgdwqFXMBVHr7gfKhZwYKoScAzlOtnFSHF25tz%2FUquwUIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDOF9JtZ4gkfpfs%2BDSyqPBeDmRTGOk%2FQ0Lp4UDtYHCYRdXC3RScdKv49e48LePEUQFXzscb2IHgIHyRGNZoAUqXYVhAUbTajcOPmHcZ93%2FOeX9JmoWmtzA24A2Hq74bOzGyNbUiV5V0PnMAyxfHC%2Br%2FN5nLc%2BrKOa1iur3rZuolDaW2qQae4zTcR3h47ugYPBwueCw0%2BOwpJwXIS%2BGBe8Y5F5E6J3E95sXR1FwTk%2F3o3uIwry60pn4YOrV4QMv%2BU%2FEQkgTGeFl%2FGOmAPKV9FEDXIzD5ctWPRMSDRGMHlMsvFRQkHdbAHzCBDsMt63iPa2gEzAIXjQo9Okb53zq3hhq8rDrKIOjCHNM84Kj2lz%2BPW4zyhbGJUlkG7Hys5go92k7P469aY%2F%2FRwJenDUbrAe1qz2OWKVLrrWxNfaBDjogaQO3sj4usfn1yOuDpmEoPnvjSdgsF3C69t7QLqopNArierFJkQ6C4e0P8l0e5xVmJhsKXvDGoEe1n3mMkTFubO6yCQaRW%2BIT6ld%2Btnv02IgwbxWh3Ycyu6ykGuvGpAe2NRP8jjunjuupvvkfgU0wIMQ%2FGW9sk7LZC0l%2FcxtxdFUB7tyNgRXsKFMao8Zd8oefA4g8pB2uRU%2B69%2Fq46h3aTIUpetFDYBd3TkVrK492zxQ3uogGwX7osKLzU5nxch7eG%2B507P8wTK7KWrQKIM6tTKvc3M%2BTLPvEUU7cYQJ3qyhU5lqDhH9I5qW5OaZo54eJJIFvbEoqk3C4LHxDmDrhJLhktAdD1A8bt4uGwkAxrPv6E7e1%2FSfPwOca05sA9Z6wendh89z1R5rtTDMaxV9%2FUxY0wmjd3NeqjN1XwZnJbQhCGGvfJ6E%2BqwvMd0APQc3Z%2FlWR2dqTc5FrkmCQui4IA4w9Zi2pwY6sQE7wRj1Oxg0O8u8POt7PWf8qRtqLFUvU0cLSS8IMZ5a9SYmyVvhbg5r3BwIvqmz2BgNOR%2B11zEEaur7aC64OW1EKG2unPxmYrlpvv%2FCy9GR3IVoMLibd5H3WUvuYXqG%2FPEKyB3eksXE0Eaz6H5kncua8L1Zrqa7oAlcN7T1dY%2F22nfPExln5a%2FCdZHrRkAzxGsqqgRGKV1qY4%2F6jqdnZRQPEFgdD2zWD1G5xqCRcryq1Og%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9247ccb0d6d5c4418e82b9187154171d82f623e72aae390158f25a152e62787c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2968377,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "You can switch your UA without any extensions, but only an idiot will switch his user agent to ‘<script>maliciouscode();</script>’ and visit a JSON page. Also, if a web developer needs to see what browser user uses, they can see the UA string using ‘window.navigator.useragent’ which is perfectly safe.\nAlso, AFAIK HTTP protocol specification does not forbid <> characters and escaping and/or them will be a violation of specification.",
+            "automated_response": false,
+            "created_at": "2018-07-01T11:53:53.095Z",
+            "updated_at": "2018-07-01T11:53:53.095Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2968628,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bougakovgeorge Let's try to keep it civilized and respectful. We all have good intentions.\nRegardless to a fix or not, do you agree to add a disclaimer in the README ?",
+            "automated_response": false,
+            "created_at": "2018-07-01T16:23:11.522Z",
+            "updated_at": "2018-07-01T16:23:11.522Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2968893,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I also have good intentions, and a disclaimer can be nice, but I just can’t imagine a **real** scenario where this exploit can be used and executed. I also think that if you patch this library to escape these symbols, you need to make it an option and don’t force it. Also, I don’t think that this module is still maintained and [I repeat] I am not the maintainer or a contributor of this module. I just wanted to use it in my service, implemented it and wanted to open an issue and a pull request to add macOS Mojave support and I just saw your issue and expressed my opinion. Sorry for any misunderstanding caused.\n\nSide note: Is your main goal “to rise my (ibrahimd’s) hackerone's signal and reputation.”? It’s kinda strange...",
+            "automated_response": false,
+            "created_at": "2018-07-01T18:00:31.922Z",
+            "updated_at": "2018-07-01T18:00:31.922Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2968988,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@bougakovgeorge I appreciate your involvement in the conversation, though I don't like that insinuation in that side note. Maybe you need to read my comment https://hackerone.com/reports/362702#activity-2894646 again.\n\nThank you for your contribution in triaging the security report.",
+            "automated_response": false,
+            "created_at": "2018-07-01T19:00:58.359Z",
+            "updated_at": "2018-07-01T19:00:58.359Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2969088,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I didn’t mean to insult anyone, but Ibrahim wrote the exact thing I included in the side note. Is there any way I can leave this conversation because I am totally the wrong guy to be here. I am not a maintainer, I don’t even have write access to the repo, so can you please exclude me from this mailing list?",
+            "automated_response": false,
+            "created_at": "2018-07-01T20:32:07.999Z",
+            "updated_at": "2018-07-01T20:32:07.999Z",
+            "actor": {
+                "username": "ba3142c38d7de2241d2c522",
+                "cleared": false,
+                "verified": false,
+                "url": "/ba3142c38d7de2241d2c522",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2969157,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sure, I'll go ahead and remove you from the thread.\nThanks for joining in the first place and willing to help!\n",
+            "automated_response": false,
+            "created_at": "2018-07-01T21:26:00.915Z",
+            "updated_at": "2018-07-01T21:26:00.915Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2969160,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-01T21:26:10.902Z",
+            "updated_at": "2018-07-01T21:26:10.902Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/ba3142c38d7de2241d2c522",
+                "username": "ba3142c38d7de2241d2c522"
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2998151,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@lirantal as you could noticed, four days ago  I tried to reach out the owner of the module on twitter, no response yet. This morning I sent him a message on facebook waiting for a feedback. I think that's the best I can do in this situation.  ",
+            "automated_response": false,
+            "created_at": "2018-07-06T08:22:45.129Z",
+            "updated_at": "2018-07-06T08:22:45.129Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2999158,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Agree.\nShould we go ahead and resolve this report as informative and disclose it?",
+            "automated_response": false,
+            "created_at": "2018-07-06T10:16:15.081Z",
+            "updated_at": "2018-07-06T10:16:15.081Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2999466,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Yes, go ahead.",
+            "automated_response": false,
+            "created_at": "2018-07-06T10:33:50.577Z",
+            "updated_at": "2018-07-06T10:33:50.577Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2999477,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Closing report.",
+            "automated_response": false,
+            "created_at": "2018-07-06T10:37:11.446Z",
+            "updated_at": "2018-07-06T10:37:11.446Z",
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 2999478,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-06T10:37:28.097Z",
+            "updated_at": "2018-07-06T10:37:28.097Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "lirantal",
+                "cleared": false,
+                "verified": false,
+                "url": "/lirantal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3000160,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-06T13:34:36.773Z",
+            "updated_at": "2018-07-06T13:34:36.773Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        },
+        {
+            "id": 3000161,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-07-06T13:34:36.894Z",
+            "updated_at": "2018-07-06T13:34:36.894Z",
+            "actor": {
+                "username": "b9b86c2fc8409c628fb3de6",
+                "cleared": false,
+                "verified": false,
+                "url": "/b9b86c2fc8409c628fb3de6",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "nodejs-ecosystem"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

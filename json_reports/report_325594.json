@@ -1,0 +1,458 @@
+{
+    "id": 325594,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMjU1OTQ=",
+    "url": "https://hackerone.com/reports/325594",
+    "title": "Leakage badges on disabled user",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2018-03-13T17:22:10.328Z",
+    "submitted_at": "2018-03-13T17:22:10.328Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "e333jsjs7se",
+        "url": "/e333jsjs7se",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 13,
+        "url": "https://hackerone.com/security",
+        "handle": "security",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "HackerOne",
+            "twitter_handle": "Hacker0x01",
+            "website": "https://hackerone.com",
+            "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-03-15T09:29:12.291Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-03-14T09:08:42.715Z",
+    "team_member_agreed_on_going_public_at": "2018-03-15T09:29:12.175Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "﻿**********************************************\n                                  Indonesia Here ;)\n**********************************************\n\n*Hi HackerOne Team,*\n\n**Description:**\nThis attack occurs when an attacker uses this graphql code:\n\n\nand this builds the path of the attacker getting disclosure information about how many programs already in the close Resolved from the Public or Disable user.\n\nokay now I do not say if the Public User just open the username profile page target will also look hacktivity that has been already Resolved or already sent bounty (bounty awarded).\n\nbut what if you open a username that is disabled? (disabled) you can not see the user page profile, and this bug can see badges username disabled.\n\nThis means that anyone who gets 10 badges means that you have submitted a report to 10 Program Handles. (This applies also to Public users)\n\n##POC:\n*  for the first I will enum and check username disable or not through UserID. POST /graphql\n\n```\n{\n  \"query\": \"query Profile_settings_MeRelayQL($id_0:ID!,$size_1:ProfilePictureSizes!) {\\n  node(id:$id_0) {\\n    id,\\n    __typename,\\n    ...F0\\n  }\\n}\\nfragment F0 on User {\\n  id,\\n  username,\\n  disabled,\\n  bio,\\n  location,\\n  website,\\n  _profile_picture:profile_picture(size:$size_1),\\n  website,\\n  next_update_username_date\\n}\",\n  \"variables\": {\n    \"id_0\": \"Z2lkOi8vaGFja2Vyb25lL1VzZXIvMzA5\",\n    \"size_1\": \"xtralarge\"\n  }\n}\n```\n**for example \nI use @alex-rice UserID 15  or @janpaul123 UserID 309\ngid://hackerone/User/309\ngid://hackerone/User/15**\n\nBody Response:\n\n```\n{\n  \"data\": {\n    \"node\": {\n      \"id\": \"Z2lkOi8vaGFja2Vyb25lL1VzZXIvMzA5\",\n      \"__typename\": \"User\",\n      \"username\": \"janpaul123\",\n      \"disabled\": true,\n......\n......\n......\n}\n  }\n}\n```\nwell user ```janpaul123``` disabled. \n\n* then if you open the user profile page will not appear. https://hackerone.com/janpaul123\n\n**let's get to the point:**\nPOST /graphql\n\n\n```{\"query\":\"query User_badges($first_0:Int!) {\\n query {\\n id,\\n ...F0\\n }\\n}\\nfragment F0 on Query {\\n _user:user(username:\\\"janpaul123\\\") {\\n username,\\n _badges:badges(first:$first_0) {\\n edges {\\n node {\\n id,\\n created_at,\\n badge {\\n name,\\n description,\\n image_path,\\n id\\n }\\n },\\n cursor\\n },\\n pageInfo {\\n hasNextPage,\\n hasPreviousPage\\n }\\n },\\n id\\n },\\n id\\n}\",\"variables\":{\"first_0\":100}}```\n\nAnd Response Body: ( I made it short. )\n```\n\"created_at\": \"2016-06-15T10:03:25.319Z\",\n                \"badge\": {\n                  \"name\": \"Publish or Perish\",\n                  \"description\": \"Publicly disclosed a report\",\n\n\"created_at\": \"2013-11-07T22:54:43.947Z\",\n                \"badge\": {\n                  \"name\": \"Hacking Hackers\",\n                  \"description\": \"Hacked HackerOne\",\n\n\"created_at\": \"2013-11-07T22:54:43.947Z\",\n                \"badge\": {\n                  \"name\": \"Insecticide\",\n                  \"description\": \"First report closed as resolved\",\n\n\"created_at\": \"2013-11-29T22:31:21.260Z\",\n                \"badge\": {\n                  \"name\": \"Bounty Hunter\",\n                  \"description\": \"First bounty received\",\n```\n**this means that there are only 4 handle programs that have been completed by** ```janpaul123```\n\n**Maybe you will ask me can you see the handle completed there (resolved)?\nI will reply: Of course I can not see the handle that has been resolved.**\n\n**and if according to your discussion there is nothing about security, then why I can see a badge of user profile page that can not be seen publicly.**\n\n*sorry if there is my writing is wrong, please understand my english bad, I use google translate hahaha*\n\n*Best Regards,*\n@terlupakan\n\n## Impact\n\nDepending on the context in which it is used, an attacker can see the badges and the description.\nbut this user is disabled, but the attacker can still see it.",
+    "weakness": {
+        "id": 18,
+        "name": "Information Disclosure"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 7,
+    "voters": [
+        "apapedulimu",
+        "kunal94",
+        "b07b97e2b8dc9d79d7de0bd",
+        "0619",
+        "e333jsjs7se",
+        "someonelikemark",
+        "indonesiamerdeka1945"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 3,
+        "asset_type": "URL",
+        "asset_identifier": "hackerone.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2488922,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "if you guys close this as a duplicate #29185 ( https://hackerone.com/reports/29185 )\n\nSince I started poc with enum User, of course this behavior is wrong.\n\nBecause of this report, it's useful for checking disabled users.\n\n**Sorry** for my many words, please understand, because many my reports are closed **N/A** because of little talk.\n\n*Best Regards,*\n@terlupakan",
+            "automated_response": false,
+            "created_at": "2018-03-13T18:05:25.387Z",
+            "updated_at": "2018-03-13T18:05:25.387Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2490678,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @e333jsjs7se, \n\nThank you for your submission! Getting badges information of any user including disabled user doesn't post any security risk and we are fine with current behavior, hence closing this submission as Informative.\n\nRegards.",
+            "automated_response": false,
+            "created_at": "2018-03-14T08:08:37.323Z",
+            "updated_at": "2018-03-14T08:08:37.323Z",
+            "actor": {
+                "username": "chessmast3r",
+                "cleared": false,
+                "verified": false,
+                "url": "/chessmast3r",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/220/459/6b3c5fca9df9cde7fe36b55238b13d2cea86ea80_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2491114,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @chessmast3r \nseems reasonable if we reveal this to the public because my signal becomes bad because of this? what do you think?",
+            "automated_response": false,
+            "created_at": "2018-03-14T09:08:42.758Z",
+            "updated_at": "2018-03-14T09:08:42.758Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2491756,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @chessmast3r @security \nfor now I can see hacktivity in disabled user.\nif you say just open hacktivity in handles yeah it is true there but long time to look for it.\n\nas an example:\nhttps://hackerone.com/hacktivity?sort_type=latest_disclosable_activity_at&filter=from:janpaul123&page=1&range=forever\n{F272301}\n\n###if it does not appear please click back in your browser.\n\n*Best Regards,*\n@terlupakan",
+            "automated_response": false,
+            "created_at": "2018-03-14T13:18:52.596Z",
+            "updated_at": "2018-03-14T13:18:52.596Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 272301,
+                    "filename": "Screenshot_20180314-201518.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/272/301/88999f6c9eae786b98ec0d3bbba1c8246e97d887/Screenshot_20180314-201518.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_20180314-201518.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_20180314-201518.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6BUFUEE%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074113Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDD9FHXU0ld2gtz64ZpnjlAw950FEQMqICGzFbRk4pC0AIhAMguqPvT6svEZTrq0b2WG76XHZFVJtNfIkDZQTZEBAWsKrsFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5IgygpHklaEgyfIVznI8qjwWOIdWktDm9Jabt75qlpVIMtXS%2FssDvdH3liIUrqSO%2Fn2cugELxTHsITAFkdxtpuIqUfC022kq1x7KnVsJ8dbHLeYcjqR%2BmyMsSM7Xr6UnozwhB4Y9cX%2F6UxIQ4Shov2Zz%2B4D9ygjyO8TAHyL4iD%2B6CaUtaTRDQPU4E5CflxhSrTzcxVSW%2BqeTqxyYZggcMEnSIhCb9IgOZ920mfAKlQNAc9hEp1VBpmPzgJ45%2F2pnRD4bAeZccOTQ2N7ai9tDdrydJZNrpSPB7gPdG8BDlQdEVpOmjIqxieGAy0zoKfSOl%2F5VHAxD0l8CodVdcp4kMEcdDDDNKGFD%2BYvWC25TJ5mw59Uk5USrQymohsM1fenBd610Hv6tbF2BGQAVrViDT2nJXnDxNQyRmqsIbJeitdGdnlpUpx45ObdZIcNmzHof%2FPv%2FVqoTgI06D0Wk6Z63VBvlhxWqLe%2BSaLcx2GAU%2Fy14hWDJEf7ZqhZ%2BM9OJtRIxfWXKISDxoTmTfZp%2F5B%2FiqubY1RL%2FDk%2BkMTxMcbSGw43o6kyeDbQbyyaDtV%2BYAWvx%2BSe9%2FhRFQPmqTdKCb%2BT23vEPLhAJ2vYsQ%2BTTeLcxLwsZ3TUOVQTBnE3%2FUfsxEMeVHPai2qUl0CGsun0HgjD95lQIzmeHal%2B%2BEP6LBM8JhmIfrmEmxecDlEpJEWMvTnef%2FUlhfSrGHNndRTanOi%2BSbxAkMtWE84y5d6km2hMzs9vO8ITHcwoDqJD9MHDjIWYVJG9MlQbnFckuSFWS1rIVtaRMcayfrXSfW9hMolo%2BRqzfol8wiNwiDk%2FCKe151LpjhbW4NYcVDBPgw8tG9ATi5pkPIxbtfE3grt%2BpRK%2Faq2%2F5BArkGIJcrN5tzOoFCLeiuMLOltqcGOrABo0TqeJmB%2BrDGBqaoTHwPAvK4%2FwgcpFFUm8NwdvRQDqlRqJax0yb%2BBe6w2ez9ShfsMMqJTOyg4Y%2FE%2BuAcIW10gTr%2BvpIXBkF%2F8x6GDpOA2qbdCvafgrSufD%2B5I4%2BvTz5e4TgiIX3QWw7OH4QNLX1OUdaUk3t0Pz5pXzlKIOWV579ZeH8AP1NSW2e%2Fj%2B8nGME4HiDOlB%2BZW%2FO8raM%2BngBp42hfPK0q4CctRMJh8z2fdSQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1ae2581ff8ab3d2eedc6c1a2a810eb1c3a340eb837e0c5c3fb7b9a7d5d3b69d9"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2491770,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**This behavior shows because the number of users who perform the user disabled action for not to be seen again. then why is this seen?**\nThanks you **HackerOne.**",
+            "automated_response": false,
+            "created_at": "2018-03-14T13:23:46.382Z",
+            "updated_at": "2018-03-14T13:23:46.382Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2491780,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "and in **HackerOne** ```filter hacktivity``` only exists\n1. Disclosed\n2. Bounty Bug\n3. All\n\n\nThen why does this only show ```From:/UserName``` only ????\n\n*Best Regards,*\n@terlupakan",
+            "automated_response": false,
+            "created_at": "2018-03-14T13:27:37.505Z",
+            "updated_at": "2018-03-14T13:27:37.505Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2491871,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @e333jsjs7se - thanks for following up, but this is something we're fine with. These badges don't pose a security risk. We're not going to do anything here. Regarding the filter: we use that one for the Hacktivity feed on the user's profile. The reports remain accessible, which is why the Hacktivity feed can still be queried. The fact that we don't expose that in the UI doesn't mean that it's a security vulnerability. Thanks again and happy hacking!",
+            "automated_response": false,
+            "created_at": "2018-03-14T14:02:22.841Z",
+            "updated_at": "2018-03-14T14:02:22.841Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2492127,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jobert \nbut there is something that confuses me, even when the user is disabled.\nthe user's profile page can not be opened, then the reputation and rank become blank not visible. and then why not everything in full?\n\nThen what is the use of disabled feature (Disable Account)? \nand also I know if this does not become sensitive information but does not hackerone attach importance to the customer (Research)??\nBecause with the behavior as above I think there is no benefit to perform the feature Disable account.\n\nThanks you again.",
+            "automated_response": false,
+            "created_at": "2018-03-14T15:35:19.408Z",
+            "updated_at": "2018-03-14T15:35:19.408Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2492174,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "It serves multiple purposes, but the most important ones are that we don't accidentally send invites to them and that we have the ability to block users on the platform, not to hide their data on hackerone.com. We might change this again in the future, but it's not something we're going to spend any time on soon.",
+            "automated_response": false,
+            "created_at": "2018-03-14T15:54:14.255Z",
+            "updated_at": "2018-03-14T15:54:14.255Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2492190,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @jobert \nhahaha, yes it seems fair if this became my first public disclosure in *HackerOne,* what do you think?",
+            "automated_response": false,
+            "created_at": "2018-03-14T16:00:31.907Z",
+            "updated_at": "2018-03-14T16:00:31.907Z",
+            "actor": {
+                "username": "e333jsjs7se",
+                "cleared": false,
+                "verified": false,
+                "url": "/e333jsjs7se",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2494536,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hi @e333jsjs7se - my bad, I missed your disclosure request. We're fine disclosing this. Again, we may change this behavior in the future but decided not to prioritize a fix for this at this point. Until then, we'll keep this closed as informative. Thanks again for your report and we look forward to receive more reports from you in the future. Happy hacking!",
+            "automated_response": false,
+            "created_at": "2018-03-15T09:29:12.206Z",
+            "updated_at": "2018-03-15T09:29:12.206Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2494537,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-15T09:29:12.321Z",
+            "updated_at": "2018-03-15T09:29:12.321Z",
+            "actor": {
+                "username": "jobert",
+                "cleared": true,
+                "verified": true,
+                "url": "/jobert",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": true
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2495720,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserJoined",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-15T14:02:06.835Z",
+            "updated_at": "2018-03-15T14:02:06.835Z",
+            "additional_data": {
+                "report_permissions": null,
+                "duplicate_report_id": 326190
+            },
+            "actor": {
+                "username": "root007_",
+                "cleared": false,
+                "verified": false,
+                "url": "/root007_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/988/cb9ec2bc7b12e8f7f7386538ae7eb85e6209f0d4_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        },
+        {
+            "id": 2495876,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ExternalUserRemoved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-15T14:49:59.964Z",
+            "updated_at": "2018-03-15T14:49:59.964Z",
+            "actor": {
+                "username": "root007_",
+                "cleared": false,
+                "verified": false,
+                "url": "/root007_",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/988/cb9ec2bc7b12e8f7f7386538ae7eb85e6209f0d4_original.JPG/67ff39e4a58539d410215f8dba66a6070ecd205a28d2d3cc89a9223fcfd99d7c"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "removed_user": {
+                "url": "/root007_",
+                "username": "root007_"
+            },
+            "genius_execution_id": null,
+            "team_handle": "security"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

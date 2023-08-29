@@ -1,0 +1,480 @@
+{
+    "id": 1213765,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjEzNzY1",
+    "url": "https://hackerone.com/reports/1213765",
+    "title": "IDOR to pay less for coin purchases on oauth.reddit.com via /api/v2/gold/paypal/create_coin_purchase_order in `order_id` parameter ",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2021-06-01T00:08:29.474Z",
+    "submitted_at": "2021-06-01T00:08:29.625Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "yanouhd",
+        "url": "/yanouhd",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/Z1rJQbz879WRmzm9at9BmAYp/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 35710,
+        "url": "https://hackerone.com/reddit",
+        "handle": "reddit",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Reddit",
+            "twitter_handle": "reddit",
+            "website": "https://www.reddit.com",
+            "about": ""
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2021-10-21T19:50:33.525Z",
+    "bug_reporter_agreed_on_going_public_at": "2021-06-13T22:35:25.152Z",
+    "team_member_agreed_on_going_public_at": "2021-10-21T19:50:33.378Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nThis vulnerability consist of modifying the PayPal transaction ID to buy a big coin pack but paying the small price for it.\n\n## Impact:\nThe only impact here could be that you don't earn the money you deserve, and users can offer a lot of presents to other users, breaking the magic of the reddit community.\n\n## Steps To Reproduce:\nHere are the steps to reproduce : \n\n  1. Click on the PayPal button to buy the smallest package (1.99$ for 500 coins at the time of writing).\n\n  2. By intercepting requests,  you should see a POST to https://oauth.reddit.com/api/v2/gold/paypal/create_coin_purchase_order, with this body : \n`coins=500&pennies=199&correlation_id=b0fc62e4-e759-4b9e-be52-da4c926560ce`\n\n  3. The response to this request is an order_id, keep it aside. This is the order_id corresponding to a PayPal transaction with an amount of 1.99$.\n{\"order_id\": \"1CR56170K7852611T\"}\n\n  4. Cancel the order, then make a new one with a bigger package (I took the 3.99$ for 1100 coins for my tests.)\n\n  5. Keep intercepting requests until you make it to the POST /api/v2/gold/paypal/create_coin_purchase_order one.\n\n  6. Now instead of forwarding the real response, change the `order_id` of this order to the one you kept from the 1.99$ transaction.\n{\"order_id\": \"~~1CR56170K7852611T~~ **1F444042JJ523625W**\"}\n  7. You will be redirected to the PayPal transaction page with an amount of 1.99$ to pay.\n\n  8. Pay, and boom ! You paid 1.99$, but when you complete the order you will be given the amount of coins you \"purchased\" for the \"fake price\".\n\n## Supporting Material/References:\n\nIf you want to check my purchase history, here is the account I used for this exploit : u/YanvegHD (This is my personal account, I think I made a mistake and I should've used a test account, my apologise...)\n\n{F1321925}\n{F1321926}\n\n## Impact\n\nBreaks the reddit magic about rewarding people / and people kinda stealing your money.",
+    "bounty_amount": "500.0",
+    "formatted_bounty": "$500",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1321925,
+            "file_name": "reddit1.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/jrodt7nf6jytp4cs49r3h08a98nx?response-content-disposition=attachment%3B%20filename%3D%22reddit1.png%22%3B%20filename%2A%3DUTF-8%27%27reddit1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070615Z&X-Amz-Expires=2337&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=14e07875bd20630401563bbdb7ebc889b7f715ad869c97be650e278307fdcc07",
+            "file_size": 26829,
+            "type": "image/png"
+        },
+        {
+            "id": 1321926,
+            "file_name": "reddit2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dawj9ihdlkuxe94cpdevdx13zwfb?response-content-disposition=attachment%3B%20filename%3D%22reddit2.png%22%3B%20filename%2A%3DUTF-8%27%27reddit2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070615Z&X-Amz-Expires=2337&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=de9eb7575c63307995a9ce8928200863779e68588ea782199d531dec818acfe7",
+            "file_size": 80148,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 13,
+    "voters": [
+        "bombon",
+        "run_win",
+        "th4nu_0x0",
+        "naategh",
+        "yanouhd",
+        "cryptographer",
+        "shivammusic",
+        "kadialjohani",
+        "dother",
+        "pitstain",
+        "and 3 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "score": 6.1,
+        "author_type": "Team",
+        "metrics": {
+            "attack_vector": "network",
+            "attack_complexity": "low",
+            "privileges_required": "none",
+            "user_interaction": "none",
+            "scope": "unchanged",
+            "confidentiality": "none",
+            "integrity": "low",
+            "availability": "none"
+        }
+    },
+    "structured_scope": {
+        "databaseId": 18836,
+        "asset_type": "URL",
+        "asset_identifier": "oauth.reddit.com",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 11965934,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @yanouhd,\n\nThanks for your submission! \nYour report is currently being reviewed and we'll get back to you once there's more to share.\n\nBest regards,\n@antenna",
+            "automated_response": false,
+            "created_at": "2021-06-02T21:57:43.708Z",
+            "updated_at": "2021-06-02T21:57:43.708Z",
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11965950,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-02T22:01:37.720Z",
+            "updated_at": "2021-06-02T22:01:37.720Z",
+            "additional_data": {
+                "old_title": "Buy reddit coins at small price (ex: buy the 82 000 coins package for only 1.99$)",
+                "new_title": "IDOR to pay less for coin purchases on oauth.reddit.com via /api/v2/gold/paypal/create_coin_purchase_order in `order_id` parameter "
+            },
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11965952,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-02T22:01:50.302Z",
+            "updated_at": "2021-06-02T22:01:50.302Z",
+            "additional_data": {
+                "old_severity": "Medium (5.7)",
+                "new_severity": "Medium (6.1)",
+                "old_severity_id": 1102967,
+                "new_severity_id": 1105114
+            },
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11965973,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-02T22:05:31.826Z",
+            "updated_at": "2021-06-02T22:05:31.826Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 11965986,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ChangedScope",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-02T22:06:10.559Z",
+            "updated_at": "2021-06-02T22:06:10.559Z",
+            "actor": {
+                "username": "antenna",
+                "cleared": false,
+                "verified": false,
+                "url": "/antenna",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/B1a8q5ga9BZjMczKoqAbnMj5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "old_scope": "www.reddit.com",
+            "new_scope": "oauth.reddit.com",
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 12025458,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugRetesting",
+            "message": "We deployed a fix, can you please retest the bug you found?",
+            "automated_response": false,
+            "created_at": "2021-06-08T17:09:38.584Z",
+            "updated_at": "2021-06-08T17:09:38.770Z",
+            "actor": {
+                "username": "reddit_h2",
+                "cleared": false,
+                "verified": false,
+                "url": "/reddit_h2",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 12026322,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::UserCompletedRetest",
+            "message": "I now have an error message when I try to change the PayPal order_id, vulnerability fixed :)\n\nScreenshot {F1330573} ",
+            "automated_response": false,
+            "created_at": "2021-06-08T18:34:54.576Z",
+            "updated_at": "2021-06-08T18:34:54.576Z",
+            "actor": {
+                "username": "yanouhd",
+                "cleared": false,
+                "verified": false,
+                "url": "/yanouhd",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Z1rJQbz879WRmzm9at9BmAYp/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 1330573,
+                    "filename": "Capture_d__cran_2021-06-08___20.32.05.png",
+                    "type": "image/png",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/k1lf4jk3lgqdmgp5jwam7yvsni5f?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_2021-06-08___20.32.05.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_2021-06-08___20.32.05.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXZ3VBH4I%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T070615Z&X-Amz-Expires=2337&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENL%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBI80e51VSJ%2F5069VWD1jyyVWLk4qzEL1PLUVPUoHjsXAiAuxGXd%2FBGA8Tpgkac6okL4cqD1DaItU4RQxYZXpaoOBSq7BQia%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAMaDDAxMzYxOTI3NDg0OSIMTYNyrIUKOcGJzVLGKo8FUV1ee%2BJlvXAyoXo%2B5Bm9hvm32DxvsxvFPEjLLGU5xmoaP5rGwqMGsPimb3YMCY%2F%2F3JcKocoIv6n46DstqXR6cnPL5XwEXVftbhvgF%2FMJAwMm0qUJelLqqoTXyrpC1y1WYOe11pCnAu4h3eI8o%2BuAWTjxMyy8Vx1x4CEtcdRZnk3mOo9ySxHh3NFJmv2GLiUI%2BkjtSj%2FSpHDn11hs84JwQ82JFJsoYchlDEN%2Bpiae%2B4kG%2FkgYMbblAJv%2BQmQLq0DnOWsUmoUbThBrL02Uf9QqSdSWWjpndqcW%2FsUci1rXA3YZzWecyX0E7p6L93XyS7KKFwv2PR1cnTP2%2FMtxZ870Yu65KgHMJ1gOr0uwgNsZd2JV3Kfr%2BRY2CknM3AZAD%2B1bUxNSxjQpqgnDBtm7F3%2Fz4Zgh%2FM9JU3zbiqdxcMPSaIJCfu8LqHtekqT7pcEALwNbLbPdlxCNGYNMUpzvGKfQPPyGC%2FajG6pqhddDgeZn9Ksvg6NAjVXGW1ydfmjrgQifCxmHN5fnjeLJFVDke1Y7CRyBoUuv1zOUz36O4EfNbPoMQFNWfjLKX8jCCGaidt1fHw8DsPWXlSJQKGxqpAzGVFIIr34X9v7gRdEd2nVcDGyWCrNmebzN3kGwS5CmA2AfVlHMnJ5z%2FT8wcV8C1Tu75Iqy%2Brh%2F2%2B4x9zE%2FlGJUuEfJsM3kYTu1NRI5cZHDxboaDriDX7YmShUCXffZtvMwkOkqs5DYrPeeFKTgtaaqFMc6V2OEAhRjOOkyqm2nqqXf01GdhF0rFpYb%2FZbMdFeoHOwAE%2FSGrO1EBqQH3tVqYWzVi29RA32n%2BklXcAnUcbXUdygXJqt7GN6xiCbfphFc4t6O1VtJlaV3mH%2BDErh6ZDC%2Bj7WnBjqyAecx%2BcCBx03LzLaH5P87gd5lVj91I6xDHs3ll93XdslRkqBttyPGkghdEqCdyjHqAvD4yGHsc%2BC0%2Bwnq2pZGxp196cautHTg3ogiyl8IbovMYFgl4uCapWztQrP70PynJjvPk2Y5EEtbiZHyMhjJ8s1SAggtwYDOqsDy1VvbYniTD3CgOlUn0xu%2BQyd9Uk9nIDnbZti5Z8HUdTrKeEjRweYFov8Mf2T8DUO09ibYHPNYxrY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3c0b538534e2b8866cd9b837c9634e54e9e1d12ed1bfce738a64dd0b74f0568c"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 12068216,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportRetestApproved",
+            "message": null,
+            "automated_response": false,
+            "created_at": "2021-06-11T17:12:23.904Z",
+            "updated_at": "2021-06-11T17:12:23.904Z",
+            "actor": {
+                "url": "/reddit",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Reddit"
+                }
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 12068217,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-06-11T17:12:24.012Z",
+            "updated_at": "2021-06-11T17:12:24.012Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "yanouhd",
+                "url": "/yanouhd"
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 12068225,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "Awarding as a Medium, thanks @yanouhd ",
+            "automated_response": false,
+            "created_at": "2021-06-11T17:13:50.355Z",
+            "updated_at": "2021-06-11T17:13:50.355Z",
+            "actor": {
+                "url": "/reddit",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Reddit"
+                }
+            },
+            "bounty_amount": "500.0",
+            "bonus_amount": "0.0",
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "reddit",
+            "collaborator": {
+                "username": "yanouhd",
+                "url": "/yanouhd"
+            }
+        },
+        {
+            "id": 12081862,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Hello, thank you very much for the bounty ! May I request the disclosure of this report ? Thank you !",
+            "automated_response": false,
+            "created_at": "2021-06-13T22:35:25.181Z",
+            "updated_at": "2021-06-13T22:35:25.181Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "yanouhd",
+                "cleared": false,
+                "verified": false,
+                "url": "/yanouhd",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/Z1rJQbz879WRmzm9at9BmAYp/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 14001112,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-21T19:50:33.404Z",
+            "updated_at": "2021-10-21T19:50:33.404Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        },
+        {
+            "id": 14001113,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2021-10-21T19:50:33.567Z",
+            "updated_at": "2021-10-21T19:50:33.567Z",
+            "actor": {
+                "username": "gunther_reddit",
+                "cleared": false,
+                "verified": false,
+                "url": "/gunther_reddit",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/bJkGBkpS1oLzSdpXBuVHDi7f/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "reddit"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

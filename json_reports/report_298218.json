@@ -1,0 +1,369 @@
+{
+    "id": 298218,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yOTgyMTg=",
+    "url": "https://hackerone.com/reports/298218",
+    "title": "antispambot does not always escape <, >, &, \" and '",
+    "state": "Closed",
+    "substate": "informative",
+    "severity_rating": "low",
+    "readable_substate": "Informative",
+    "created_at": "2017-12-15T08:49:22.937Z",
+    "submitted_at": "2017-12-15T08:49:22.937Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "flimm",
+        "url": "/flimm",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/224/809/9473d64337fb4f05c3efb9e8f5545cb1690b1517_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 55,
+        "url": "https://hackerone.com/wordpress",
+        "handle": "wordpress",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "WordPress",
+            "twitter_handle": "wordpress",
+            "website": "https://wordpress.org/",
+            "about": "Beautiful sites of any kind."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2019-09-16T17:45:51.322Z",
+    "bug_reporter_agreed_on_going_public_at": "2019-09-16T15:07:16.990Z",
+    "team_member_agreed_on_going_public_at": "2019-09-16T17:45:51.193Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "The `antispambot` function escapes some randomly selected characters from its first argument, for example:\n\n```\n<?php\necho antispambot( 'example@example.com' );\n```\n\nThis would print out:\n\n```\nexa&#109;p&#108;&#101;&#64;&#101;xa&#109;pl&#101;&#46;&#99;o&#109;\n```\n\nSince this returns HTML, developers are not going to use `esc_html` with the return value of `antispambot`, since that would double-escape the result. Developers will assume that this function can be safely used with untrusted email addresses, which is a fair assumption. However, it turns out that `antispambot` cannot be trusted. Whether a character is escaped is randomly selected, even if the character is `<`, `>`, `&`, `\"`, or `'`. These last five characters should always be escaped.\n\nThere is a chance that this will print out unescaped:\n\n```\n<?php\necho antispambot( '<script>console.log(\"hello\");</script>');\n```\n\nEven though the chance of this happening is low, with enough repetitions this could happen eventually.\n\n`antispambot` should always escape the five sensitive characters.\n\n## Impact\n\nIf `antispambot` is being used by a plugin that passes to it untrusted input, an attacker could cause arbitrary client-side code to run. Since the probability of all of the characters remaining unescaped is low, only a small fraction of the attacks would succeed, and the attacker would need the ability to attack many times to see a few successes.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 3,
+    "voters": [
+        "sameerphad72",
+        "dstack4273",
+        "1cigano"
+    ],
+    "severity": {
+        "rating": "low",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 2750,
+        "asset_type": "SOURCE_CODE",
+        "asset_identifier": "WordPress Core",
+        "max_severity": "critical"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2247354,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi, thanks for the report, and sorry for the slow response. Have you come up with any ways to reproduce this more reliably? That would help with triage, unit tests, etc.\n\nI tried a simple loop like this, and reloaded the page a few dozen times, but never got a hit:\n\n```\nfor ( $i = 0; $i < 100000; $i++ ) {\n\techo antispambot( '<script>alert(\"hello\");</script>' );\n}\n```\n\n",
+            "automated_response": false,
+            "created_at": "2017-12-26T20:37:32.150Z",
+            "updated_at": "2017-12-26T20:37:32.150Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2251775,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Run this using `wp eval-file` and you'll get the result:\n\n```\n<?php\n$string = '<script>alert()</script>';\n\nwhile (antispambot( $string ) !== $string) {\n\n}\n\necho \"If this statement is printed, then antispambot did not escape the input.\";\n```\n\nAdmittedly, the odds of the entire string remaining unescaped get lower and lower the longer the string is, so an attacker would have to attack more and more times. But the fact that this script finishes within a minute proves that the odds are not negligible.\n\nIn any case, the fix for this is very simple (just always escape `&`, `<`, `>`, `'` and `\"`).",
+            "automated_response": false,
+            "created_at": "2017-12-29T13:27:37.049Z",
+            "updated_at": "2017-12-29T13:27:37.049Z",
+            "actor": {
+                "username": "flimm",
+                "cleared": false,
+                "verified": false,
+                "url": "/flimm",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/224/809/9473d64337fb4f05c3efb9e8f5545cb1690b1517_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2252120,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks David, that's a good idea, and I was able to see it happening with that. I ran it about 5 times and it usually took between 1 and 8 minutes, with about `2.75 million` tests per minute.\n\nThinking through the details, it seems like it's extremely unlikely that this would be successfully used in a real world attack.\n\nWhen Core displays comment authors in wp-admin, it escapes the address with `esc_url()`, and I don't think there are many themes that display the email address on the front-end, in order to protect privacy.\n\nEven if a plugin or theme did display the address unescaped, the victim would still need to visit a page showing the comment, which seems very unlikely if there are millions of comments to navigate through. At that point it's also likely that the attacker would be stopped by other means (Akismet, the site owner disabling comments out of frustration, etc).\n\nGiven all the mitigating factors, I think this can probably be considered a low-priority hardening enhancement, and worked on publicly on core.trac.wordpress.org.\n\nBefore we do that, though, I wanted to get your thoughts, in case I'm missing something. Do the mitigating factors above seem correct to you? Can you think of any way to significantly increase the likelihood of success?\n\nI'll ask another member of the security team to take a look at this before we move it to Core Trac as well, just to be safe.\n",
+            "automated_response": false,
+            "created_at": "2017-12-29T18:38:55.918Z",
+            "updated_at": "2017-12-29T18:38:55.918Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2256048,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I agree with your assessment. You're right, this could probably be considered a low-priority hardening enhancement. As soon as I get the OK from you folks, I'll post this on the bug tracker.",
+            "automated_response": false,
+            "created_at": "2018-01-02T16:06:29.195Z",
+            "updated_at": "2018-01-02T16:06:29.195Z",
+            "actor": {
+                "username": "flimm",
+                "cleared": false,
+                "verified": false,
+                "url": "/flimm",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/224/809/9473d64337fb4f05c3efb9e8f5545cb1690b1517_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2270767,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks, no one on the team has had a chance to double check this yet, but I'll let you know once someone does. Thanks for your patience!",
+            "automated_response": false,
+            "created_at": "2018-01-08T20:19:02.712Z",
+            "updated_at": "2018-01-08T20:19:02.712Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2273096,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Dominik looked at this and caught something that I'd missed: `esc_html()` doesn't double-escape:\n\n```\nwp> $email = antispambot( 'foo@example.org' );\nstring(53) \"f&#111;&#111;&#64;e&#120;am&#112;l&#101;&#46;o&#114;g\"\nwp> $esc_email = esc_html( $email );\nstring(55) \"f&#111;&#111;&#064;e&#120;am&#112;l&#101;&#046;o&#114;g\"\nwp> $esc_email2 = esc_html( $esc_email );\nstring(55) \"f&#111;&#111;&#064;e&#120;am&#112;l&#101;&#046;o&#114;g\"\n\nwp> $esc_html = esc_html( '<script>alert(\"hi\");</script>' );\nstring(51) \"&lt;script&gt;alert(&quot;hi&quot;);&lt;/script&gt;\"\nwp> $esc_html2 = esc_html( $esc_html );\nstring(51) \"&lt;script&gt;alert(&quot;hi&quot;);&lt;/script&gt;\"\n```\n\nCore actually uses both `esc_url()` and `esc_html()` with the value, like in `WP_Comments_List_Table::column_author()`, so I think the only issue here is developer education, since you're right that many will assume it's safe to use unescaped.\n\nI've updated the Codex and DevHub articles to add `esc_url()` and `esc_html()`, and [the WP Coding Standards issue that you opened](https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/issues/1246) will also help.\n\nSo, I think at this point there's nothing more to do here. Do you agree with that?",
+            "automated_response": false,
+            "created_at": "2018-01-09T18:43:37.447Z",
+            "updated_at": "2018-01-09T18:43:37.447Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2275322,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "I did not know that about `esc_html`! That's counter-intuitive to me :)\n\nI agree, I think there's nothing more to do here. I might file a bug in the normal bug tracker to make the change I suggested to `antispambot`, but I can see that the security team don't need to be involved in this. I wanted to check with you folks first. Thanks for editing the documentation. I've made a couple of more documentation contributions to the docs of `esc_html` and `esc_attr`.",
+            "automated_response": false,
+            "created_at": "2018-01-10T16:56:44.162Z",
+            "updated_at": "2018-01-10T16:56:44.162Z",
+            "actor": {
+                "username": "flimm",
+                "cleared": false,
+                "verified": false,
+                "url": "/flimm",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/224/809/9473d64337fb4f05c3efb9e8f5545cb1690b1517_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 2275667,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugInformative",
+            "message": "That sounds good, thanks for checking here first!",
+            "automated_response": false,
+            "created_at": "2018-01-10T19:22:15.646Z",
+            "updated_at": "2018-01-10T19:22:15.646Z",
+            "actor": {
+                "username": "iandunn",
+                "cleared": false,
+                "verified": false,
+                "url": "/iandunn",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/974/01bc1d097002b7eff8eddba98990e094553b1eac_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 5817000,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-16T15:07:17.012Z",
+            "updated_at": "2019-09-16T15:07:17.012Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "flimm",
+                "cleared": false,
+                "verified": false,
+                "url": "/flimm",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/224/809/9473d64337fb4f05c3efb9e8f5545cb1690b1517_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 5818197,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-16T17:45:51.235Z",
+            "updated_at": "2019-09-16T17:45:51.235Z",
+            "actor": {
+                "username": "whyisjake",
+                "cleared": false,
+                "verified": false,
+                "url": "/whyisjake",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/499/942/de8d53f71535e9531105209e14875727a9e88cfe_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        },
+        {
+            "id": 5818199,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2019-09-16T17:45:51.347Z",
+            "updated_at": "2019-09-16T17:45:51.347Z",
+            "actor": {
+                "username": "whyisjake",
+                "cleared": false,
+                "verified": false,
+                "url": "/whyisjake",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/499/942/de8d53f71535e9531105209e14875727a9e88cfe_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "wordpress"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

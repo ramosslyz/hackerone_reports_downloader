@@ -1,0 +1,350 @@
+{
+    "id": 1029723,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDI5NzIz",
+    "url": "https://hackerone.com/reports/1029723",
+    "title": "No rate limiting for subscribe email + lead to Cross origin misconfiguration",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2020-11-09T04:47:53.979Z",
+    "submitted_at": "2020-11-09T04:47:54.109Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": true,
+        "username": "lmhu",
+        "url": "/lmhu",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/mzorbmv6t3ar9rxldl6flguh5cml/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 42368,
+        "url": "https://hackerone.com/stripo",
+        "handle": "stripo",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Stripo Inc",
+            "twitter_handle": "",
+            "website": "https://stripo.email",
+            "about": "Stripo is a lightweight and intuitive email template editor that lets users build professional looking and highly responsive email templates."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2020-11-30T12:08:54.733Z",
+    "bug_reporter_agreed_on_going_public_at": "2020-11-30T11:40:56.747Z",
+    "team_member_agreed_on_going_public_at": "2020-11-30T12:08:54.605Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "## Summary:\nI found bypass no rate limiting using ``Access-Control-Allow-Origin:`` and look the response as ``200`` vulnerable\nNo rate limit means their is no mechanism to protect against the requests you made in a short frame of time. If the repetition doesn't give any error after 50, 100, 1000 repetitions then their will be no rate limit set. vulnerable has registred in #297359 #774050 #922470\n\n**URL Effected**\nhttps://stripo.email/subscribe/\n\n## Step-by-step Reproduction Instructions:\n  * Go to url https://stripo.email/ and scrolls look the subscribe button\n  * Add the victim emails, and repreat to burp-suite\n  * Sent request to burp-intruder, and clear all payloads ``§``\n  * In the payloads set a ``null-payloads`` and run intruder\n  * Boom 1Million request sent to victim-email\n\n**Request**\n```\nPOST /subscribe/ HTTP/1.1\nHost: stripo.email\nX-Requested-With: XMLHttpRequest\nContent-Length: 126\nOrigin: https://evil.stripo.email\nConnection: close\nReferer: https://evil.stripo.email/\n\n_token=§§&source=LANDING&subscribe-email=hostbugbounty%40gmail.com&g-recaptcha-response=\n```\n**Responsive Vulnerability**\n```\nHTTP/1.1 200 OK\nServer: nginx\nDate: Mon, 09 Nov 2020 04:33:08 GMT\nContent-Type: application/json\nConnection: close\nVary: Accept-Encoding\nVary: Accept-Encoding\nCache-Control: private, must-revalidate\npragma: no-cache\nexpires: -1\nX-RateLimit-Limit: 20\nX-RateLimit-Remaining: 14\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains\nX-Frame-Options: SAMEORIGIN\nAccess-Control-Allow-Origin: https://evil.stripo.email\nContent-Length: 234\n\n{\"success\":{\"_token\":\"Zc3Jo8QdivuDDsaS8LhimIW8mVo88eRVl9FYrBi8\",\"source\":\"LANDING\",\"subscribe-email\":\"victimuser@gmail.com\",\"g-recaptcha-response\":null},\"message\":\"Thanks! You're subscribed, look for a confirmation email shortly.\"}\n```\n## Supporting Material/References:\n  * F1070656\n  * F1070657\n\n## Impact\n\n[CORS Bypassing Noratelimiting vulnerable] the attacker can send a request to the victim's email using a cloud server",
+    "weakness": {
+        "id": 65,
+        "name": "Business Logic Errors"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 1070656,
+            "file_name": "Screenshots.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/mx4CM3ymUXm3KBFiwJEhw2RY?response-content-disposition=attachment%3B%20filename%3D%22Screenshots.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshots.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071640Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7799be692a5fe4af13c7dcc728fa974267b27d6c61362d2b6820b966702476a8",
+            "file_size": 76030,
+            "type": "image/png"
+        },
+        {
+            "id": 1070657,
+            "file_name": "ScreenshotsPOC2.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/YXQe63wk5n9HsaWpscTojcgX?response-content-disposition=attachment%3B%20filename%3D%22ScreenshotsPOC2.png%22%3B%20filename%2A%3DUTF-8%27%27ScreenshotsPOC2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3ANTHS73%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T071640Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIB8bLtuWLhLBe36bBDJ6rAPBxu7h%2BdoaAlbjjFCdsiO7AiEA54Z5DY5SyvrmX6uvJPAY7k5KQ8nBix8MlWqmdugzh10quwUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDG977bh6X7R1EZQc8CqPBQSRFc6bgzWvfNLi0m2xGvPNUjseer1P%2Fd1SfKMdBcL2sZpI8B28aHJpC9VhOh%2B7R2okvs3wBV%2FRaXq4asfxsKY8yRdI2%2BoqO7UhDFUSDF%2BH5VvZgduO7xgl%2BcIHDbuINU8UY8X4qfS%2F0ywWG2B27GZZY1g1Ogmr6TOGbhilybHM51KAh4DFHcRrP%2FSfKJzTTbKnyJ9Wthnt8vOonzvP4J0C7KH15JJQGJz%2F8kIKDfV1zGdbpGIqk1IiucZWVEyQ%2BNwalzT4J8TOD0Bn1iMpYOiqlUAWPvqRSXJU3XDHEZUEHuXIhmWwAj7cfa9Wx3Qjzfvlck5EsgASHhy2gwI0TDLRFv199LATv6zV4aTZznyStpeqnzgz2ftoucqM4euk0wFg205gJlrVyYqLSKwWI6pljtn%2BCEKw7k%2BIl6ViKrs%2Bqi0iLkMQZJIIjDJxW8aSs%2F0OWGOrjm5MBX9jz55BlNxIQoT2VRmH1tp0Ex1kt10ARv1MHz8FzVj4zaX4SCovejtDRUm8mmcwcb%2BuFkWtF5kzLe91%2BcFfqgMAcgZ7UxSr3ajLIKuzBee0JvczodfaF3DMNWp8yoMPBEcdUc5zpNB%2FO%2FkLe8EFHhk%2BkNd%2Bv14xAkCVjBGeM1K1NZpaRC0dIccvIkQjaeSreLVyRdrNepeIKVWbnPy8gobjAdpHUlLCvE7mLqzZQHDvx4icA7xB91uI8xdKl6X68uKHbEZN4gvc1rq16vo3AUrEP6QwMfWUHQ6PDWef8vv5vCROnAJ472B8xrWK%2BOA%2FRzSQijjfvSbGiaxAsm2Bd9IH37OU35nBplokROIvNIpTWe90%2BRkL73IFI8QQbvtE47uf%2F4h%2FWEeSLy1677qofdP3UHXD0Tow2K%2B2pwY6sQGx8ON%2Fbs3%2BVDYEcInzDPiuuY2x95R8Wn4gf4dRJVl%2BaTCWAhObov3wooNwxzGOv3%2F2ulWcRg8EB6l9i1c1DrOHg3nj7ydP5nh%2BfXp9I3i%2BsR5rT%2BV%2FZiA1tYDir94IvYVyfsyu3b3l8dErmsDQ2DTcHnBUFiBNgHOKuNATRkNPYChY5ZvHGumdhAyae4kJctm2vTwKRFYI6K2YK00uFtzOPgBk4b5PFWa7e64VdTgGu%2Fg%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=18e0a58b82f62e2a6a9cb4c1c39ee6ebdd2f08afa3efa60e25f70d6e6e778c51",
+            "file_size": 242298,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": null,
+    "vote_count": 52,
+    "voters": [
+        "alpharingo",
+        "lowtoe",
+        "sw33tlie",
+        "rook1337",
+        "bibekshah",
+        "tess",
+        "shubham_srt",
+        "khizer47",
+        "cryptographer",
+        "0xrohadi",
+        "and 42 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 38701,
+        "asset_type": "URL",
+        "asset_identifier": "stripo.email",
+        "max_severity": "medium"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 9786685,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Hello Security Team @artem_nefedov** any update for this issue?",
+            "automated_response": false,
+            "created_at": "2020-11-11T01:03:44.698Z",
+            "updated_at": "2020-11-11T01:03:44.698Z",
+            "actor": {
+                "username": "lmhu",
+                "cleared": false,
+                "verified": false,
+                "url": "/lmhu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mzorbmv6t3ar9rxldl6flguh5cml/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9790514,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Confirmed , thanks!",
+            "automated_response": false,
+            "created_at": "2020-11-11T11:30:02.292Z",
+            "updated_at": "2020-11-11T11:30:02.292Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9953219,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Hello Security Team @artem_nefedov** Any update for 1month ago ?\nWe will waiting for disclosed this reports to publicy.\n\n**Kind Regards**\n**@kittytrace**",
+            "automated_response": false,
+            "created_at": "2020-11-28T18:59:59.850Z",
+            "updated_at": "2020-11-28T18:59:59.850Z",
+            "actor": {
+                "username": "lmhu",
+                "cleared": false,
+                "verified": false,
+                "url": "/lmhu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mzorbmv6t3ar9rxldl6flguh5cml/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9960856,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Done, thank you!",
+            "automated_response": false,
+            "created_at": "2020-11-30T11:32:49.563Z",
+            "updated_at": "2020-11-30T11:32:49.563Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "lmhu",
+                "url": "/lmhu"
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9960942,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "**Hi! security team @artem_nefedov** Thank you for fixed/patched issue-vulnerability.\ncan we disclosed ? thanks you.\n\n**Best Regards**\n**@kittytrace**",
+            "automated_response": false,
+            "created_at": "2020-11-30T11:40:56.770Z",
+            "updated_at": "2020-11-30T11:40:56.770Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "lmhu",
+                "cleared": false,
+                "verified": false,
+                "url": "/lmhu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mzorbmv6t3ar9rxldl6flguh5cml/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9960957,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sure, please request the disclosure ",
+            "automated_response": false,
+            "created_at": "2020-11-30T11:42:45.991Z",
+            "updated_at": "2020-11-30T11:42:45.991Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9960974,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "**Thanks you for response @artem_nefedov**\nlet's accept this disclosure,\n\nbest regards,\n@kittytrace ",
+            "automated_response": false,
+            "created_at": "2020-11-30T11:45:00.913Z",
+            "updated_at": "2020-11-30T11:45:00.913Z",
+            "actor": {
+                "username": "lmhu",
+                "cleared": false,
+                "verified": false,
+                "url": "/lmhu",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/mzorbmv6t3ar9rxldl6flguh5cml/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9961198,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-30T12:08:54.637Z",
+            "updated_at": "2020-11-30T12:08:54.637Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        },
+        {
+            "id": 9961199,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2020-11-30T12:08:54.780Z",
+            "updated_at": "2020-11-30T12:08:54.780Z",
+            "actor": {
+                "username": "artem_nefedov",
+                "cleared": false,
+                "verified": false,
+                "url": "/artem_nefedov",
+                "profile_picture_urls": {
+                    "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "stripo"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

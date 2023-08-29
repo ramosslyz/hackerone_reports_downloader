@@ -1,0 +1,405 @@
+{
+    "id": 272379,
+    "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzIzNzk=",
+    "url": "https://hackerone.com/reports/272379",
+    "title": "Password reset token leak on third party website via Referer header",
+    "state": "Closed",
+    "substate": "resolved",
+    "severity_rating": "medium",
+    "readable_substate": "Resolved",
+    "created_at": "2017-09-27T12:35:22.111Z",
+    "submitted_at": "2017-09-27T12:35:22.111Z",
+    "is_member_of_team?": false,
+    "is_organization_group_member?": false,
+    "reporter": {
+        "disabled": false,
+        "username": "akaash_pantherdefence",
+        "url": "/akaash_pantherdefence",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+        },
+        "is_me?": false,
+        "cleared": false,
+        "verified": false,
+        "hackerone_triager": false,
+        "hacker_mediation": false
+    },
+    "team": {
+        "id": 9520,
+        "url": "https://hackerone.com/aspen",
+        "handle": "aspen",
+        "profile_picture_urls": {
+            "small": "https://profile-photos.hackerone-user-content.com/variants/000/009/520/f7b32b7e3ac40975de7a2e718dcecb2c59c229cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+            "medium": "https://profile-photos.hackerone-user-content.com/variants/000/009/520/f7b32b7e3ac40975de7a2e718dcecb2c59c229cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+        },
+        "permissions": [],
+        "submission_state": "open",
+        "default_currency": "usd",
+        "awards_miles": false,
+        "offers_bounties": false,
+        "state": "public_mode",
+        "only_cleared_hackers": false,
+        "pentest_feature_enabled?": false,
+        "profile": {
+            "name": "Aspen",
+            "twitter_handle": "aspen_io",
+            "website": "http://aspen.io/",
+            "about": "A python web framework based on filesystem dispatch and simplates."
+        }
+    },
+    "has_bounty?": false,
+    "in_validation?": false,
+    "can_view_team": true,
+    "can_view_report": true,
+    "is_external_bug": false,
+    "is_published": false,
+    "is_participant": false,
+    "has_collaborators": false,
+    "submitted_by_team_member": false,
+    "stage": 4,
+    "public": true,
+    "visibility": "full",
+    "cve_ids": [],
+    "singular_disclosure_disabled": false,
+    "disclosed_at": "2017-09-27T17:34:07.598Z",
+    "bug_reporter_agreed_on_going_public_at": "2017-09-27T17:34:07.536Z",
+    "team_member_agreed_on_going_public_at": "2017-09-27T16:43:52.979Z",
+    "comments_closed?": false,
+    "facebook_team?": false,
+    "team_private?": false,
+    "vulnerability_information": "Hi Security Team,\n*******************************************\n#Description\n\nIt has been identified that the application is leaking referrer token to third party sites. In this case it was found that the password reset token is being leaked to third party sites which is a issue knowing the fact that it can allow any malicious users to use the token and reset the passwords of the victim.\n\n#Steps To Reproduce:-\n1) Request a password reset link for a valid account\n2) Click on the reset link\n3) Before resetting the password click on the github link footer section\n4) You will notice the following request in burpsuit\n\n#REQUEST:\nGET /rtfd/readthedocs.org HTTP/1.1\nHost: github.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:55.0) Gecko/20100101 Firefox/55.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nReferer: https://readthedocs.org/accounts/password/reset/key/1zp5-4pt-8163732eb05d188994ec/\nCookie: COOKIE\nConnection: close\nUpgrade-Insecure-Requests: 1\n\n\nAs you can see in the referrer the reset token is getting leaked to third party sites. So, the person who has the complete control over that particular third party site can compromise the user accounts easily.\n{F224492}\n\n#Solution:\nFor remediation, you should stop the third party sites to show the referrer header by adding rel=\"noopener noreferrer\" to external links in the footer. or check the reference below.\n\nRef: https://mathiasbynens.github.io/rel-noopener/\n*************************************************************\nBest Regards\n*Akaash Sharma :)*\n",
+    "weakness": {
+        "id": 57,
+        "name": "Violation of Secure Design Principles"
+    },
+    "original_report_id": null,
+    "original_report_url": null,
+    "attachments": [
+        {
+            "id": 224492,
+            "file_name": "POC_img.jpg",
+            "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/224/492/6ecb6bbd6722cc392c45a0d6a55b3d9b5bc904ac/POC_img.jpg?response-content-disposition=attachment%3B%20filename%3D%22POC_img.jpg%22%3B%20filename%2A%3DUTF-8%27%27POC_img.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075937Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=0381346d21117e75d13cce8943db40926f3ea1a5c690b10fbc3ec4efebacf103",
+            "file_size": 535307,
+            "type": "image/jpeg"
+        }
+    ],
+    "allow_singular_disclosure_at": "2017-10-27T16:43:53.023Z",
+    "allow_singular_disclosure_after": -184173344.68097046,
+    "singular_disclosure_allowed": true,
+    "vote_count": 28,
+    "voters": [
+        "sameerphad72",
+        "shubham_srt",
+        "0nlymohammed",
+        "apapedulimu",
+        "edoverflow",
+        "gamliel",
+        "r3y",
+        "eveeez",
+        "sa1tama0",
+        "khizer47",
+        "and 18 more..."
+    ],
+    "severity": {
+        "rating": "medium",
+        "author_type": "User"
+    },
+    "structured_scope": {
+        "databaseId": 1926,
+        "asset_type": "URL",
+        "asset_identifier": "core.aspen.io",
+        "max_severity": "medium"
+    },
+    "abilities": {
+        "assignable_team_members": [],
+        "assignable_team_member_groups": []
+    },
+    "activities": [
+        {
+            "id": 2027174,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNeedsMoreInfo",
+            "message": "Hi @blackpanther_akaash,\n\nAre you able to leak the token to an attacker controlled website and not GitHub?\n\nBest regards,\nEd",
+            "automated_response": false,
+            "created_at": "2017-09-27T12:38:56.477Z",
+            "updated_at": "2017-09-27T12:38:56.477Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027204,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugNew",
+            "message": "Hello @edio \nThe only way to test was to click on the external link which was found on the reset page. And the token was leaking in referer header.",
+            "automated_response": false,
+            "created_at": "2017-09-27T12:54:21.786Z",
+            "updated_at": "2017-09-27T12:54:21.786Z",
+            "actor": {
+                "username": "akaash_pantherdefence",
+                "cleared": false,
+                "verified": false,
+                "url": "/akaash_pantherdefence",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027224,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugTriaged",
+            "message": "This issue actually affects readthedocs.org and not Aspen, but since [rtfd are open source](https://github.com/rtfd/) I submitted a patch here: https://github.com/rtfd/readthedocs.org/pull/3125.",
+            "automated_response": false,
+            "created_at": "2017-09-27T13:06:28.501Z",
+            "updated_at": "2017-09-27T13:06:28.501Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027241,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Thanks !\nWhen digging deep more i have found that there are 2 more third party sites that leak token via referer\n1. use.typekit.net, p.typekit.net\n{F224496}\n2. bam.nr-data.net\n{F224495}",
+            "automated_response": false,
+            "created_at": "2017-09-27T13:12:15.091Z",
+            "updated_at": "2017-09-27T13:12:15.091Z",
+            "actor": {
+                "username": "akaash_pantherdefence",
+                "cleared": false,
+                "verified": false,
+                "url": "/akaash_pantherdefence",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "attachments": [
+                {
+                    "id": 224496,
+                    "filename": "1.jpg",
+                    "type": "image/jpeg",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/224/496/e1d330e1f3503c1903fcf16ef26d94e045d982bf/1.jpg?response-content-disposition=attachment%3B%20filename%3D%221.jpg%22%3B%20filename%2A%3DUTF-8%27%271.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075937Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=1a497eb21dc96063bb457f7bf6d0e6ea53234530371da8d7019dcf2ad1c3f7f1"
+                },
+                {
+                    "id": 224495,
+                    "filename": "2.jpg",
+                    "type": "image/jpeg",
+                    "url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/224/495/6824ce2365a4d2b7f5c453fc61619e4e6e344d53/2.jpg?response-content-disposition=attachment%3B%20filename%3D%222.jpg%22%3B%20filename%2A%3DUTF-8%27%272.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTVJGXTX7%2F20230829%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230829T075937Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjENf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFzzfx26RrXvw7uz6McXptNAmaGsX5EsZcn%2B1e2FPdBSAiEA5AKGpNyobjXVm9I6KKSI9zAKTnq5B58izBx5zTM9YRkquQUIoP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgwwMTM2MTkyNzQ4NDkiDE4rojG3e45C1AJddSqNBWcpUvMwQMmykDcxc%2FC8kftCljW4cms6Yk1JhgJvZEKg23kYkL0XbqRUYuA7x6jq2wLdyyY3z6WjzlKiK0wxnwXJmcyU1F0Z5dNzW9KydwIcHLiOzp4Ey0JOnP3zfu5XBbDdXLwNRneQkqx4s%2FY5n4dpRxVwNMRSNcrzl6D0qgS7elyxoHrgKGapPgTO4cfRVNQQlNh%2FYRRt8DqlSz%2BuDN1RnR1ZDH9KyeEqDRXRbLcCfJIwXySYXHzqGon%2F81r1I5iCSJl2tykGCaBonqwz07HVMMebv%2FP7Vz%2BrX7UwMAMv2k3U7Pe1KSV%2FiwaSs73yirvx%2BnH3XxJwuWGHfkm7p8UwN1SZ%2BOL6R7pK4ZrFk51TILwXIkxh5%2BhcK4FZMIeaXUO3OeS2WbyQ7Vla9rPiKMH3tnsM06TYh2LFnKRqNTfJ48bTEdXAE94E0V5R4weAdx7bNMqc11YJ%2FWjdUpFFGBbJ%2F%2BnF8TeYBiPhElK5Rk0%2BAImyGK7x4KkAf%2F7el3s1yVt5zRGAcR5OFWcLBUm%2BDVxkmi3uMAFIhFDomFifn3oJT0qIvfJuf7JfXC2zGXs2zTFl2TNWMDWXScZ8wkCcz9A0%2FbrofHVrCrZ6%2BKXYTt1UFHHEesX1y9XAdblz3Is3BSQUl2hgcZVJBxJTXnpgXN0YcS5oLyq2PynlP34N1Jlw%2FEWt1HM3u1omKIaPo5e0sR6W2zFDr6jijsgNjuTFDmSTLJM8WgptSiN71y%2FkITJYTWvebfAmwWB4ASD9huKNB42EETMLZzSHLAyXfJnFqLVeG66eWRfYnEwqEhbusmwQGSy34VeFCGyz7mQ7sjd8E8t9u5l%2B8zhYewxaT9nLNKv8%2BXfkDhf5ZSdAaVTQMPirtqcGOrEBP0GEcUHrda0KRMaiNkKAHwyPowenqMl%2FCwnOYUXuL8p2iUuZFMrs%2BRcaNXJWLAKt3ih7yKkmksX2ZTMDbh%2BZcFqOdyhR4rSjXE7oSD2Gv5B75%2F10kZ9gGUiq%2BIWESxzF4GgUEL5XBbCuRWm8pRqfUphiVCpm%2BXekuj0xegYPqWqFypaouNumpTI1M4YM0Q4czqvenPqGJyVNuLbWVA59jYvwta2NF4qqI2%2BAg1mhFQZs&X-Amz-SignedHeaders=host&X-Amz-Signature=6aa59e3c47eff927ab04bbf189e02e26f58950511e2fc223cff1fe81d900bd70"
+                }
+            ],
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027265,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Please see: https://github.com/rtfd/readthedocs.org/pull/3125#issuecomment-332517243",
+            "automated_response": false,
+            "created_at": "2017-09-27T13:17:25.567Z",
+            "updated_at": "2017-09-27T13:17:25.567Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027276,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "Sound crazy but github is new for me so i didn't understand what to do in that..",
+            "automated_response": false,
+            "created_at": "2017-09-27T13:23:12.287Z",
+            "updated_at": "2017-09-27T13:23:12.287Z",
+            "actor": {
+                "username": "akaash_pantherdefence",
+                "cleared": false,
+                "verified": false,
+                "url": "/akaash_pantherdefence",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027294,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::Comment",
+            "message": "@blackpanther_akaash No worries, I will take care of everything.",
+            "automated_response": false,
+            "created_at": "2017-09-27T13:26:24.724Z",
+            "updated_at": "2017-09-27T13:26:24.724Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027810,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::BugResolved",
+            "message": "Since the issue is now public knowledge and the rtfd team are in charge of the patch I will close this report as resolved. I do not want to keep you waiting much longer. Thank you very much for the report.",
+            "automated_response": false,
+            "created_at": "2017-09-27T16:43:24.237Z",
+            "updated_at": "2017-09-27T16:43:24.237Z",
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "reporter": {
+                "username": "akaash_pantherdefence",
+                "url": "/akaash_pantherdefence"
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027811,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-09-27T16:43:53.003Z",
+            "updated_at": "2017-09-27T16:43:53.003Z",
+            "first_to_agree": true,
+            "actor": {
+                "username": "edoverflow",
+                "cleared": false,
+                "verified": false,
+                "url": "/edoverflow",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027939,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::AgreedOnGoingPublic",
+            "message": "I Don't mind for the disclosure.\nThanks anyways @edio ",
+            "automated_response": false,
+            "created_at": "2017-09-27T17:34:07.557Z",
+            "updated_at": "2017-09-27T17:34:07.557Z",
+            "actor": {
+                "username": "akaash_pantherdefence",
+                "cleared": false,
+                "verified": false,
+                "url": "/akaash_pantherdefence",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        },
+        {
+            "id": 2027940,
+            "is_internal": false,
+            "editable": false,
+            "type": "Activities::ReportBecamePublic",
+            "message": "",
+            "automated_response": false,
+            "created_at": "2017-09-27T17:34:07.617Z",
+            "updated_at": "2017-09-27T17:34:07.617Z",
+            "actor": {
+                "username": "akaash_pantherdefence",
+                "cleared": false,
+                "verified": false,
+                "url": "/akaash_pantherdefence",
+                "profile_picture_urls": {
+                    "medium": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+                },
+                "hackerone_triager": false,
+                "hackerone_employee": false
+            },
+            "genius_execution_id": null,
+            "team_handle": "aspen"
+        }
+    ],
+    "activity_page_count": 1,
+    "activity_page_number": 1,
+    "summaries": [
+        {
+            "category": "team",
+            "can_view?": true,
+            "can_create?": false
+        },
+        {
+            "category": "researcher",
+            "can_view?": true,
+            "can_create?": false
+        }
+    ]
+}
