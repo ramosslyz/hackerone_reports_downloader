@@ -52,7 +52,7 @@ def main():
             st.success(f"Found {len(results)} matching Reports for Query : {search_query}.")
 
 
-        for result in results:
+        for result in results[:50]:
             try:
                 report_title = result[1]['title']
             except KeyError:
