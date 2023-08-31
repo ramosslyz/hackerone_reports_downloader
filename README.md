@@ -22,6 +22,8 @@ By default search UI will run on http://localhost:8501
 Let's see if i ever get around to doing that.
 ```
 
+![Screenshot](docs/img/screenshot.png)
+
 
 ### Tasks
 - [X] Build Scraper
