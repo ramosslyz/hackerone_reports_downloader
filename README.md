@@ -8,6 +8,11 @@ Download dependencies
 pip install -r requirements.txt
 Run the script to download latest reports
 python hackerone_reports_downloader.py
+
+Run Search UI using streamlit
+streamlit run search.py
+
+By default search UI will run on http://localhost:8501
 ```
 
 ### Goal of this project
