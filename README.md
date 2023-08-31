@@ -30,3 +30,6 @@ Let's see if i ever get around to doing that.
 - [X] Download all reports
 - [ ] Setup a basic web app to search through the reports (initially probably won't use a DB, it's only 300MB of reports, in memory data structures should be fine while testing)
 - [ ] ......
+
+
+Test version deployed at https://hackeronereportsdownloader.streamlit.app/
