@@ -28,8 +28,9 @@ Let's see if i ever get around to doing that.
 ### Tasks
 - [X] Build Scraper
 - [X] Download all reports
-- [ ] Setup a basic web app to search through the reports (initially probably won't use a DB, it's only 300MB of reports, in memory data structures should be fine while testing)
-- [ ] ......
+- [X] Setup a basic web app to search through the reports (initially probably won't use a DB, it's only 300MB of reports, in memory data structures should be fine while testing)
+- [ ] Add Pagination
+- [ ] Add filters
 
 
 Test version deployed at https://hackeronereportsdownloader.streamlit.app/
